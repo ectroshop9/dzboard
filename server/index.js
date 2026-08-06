@@ -1,8 +1,13 @@
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
+import express from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
+import productRoutes from './routes/products.js';
+import orderRoutes from './routes/orders.js';
+import adminRoutes from './routes/admin.js';
+import shippingRoutes from './routes/shipping.js';
 
 const app = express();
 
@@ -18,19 +23,11 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 
-// Import routes
-app.use('/api/products', require('./routes/products'));
-app.use('/api/orders', require('./routes/orders'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/shipping', require('./routes/shipping'));
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/shipping', shippingRoutes);
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-module.exports = app;
-
-if (!process.env.VERCEL) {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-}
+export default app;
