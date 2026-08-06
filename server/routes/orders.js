@@ -1,11 +1,11 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const ctrl = require('../controllers/orderController');
-const { verifyAdmin } = require('../middleware/auth');
+import * as ctrl from '../controllers/orderController.js';
+import { verifyAdmin } from '../middleware/auth.js';
 
 router.post('/', ctrl.create);
 router.get('/', verifyAdmin, ctrl.getAll);
 router.put('/:id/status', verifyAdmin, ctrl.updateStatus);
 router.get('/track/:tracking', ctrl.trackOrder);
 
-module.exports = router;
+export default router;

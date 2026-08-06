@@ -1,7 +1,5 @@
-let wilayas = [];
-let shippingFees = [];
-
-module.exports = {
+let wilayas = []; let shippingFees = [];
+export default {
   getWilayas: () => wilayas,
   getLivraisonFee: (id) => { const f = shippingFees.find(f => f.wilaya_id === id && f.type === 'livraison'); return f ? { domicile: f.tarif, stopdesk: f.tarif_stopdesk } : null; },
   syncFromEcotrack: (data) => {
