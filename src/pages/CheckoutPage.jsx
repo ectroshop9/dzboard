@@ -1,0 +1,302 @@
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { 
+  Truck, Home, CreditCard, Loader2, MapPin, Package, ChevronLeft, ZoomIn, X 
+} from 'lucide-react';
+
+const API_BASE = 'http://localhost:5000/api';
+
+export default function CheckoutPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const cartItems = location.state?.items || [];
+
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [wilayaId, setWilayaId] = useState('');
+  const [commune, setCommune] = useState('');
+  const [address, setAddress] = useState('');
+  const [notes, setNotes] = useState('');
+  const [shippingType, setShippingType] = useState('domicile');
+  const [wilayas, setWilayas] = useState([]);
+  const [communes, setCommunes] = useState([]);
+  const [fees, setFees] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  useEffect(() => {
+    setWilayas([
+      { wilaya_id: 16, name_ar: 'الجزائر', has_stopdesk: true },
+      { wilaya_id: 31, name_ar: 'وهران', has_stopdesk: true },
+      { wilaya_id: 25, name_ar: 'قسنطينة', has_stopdesk: true },
+      { wilaya_id: 9, name_ar: 'البليدة', has_stopdesk: true },
+      { wilaya_id: 42, name_ar: 'تيبازة', has_stopdesk: true },
+    ]);
+  }, []);
+
+  useEffect(() => {
+    if (!wilayaId) {
+      setCommunes([]);
+      setFees(null);
+      return;
+    }
+
+    const communesByWilaya = {
+      '16': ['الجزائر الوسطى', 'باب الوادي', 'القصبة', 'بولوغين', 'الابيار', 'حسين داي', 'الكاليتوس', 'براقي'],
+      '31': ['وهران', 'بئر الجير', 'السانية', 'قديل', 'أرزيو', 'بطيوة', 'وادي تليلات'],
+      '25': ['قسنطينة', 'الخروب', 'ديدوش مراد', 'حامة بوزيان', 'زيغود يوسف', 'عين عبيد'],
+      '9': ['البليدة', 'بوفاريك', 'موزاية', 'الأربعاء', 'بوعينان', 'الشفة'],
+      '42': ['تيبازة', 'شرشال', 'القليعة', 'حجرة النص', 'بوسماعيل', 'دواودة'],
+    };
+    setCommunes(communesByWilaya[wilayaId] || []);
+    setCommune('');
+
+    const feesByWilaya = {
+      '16': { domicile: '400', stopdesk: '300' },
+      '31': { domicile: '800', stopdesk: '450' },
+      '25': { domicile: '800', stopdesk: '450' },
+      '9': { domicile: '650', stopdesk: '400' },
+      '42': { domicile: '650', stopdesk: '450' },
+    };
+    setFees(feesByWilaya[wilayaId] || null);
+  }, [wilayaId]);
+
+  if (cartItems.length === 0) {
+    return (
+      <div style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', direction: 'rtl', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cairo', sans-serif" }}>
+        <div className="card" style={{ textAlign: 'center', padding: 40, maxWidth: 400 }}>
+          <Package size={48} style={{ color: 'var(--text-muted)', marginBottom: 16 }} />
+          <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>لا توجد منتجات</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 20 }}>لم تقم باختيار أي منتج بعد</p>
+          <Link to="/store" className="btn btn-primary">تصفح المتجر</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const subtotal = cartItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
+  const shippingCost = fees ? parseFloat(fees[shippingType]) : 0;
+  const total = subtotal + shippingCost;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!fullName || !phone || !address || !wilayaId || !commune) {
+      setError('جميع الحقول مطلوبة');
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+
+    // Simulate API call then redirect to Thank You page
+    setTimeout(() => {
+      navigate('/thank-you', {
+        state: {
+          trackingNumber: 'ECG' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+          orderId: Math.floor(Math.random() * 100000),
+        }
+      });
+    }, 1500);
+  };
+
+  return (
+    <div style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', sans-serif" }}>
+      
+      {/* Header */}
+      <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', alignItems: 'center' }}>
+          <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm">
+            <ChevronLeft size={18} /> رجوع
+          </button>
+          <h1 style={{ fontSize: 18, fontWeight: 900, marginRight: 8 }}>إتمام الطلب السريع</h1>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '16px' }}>
+        
+        {error && (
+          <div style={{ background: '#fef2f2', color: '#dc2626', padding: 12, borderRadius: 8, marginBottom: 16, textAlign: 'center', fontSize: 13, border: '1px solid #fecaca' }}>
+            {error}
+          </div>
+        )}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', alignItems: 'start' }}>
+          
+          {/* العمود الأيمن: المنتجات والملخص */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="card" style={{ padding: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <div className="icon-box" style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981', width: 32, height: 32 }}>
+                  <Package size={16} />
+                </div>
+                <h3 style={{ fontSize: 15, fontWeight: 800 }}>المنتجات المختارة</h3>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {cartItems.map((item, index) => (
+                  <div key={index} style={{ display: 'flex', gap: 12, alignItems: 'center', borderBottom: index < cartItems.length - 1 ? '1px solid var(--border)' : 'none', paddingBottom: 10 }}>
+                    
+                    <div style={{ position: 'relative', width: 64, height: 64, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', flexShrink: 0, background: '#f9fafb' }}>
+                      <img 
+                        src={item.image || 'https://via.placeholder.com/64'} 
+                        alt={item.name} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => setSelectedImage(item.image || 'https://via.placeholder.com/400')}
+                        style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', border: 'none', cursor: 'pointer', opacity: 0, transition: 'opacity 0.2s' }}
+                        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                        onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
+                      >
+                        <ZoomIn size={16} />
+                      </button>
+                    </div>
+
+                    <div style={{ flex: 1 }}>
+                      <h4 style={{ fontSize: 13, fontWeight: 700, margin: '0 0 4px 0' }}>{item.name}</h4>
+                      <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>الكمية: {item.quantity}</p>
+                    </div>
+                    <div style={{ fontWeight: 800, fontSize: 13 }}>
+                      {(parseFloat(item.price) * item.quantity).toLocaleString()} دج
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="card" style={{ padding: 16 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>ملخص الحساب</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>مجموع المنتجات:</span>
+                  <span style={{ fontWeight: 700 }}>{subtotal.toLocaleString()} دج</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>كلفة الشحن:</span>
+                  <span style={{ fontWeight: 700 }}>{shippingCost.toLocaleString()} دج</span>
+                </div>
+                <hr style={{ borderColor: 'var(--border)', margin: '8px 0' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 900, fontSize: 16 }}>
+                  <span>المبلغ الإجمالي:</span>
+                  <span style={{ color: 'var(--accent)' }}>{total.toLocaleString()} دج</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* العمود الأيسر: نموذج البيانات والشحن */}
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            
+            <div className="card" style={{ padding: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <div className="icon-box" style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--primary)', width: 32, height: 32 }}>
+                  <MapPin size={16} />
+                </div>
+                <h3 style={{ fontSize: 15, fontWeight: 800 }}>معلومات المشتري</h3>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <input className="field-input" placeholder="الاسم الكامل *" value={fullName} onChange={e => setFullName(e.target.value)} required />
+                <input className="field-input" placeholder="رقم الهاتف *" value={phone} onChange={e => setPhone(e.target.value)} required type="tel" />
+                
+                <select className="field-input" value={wilayaId} onChange={e => setWilayaId(e.target.value)} required>
+                  <option value="">اختر الولاية *</option>
+                  {wilayas.map(w => (
+                    <option key={w.wilaya_id} value={w.wilaya_id}>{w.name_ar}</option>
+                  ))}
+                </select>
+
+                <select className="field-input" value={commune} onChange={e => setCommune(e.target.value)} required disabled={!wilayaId}>
+                  <option value="">اختر البلدية *</option>
+                  {communes.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+
+                <textarea className="field-input" placeholder="العنوان التفصيلي *" value={address} onChange={e => setAddress(e.target.value)} required rows={2} />
+                <textarea className="field-input" placeholder="ملاحظات (اختياري)" value={notes} onChange={e => setNotes(e.target.value)} rows={1} />
+              </div>
+            </div>
+
+            {fees && (
+              <div className="card" style={{ padding: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <div className="icon-box" style={{ background: 'rgba(245,158,11,0.12)', color: 'var(--accent)', width: 32, height: 32 }}>
+                    <Truck size={16} />
+                  </div>
+                  <h3 style={{ fontSize: 15, fontWeight: 800 }}>طريقة التوصيل</h3>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => setShippingType('domicile')}
+                    style={{
+                      padding: 10, textAlign: 'center', cursor: 'pointer', borderRadius: 8,
+                      border: shippingType === 'domicile' ? '2px solid var(--primary)' : '1px solid var(--border)',
+                      background: shippingType === 'domicile' ? 'rgba(99,102,241,0.06)' : 'var(--bg-secondary)',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
+                    <Home size={18} style={{ marginBottom: 4, color: 'var(--primary)' }} />
+                    <div style={{ fontWeight: 800, fontSize: 12 }}>توصيل للمنزل</div>
+                    <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent)' }}>{fees.domicile} دج</div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setShippingType('stopdesk')}
+                    disabled={fees.stopdesk === '0'}
+                    style={{
+                      padding: 10, textAlign: 'center', borderRadius: 8,
+                      cursor: fees.stopdesk === '0' ? 'not-allowed' : 'pointer',
+                      border: shippingType === 'stopdesk' ? '2px solid var(--primary)' : '1px solid var(--border)',
+                      background: shippingType === 'stopdesk' ? 'rgba(99,102,241,0.06)' : 'var(--bg-secondary)',
+                      opacity: fees.stopdesk === '0' ? 0.5 : 1,
+                      color: 'var(--text-primary)',
+                    }}
+                  >
+                    <Truck size={18} style={{ marginBottom: 4, color: 'var(--primary)' }} />
+                    <div style={{ fontWeight: 800, fontSize: 12 }}>المكتب (StopDesk)</div>
+                    <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent)' }}>{fees.stopdesk} دج</div>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <button 
+              type="submit" 
+              className="btn btn-accent btn-lg btn-block"
+              disabled={submitting || !wilayaId}
+              style={{ gap: 8 }}
+            >
+              {submitting ? <Loader2 size={18} className="spin" /> : <CreditCard size={18} />}
+              {submitting ? 'جاري الإرسال...' : 'تأكيد الطلب (الدفع عند الاستلام)'}
+            </button>
+          </form>
+
+        </div>
+      </div>
+
+      {/* نافذة تكبير الصورة */}
+      {selectedImage && (
+        <div 
+          onClick={() => setSelectedImage(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+        >
+          <div style={{ position: 'relative', maxWidth: '90%', maxHeight: '90%' }}>
+            <button 
+              onClick={() => setSelectedImage(null)}
+              style={{ position: 'absolute', top: -40, right: 0, background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
+            >
+              <X size={28} />
+            </button>
+            <img src={selectedImage} alt="Enlarged product" style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 8, objectFit: 'contain' }} />
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
