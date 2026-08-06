@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Loader2, Shield } from 'lucide-react';
+import { api } from '../services/api';
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();
@@ -19,16 +20,20 @@ export default function AdminLoginPage() {
     setLoading(true);
     setError('');
 
-    // Mock login
-    setTimeout(() => {
-      if (username === 'admin' && password === 'admin123') {
-        localStorage.setItem('dzboard_admin_token', 'mock_token_123');
+    try {
+      const data = await api.adminLogin(username, password);
+      
+      if (data.success) {
+        localStorage.setItem('dzboard_admin_token', data.token);
         navigate('/admin/dashboard');
       } else {
-        setError('اسم المستخدم أو كلمة المرور غير صحيحة');
+        setError(data.message || 'بيانات الدخول غير صحيحة');
       }
-      setLoading(false);
-    }, 1000);
+    } catch (err) {
+      setError('خطأ في الاتصال بالسيرفر');
+    }
+    
+    setLoading(false);
   };
 
   return (
@@ -52,41 +57,22 @@ export default function AdminLoginPage() {
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
             <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>اسم المستخدم</label>
-            <input 
-              className="field-input" 
-              placeholder="admin" 
-              value={username} 
-              onChange={e => setUsername(e.target.value)} 
-              autoFocus 
-            />
+            <input className="field-input" placeholder="admin" value={username} onChange={e => setUsername(e.target.value)} autoFocus />
           </div>
 
           <div>
             <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>كلمة المرور</label>
-            <input 
-              className="field-input" 
-              type="password" 
-              placeholder="••••••••" 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-            />
+            <input className="field-input" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
           </div>
 
-          <button 
-            type="submit" 
-            className="btn btn-primary btn-lg btn-block"
-            disabled={loading}
-            style={{ gap: 8, marginTop: 8 }}
-          >
+          <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={loading} style={{ gap: 8, marginTop: 8 }}>
             {loading ? <Loader2 size={18} className="spin" /> : <Lock size={18} />}
             {loading ? 'جاري الدخول...' : 'تسجيل الدخول'}
           </button>
         </form>
 
         <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <button onClick={() => navigate('/')} className="btn btn-ghost btn-sm">
-            العودة للمتجر
-          </button>
+          <button onClick={() => navigate('/')} className="btn btn-ghost btn-sm">العودة للمتجر</button>
         </div>
       </div>
     </div>
