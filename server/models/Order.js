@@ -1,27 +1,8 @@
 let orders = [];
 let nextId = 1001;
-
-export default {
-  getAll: () => orders.sort((a, b) => b.id - a.id),
+module.exports = {
+  getAll: () => orders.sort((a,b) => b.id - a.id),
   getById: (id) => orders.find(o => o.id === id),
-  create: (data) => {
-    const order = {
-      id: nextId++,
-      ...data,
-      status: 'pending',
-      tracking: null,
-      createdAt: new Date().toISOString(),
-    };
-    orders.push(order);
-    return order;
-  },
-  updateStatus: (id, status, tracking = null) => {
-    const order = orders.find(o => o.id === id);
-    if (order) {
-      order.status = status;
-      if (tracking) order.tracking = tracking;
-      return order;
-    }
-    return null;
-  },
+  create: (data) => { const o = { id: nextId++, ...data, status: 'pending', tracking: null, createdAt: new Date().toISOString() }; orders.push(o); return o; },
+  updateStatus: (id, status, tracking) => { const o = orders.find(o => o.id === id); if (o) { o.status = status; if (tracking) o.tracking = tracking; return o; } return null; },
 };

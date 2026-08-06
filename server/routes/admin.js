@@ -1,6 +1,6 @@
-import express from 'express';
+const express = require('express');
 const router = express.Router();
-import { verifyAdmin } from '../middleware/auth.js';
+const { verifyAdmin } = require('../middleware/auth');
 
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
@@ -18,4 +18,4 @@ router.get('/verify', verifyAdmin, (req, res) => {
   res.json({ success: true, message: 'Token صالح' });
 });
 
-export default router;
+module.exports = router;
