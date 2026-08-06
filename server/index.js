@@ -7,6 +7,7 @@ import morgan from 'morgan';
 import productRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
 import adminRoutes from './routes/admin.js';
+import shippingRoutes from './routes/shipping.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,6 +27,7 @@ app.use(express.json());
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/shipping', shippingRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

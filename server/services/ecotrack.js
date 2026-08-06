@@ -5,7 +5,20 @@ const ECOTRACK_URL = process.env.ECOTRACK_API_URL || 'https://platform.dhd-dz.co
 const ECOTRACK_TOKEN = process.env.ECOTRACK_API_TOKEN || '';
 
 export const ecotrackService = {
-  // إنشاء طلب توصيل
+  // جلب التعريفات
+  getFees: async () => {
+    try {
+      const response = await fetch(`${ECOTRACK_URL}/get/fees`, {
+        headers: { 'Authorization': `Bearer ${ECOTRACK_TOKEN}` },
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('getFees error:', error);
+      return null;
+    }
+  },
+
+  // إنشاء طلب
   createShipment: async (order) => {
     try {
       const productsText = order.items?.map(item => `${item.name} x${item.quantity}`).join(', ') || '';
@@ -21,34 +34,25 @@ export const ecotrackService = {
         montant: String(parseFloat(order.amount) + parseFloat(order.shipping || 0)),
         remarque: order.notes || '',
         produit: productsText,
-        type: '1', // 1 = Livraison
+        type: '1',
         stop_desk: order.shippingType === 'stopdesk' ? '1' : '0',
       });
 
-      console.log('ECOTRACK Request:', params.toString());
-
       const response = await fetch(`${ECOTRACK_URL}/create/order?${params.toString()}`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${ECOTRACK_TOKEN}`,
-        },
+        headers: { 'Authorization': `Bearer ${ECOTRACK_TOKEN}` },
       });
 
       const data = await response.json();
-      console.log('ECOTRACK Response:', data);
       
-      if (data.success || data.tracking) {
-        return {
-          success: true,
-          tracking: data.tracking,
-          ecotrackId: data.id,
-        };
+      if (data.tracking) {
+        return { success: true, tracking: data.tracking, ecotrackId: data.id };
       }
       
       return { success: false, error: data.message || 'فشل إنشاء الشحنة' };
     } catch (error) {
-      console.error('ECOTRACK error:', error);
-      return { success: false, error: 'خطأ في الاتصال بشركة التوصيل' };
+      console.error('createShipment error:', error);
+      return { success: false, error: 'خطأ في الاتصال' };
     }
   },
 
