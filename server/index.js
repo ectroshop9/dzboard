@@ -33,7 +33,12 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`ECOTRACK URL: ${process.env.ECOTRACK_API_URL}`);
-});
+// For Vercel Serverless
+if (process.env.VERCEL) {
+  export default app;
+} else {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`ECOTRACK URL: ${process.env.ECOTRACK_API_URL}`);
+  });
+}
