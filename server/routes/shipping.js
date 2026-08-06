@@ -18,3 +18,10 @@ router.get('/fee', (req, res) => {
 });
 
 export default router;
+
+router.get('/sync', async (req, res) => {
+  const data = await ecotrackService.getFees();
+  if (!data?.livraison) return res.status(500).json({ success: false });
+  const result = Wilaya.syncFromEcotrack(data);
+  res.json({ success: true, ...result });
+});
