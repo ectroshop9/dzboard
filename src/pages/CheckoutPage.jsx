@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Truck, Home, Loader2, MapPin, Package, ChevronLeft, Shield } from 'lucide-react';
+import { Truck, Home, Loader2, Package, ChevronLeft, Shield } from 'lucide-react';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -42,9 +42,7 @@ export default function CheckoutPage() {
   }, [wilayaId]);
 
   useEffect(() => {
-    if (fees && parseFloat(fees.stopdesk) === 0 && shippingType === 'stopdesk') {
-      setShippingType('domicile');
-    }
+    if (fees && parseFloat(fees.stopdesk) === 0 && shippingType === 'stopdesk') setShippingType('domicile');
   }, [fees, shippingType]);
 
   if (cartItems.length === 0) {
@@ -65,9 +63,7 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!fullName || !phone || !address || !wilayaId || !commune) {
-      setError('جميع الحقول مطلوبة'); return;
-    }
+    if (!fullName || !phone || !address || !wilayaId || !commune) { setError('جميع الحقول مطلوبة'); return; }
     setSubmitting(true); setError('');
     try {
       const res = await fetch('/api/orders', {
@@ -83,13 +79,9 @@ export default function CheckoutPage() {
 
   return (
     <div style={{ background: '#f5f5f5', minHeight: '100vh', fontFamily: 'system-ui', direction: 'rtl' }}>
-      
-      {/* Header */}
       <div style={{ background: '#fff', padding: '12px 16px', borderBottom: '1px solid #eee', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', alignItems: 'center' }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#333' }}>
-            <ChevronLeft size={20} />
-          </button>
+          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#333' }}><ChevronLeft size={20} /></button>
           <h1 style={{ fontSize: 18, fontWeight: 700, marginRight: 8, color: '#222' }}>تأكيد الطلب</h1>
         </div>
       </div>
@@ -107,45 +99,27 @@ export default function CheckoutPage() {
                 <div style={{ flex: 1 }}>
                   <h4 style={{ fontSize: 14, fontWeight: 600, color: '#222', marginBottom: 4 }}>{item.name}</h4>
                   <p style={{ fontSize: 12, color: '#999' }}>الكمية: {item.quantity}</p>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#ff6600', marginTop: 4 }}>{(parseFloat(item.price) * item.quantity).toLocaleString("en-US")} دج</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: '#ff6600', marginTop: 4 }}>{(parseFloat(item.price) * item.quantity).toLocaleString('en-US')} دج</div>
                 </div>
               </div>
             ))}
-
-            {/* ملخص سريع */}
-            <div style={{ background: '#fff', borderRadius: 12, padding: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#666', marginBottom: 6 }}>
-                <span>المجموع</span><span>{subtotal.toLocaleString("en-US")} دج</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#666', marginBottom: 6 }}>
-                <span>الشحن</span><span style={{ color: '#0a0' }}>{shippingCost === 0 ? 'يُحدد بعد اختيار الولاية' : `${shippingCost.toLocaleString("en-US")} دج`}</span>
-              </div>
-              <hr style={{ borderColor: '#eee', margin: '8px 0' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 18, fontWeight: 700, color: '#222' }}>
-                <span>الإجمالي</span><span style={{ color: '#ff6600' }}>{total.toLocaleString("en-US")} دج</span>
-              </div>
-            </div>
           </div>
 
           {/* العمود اليسار - النموذج */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ background: '#fff', borderRadius: 12, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               <h3 style={{ fontSize: 16, fontWeight: 700, color: '#222', marginBottom: 14 }}>معلومات التوصيل</h3>
-              
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <input style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} placeholder="الاسم الكامل *" value={fullName} onChange={e => setFullName(e.target.value)} required />
                 <input style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} placeholder="رقم الهاتف *" value={phone} onChange={e => setPhone(e.target.value)} required type="tel" />
-                
                 <select style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }} value={wilayaId} onChange={e => setWilayaId(e.target.value)} required disabled={loadingWilayas}>
                   <option value="">{loadingWilayas ? 'جاري التحميل...' : 'اختر الولاية *'}</option>
                   {wilayas.map(w => (<option key={w.wilaya_id} value={w.wilaya_id}>{w.name_ar}</option>))}
                 </select>
-
                 <select style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }} value={commune} onChange={e => setCommune(e.target.value)} required disabled={!wilayaId || loadingCommunes}>
                   <option value="">{!wilayaId ? 'اختر الولاية أولاً' : loadingCommunes ? 'جاري تحميل البلديات...' : communes.length === 0 ? 'لا توجد بلديات' : 'اختر البلدية *'}</option>
                   {communes.map(c => (<option key={c.id || c.name_fr} value={c.name_fr || c.name_ar}>{c.name_ar}</option>))}
                 </select>
-
                 <textarea style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} placeholder="العنوان التفصيلي *" value={address} onChange={e => setAddress(e.target.value)} required rows={2} />
               </div>
             </div>
@@ -160,6 +134,19 @@ export default function CheckoutPage() {
                     <Truck size={18} /><div style={{ fontWeight: 600, fontSize: 12, marginTop: 4 }}>Stop Desk</div><div style={{ fontSize: 14, fontWeight: 700, color: '#ff6600', marginTop: 2 }}>{fees.stopdesk} دج</div>
                   </button>
                 </div>
+
+                {/* ملخص الحساب أسفل التوصيل */}
+                <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #eee' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#666', marginBottom: 6 }}>
+                    <span>المجموع</span><span>{subtotal.toLocaleString('en-US')} دج</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#666', marginBottom: 6 }}>
+                    <span>الشحن</span><span>{shippingCost.toLocaleString('en-US')} دج</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#222', marginTop: 8 }}>
+                    <span>الإجمالي</span><span style={{ color: '#ff6600' }}>{total.toLocaleString('en-US')} دج</span>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -167,12 +154,8 @@ export default function CheckoutPage() {
               {submitting ? <Loader2 size={18} className="spin" /> : <Shield size={18} />}
               {submitting ? 'جاري التأكيد...' : 'تأكيد الطلب - الدفع عند الاستلام'}
             </button>
-
-            <p style={{ textAlign: 'center', fontSize: 11, color: '#999', marginTop: 8 }}>
-              <Shield size={12} style={{ verticalAlign: 'middle' }} /> دفع آمن عند الاستلام
-            </p>
+            <p style={{ textAlign: 'center', fontSize: 11, color: '#999' }}><Shield size={12} style={{ verticalAlign: 'middle' }} /> دفع آمن عند الاستلام</p>
           </form>
-
         </div>
       </div>
     </div>
