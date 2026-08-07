@@ -1,9 +1,24 @@
-import { sql } from '../db.js';
+import { supabase } from '../supabase.js'
 
 export default {
-  getAll: async () => await sql`SELECT * FROM products WHERE active = true ORDER BY id DESC`,
-  getById: async (id) => (await sql`SELECT * FROM products WHERE id = ${id}`)[0],
-  create: async (data) => (await sql`INSERT INTO products (name, category, brand, price, stock, description, image) VALUES (${data.name}, ${data.category||'tcon'}, ${data.brand||'samsung'}, ${data.price}, ${data.stock||0}, ${data.description||''}, ${data.image||''}) RETURNING *`)[0],
-  update: async (id, data) => (await sql`UPDATE products SET name=${data.name}, price=${data.price}, stock=${data.stock} WHERE id=${id} RETURNING *`)[0],
-  delete: async (id) => { await sql`UPDATE products SET active = false WHERE id=${id}`; return true; },
-};
+  getAll: async () => {
+    const { data } = await supabase.from('products').select('*').eq('active', true).order('id', { ascending: false })
+    return data || []
+  },
+  getById: async (id) => {
+    const { data } = await supabase.from('products').select('*').eq('id', id).single()
+    return data
+  },
+  create: async (product) => {
+    const { data } = await supabase.from('products').insert(product).select().single()
+    return data
+  },
+  update: async (id, product) => {
+    const { data } = await supabase.from('products').update(product).eq('id', id).select().single()
+    return data
+  },
+  delete: async (id) => {
+    await supabase.from('products').update({ active: false }).eq('id', id)
+    return true
+  },
+}
