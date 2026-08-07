@@ -76,9 +76,9 @@ export default function StorePage() {
   };
 
   return (
-    <div style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', sans-serif" }}>
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', sans-serif" }}>
       
-      <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
+      <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Link to="/" className="btn btn-ghost btn-sm"><ChevronLeft size={18} /> الرئيسية</Link>
@@ -111,7 +111,7 @@ export default function StorePage() {
             </select>
             <div style={{ flex: 1, position: 'relative', minWidth: 200 }}>
               <input type="text" placeholder="ابحث عن قطعة..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="field-input" />
-              <Search size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <Search size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
             </div>
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="field-input" style={{ width: 'auto', minWidth: 140 }}>
               <option value="newest">الأحدث</option>
@@ -121,17 +121,17 @@ export default function StorePage() {
           </div>
         </div>
 
-        <div style={{ marginBottom: 16, color: 'var(--text-secondary)', fontSize: 13 }}>
+        <div style={{ marginBottom: 16, color: '#64748b', fontSize: 13 }}>
           {loading ? 'جاري التحميل...' : `${products.length} منتج`}
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 60 }}><Loader2 size={40} className="spin" style={{ color: 'var(--primary)' }} /></div>
+          <div style={{ textAlign: 'center', padding: 60 }}><Loader2 size={40} className="spin" style={{ color: '#3b82f6' }} /></div>
         ) : products.length === 0 ? (
           <div className="card" style={{ textAlign: 'center', padding: 60 }}>
-            <Package size={48} style={{ color: 'var(--text-muted)', marginBottom: 16 }} />
+            <Package size={48} style={{ color: '#94a3b8', marginBottom: 16 }} />
             <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>لا توجد منتجات</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>لم نجد قطع تطابق بحثك</p>
+            <p style={{ color: '#64748b', fontSize: 13 }}>لم نجد قطع تطابق بحثك</p>
           </div>
         ) : (
           <div style={viewMode === 'grid' ? {
@@ -141,10 +141,10 @@ export default function StorePage() {
           }}>
             {products.map((product) => (
               <div key={product.id} className="card" style={{ overflow: 'hidden', cursor: 'pointer', transition: 'all 0.2s', display: viewMode === 'list' ? 'flex' : 'block', gap: viewMode === 'list' ? 16 : 0 }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                 
-                <div style={{ background: 'var(--bg-secondary)', height: viewMode === 'list' ? 'auto' : 180, width: viewMode === 'list' ? 140 : '100%', minHeight: viewMode === 'list' ? 120 : 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                <div style={{ background: '#fff', height: viewMode === 'list' ? 'auto' : 180, width: viewMode === 'list' ? 140 : '100%', minHeight: viewMode === 'list' ? 120 : 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                   <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
 
@@ -161,9 +161,9 @@ export default function StorePage() {
                     )}
                   </div>
                   <h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>{product.name}</h3>
-                  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10, lineHeight: 1.4 }}>{product.description}</p>
+                  <p style={{ fontSize: 12, color: '#94a3b8', marginBottom: 10, lineHeight: 1.4 }}>{product.description}</p>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: 18, fontWeight: 900, color: 'var(--accent)' }}>{product.price.toLocaleString()} دج</span>
+                    <span style={{ fontSize: 18, fontWeight: 900, color: '#f59e0b' }}>{product.price.toLocaleString()} دج</span>
                     <button onClick={() => handleBuyNow(product)} className="btn btn-accent btn-sm" disabled={product.stock === 0} style={{ gap: 6 }}>
                       <ShoppingCart size={14} /> اشتري الآن
                     </button>
