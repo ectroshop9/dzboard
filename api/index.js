@@ -8,7 +8,6 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 
-// Import routes
 import productRoutes from '../server/routes/products.js';
 import orderRoutes from '../server/routes/orders.js';
 import adminRoutes from '../server/routes/admin.js';
