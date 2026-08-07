@@ -9,9 +9,9 @@ export default function HomePage() {
   const [searchBrand, setSearchBrand] = useState('ALL');
 
   const slides = [
-    { image: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1200', title: 'كرت تيكون (T-Con)', subtitle: 'جميع بوردات T-Con' },
-    { image: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=1200', title: 'اليمونتاسيون', subtitle: 'باور سبلاي وبوردات تغذية' },
-    { image: 'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=1200', title: 'قطع غيار أصلية', subtitle: 'بأسعار منافسة' },
+    { image: '/hero/tcon.jpg', title: 'كرت تيكون (T-Con)', subtitle: 'جميع بوردات T-Con' },
+    { image: '/hero/power.jpg', title: 'اليمونتاسيون', subtitle: 'باور سبلاي وبوردات تغذية' },
+    { image: '/hero/parts.jpg', title: 'قطع غيار أصلية', subtitle: 'بأسعار منافسة' },
   ];
 
   useEffect(() => {
