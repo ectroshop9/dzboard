@@ -117,7 +117,7 @@ export default function CheckoutPage() {
               <input className="field-input" placeholder="الاسم الكامل *" value={fullName} onChange={e => setFullName(e.target.value)} required />
               <input className="field-input" placeholder="رقم الهاتف *" value={phone} onChange={e => setPhone(e.target.value)} required type="tel" />
               <select className="field-input" value={wilayaId} onChange={e => setWilayaId(e.target.value)} required disabled={loadingWilayas}>
-                <option value="">{loadingWilayas ? 'جاري التحميل...' : 'اختر الولاية *'}</option>
+                <option value="">{loadingWilayas ? 'جاري تحميل الولايات...' : 'اختر الولاية *'}</option>
                 {wilayas.map(w => (<option key={w.wilaya_id} value={w.wilaya_id}>{w.name_ar}</option>))}
               </select>
               <select className="field-input" value={commune} onChange={e => setCommune(e.target.value)} required disabled={!wilayaId || loadingCommunes}>
