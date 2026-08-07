@@ -60,7 +60,7 @@ export default function CheckoutPage() {
   }
 
   const subtotal = cartItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
-  const shippingCost = fees ? parseFloat(fees[shippingType]) : 0;
+  const shippingCost = fees ? (parseFloat(fees[shippingType]) || 0) : 0;
   const total = subtotal + shippingCost;
 
   const handleSubmit = async (e) => {
