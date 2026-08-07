@@ -1,15 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import { initDB } from '../server/db.js';
 
 const app = express();
 
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
-
-initDB().catch(console.error);
 
 import productRoutes from '../server/routes/products.js';
 import orderRoutes from '../server/routes/orders.js';
@@ -22,7 +19,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/shipping', shippingRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok' });
 });
 
 export default app;
