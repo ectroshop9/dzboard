@@ -18,10 +18,7 @@ const WILAYA_NAMES = {
 export default {
   getWilayas: async () => {
     const { data } = await supabase.from('wilayas').select('*').order('wilaya_id');
-    return (data || []).map(w => ({
-      ...w,
-      name_ar: WILAYA_NAMES[w.wilaya_id] || w.name_ar,
-    }));
+    return (data || []).map(w => ({ ...w, name_ar: WILAYA_NAMES[w.wilaya_id] || w.name_ar }));
   },
 
   getLivraisonFee: async (wilaya_id) => {
@@ -37,6 +34,7 @@ export default {
   syncFromEcotrack: async (ecotrackData) => {
     const wilayas = [];
     const fees = [];
+    const communes = [];
 
     ['livraison', 'recouvrement'].forEach(type => {
       if (ecotrackData[type]) {
@@ -58,9 +56,21 @@ export default {
       }
     });
 
+    // استخراج البلديات من البيانات (إذا موجودة في الـ response)
+    if (ecotrackData.communes) {
+      ecotrackData.communes.forEach(item => {
+        communes.push({
+          wilaya_id: item.wilaya_id,
+          name_ar: item.nom,
+          name_fr: item.nom,
+        });
+      });
+    }
+
     if (wilayas.length > 0) await supabase.from('wilayas').upsert(wilayas);
     if (fees.length > 0) await supabase.from('shipping_fees').upsert(fees);
+    if (communes.length > 0) await supabase.from('communes').upsert(communes);
 
-    return { wilayas: wilayas.length, fees: fees.length };
+    return { wilayas: wilayas.length, fees: fees.length, communes: communes.length };
   },
 };
