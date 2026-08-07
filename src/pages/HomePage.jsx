@@ -82,8 +82,8 @@ export default function HomePage() {
           </div>
         ))}
         <div style={{ position: 'relative', zIndex: 10, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-          <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 8, color: '#1e293b' }}>{slides[currentSlide].title}</h1>
-          <p style={{ fontSize: 15, color: '#64748b', marginBottom: 20 }}>{slides[currentSlide].subtitle}</p>
+          
+          
           <Link to="/store" style={{ background: '#f59e0b', color: '#fff', padding: '12px 28px', borderRadius: 8, textDecoration: 'none', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             تصفح المتجر <ChevronLeft size={18} />
           </Link>
