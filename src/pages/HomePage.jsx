@@ -7,6 +7,7 @@ import {
 export default function HomePage() {
   const navigate = useNavigate();
 
+  const [isDark, setIsDark] = useState(() => {
     try {
       const savedTheme = localStorage.getItem('dzboard_theme');
       if (savedTheme !== null) return savedTheme === 'dark';
@@ -40,6 +41,8 @@ export default function HomePage() {
 
   useEffect(() => {
     try {
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      localStorage.setItem('dzboard_theme', isDark ? 'dark' : 'light');
     } catch (e) {}
   }, [isDark]);
 
@@ -103,6 +106,7 @@ export default function HomePage() {
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button onClick={() => setIsDark(!isDark)} className="btn btn-ghost btn-sm" style={{ padding: '6px 8px' }}>
+              {isDark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <Link to="/store" className="btn btn-primary btn-sm">المتجر</Link>
           </div>
