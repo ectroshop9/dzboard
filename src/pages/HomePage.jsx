@@ -10,7 +10,7 @@ export default function HomePage() {
 
   const slides = [
     { image: '/hero/tcon.jpg', title: 'كرت تيكون (T-Con)', subtitle: 'جميع بوردات T-Con' },
-    { image: '/hero/power.jpg', title: 'اليمونتاسيون', subtitle: 'باور سبلاي وبوردات تغذية' },
+    { image: '/hero/parts.jpg', title: 'اليمونتاسيون', subtitle: 'باور سبلاي وبوردات تغذية' },
     { image: '/hero/parts.jpg', title: 'قطع غيار أصلية', subtitle: 'بأسعار منافسة' },
   ];
 
