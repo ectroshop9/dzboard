@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 import { ecotrackService } from '../services/ecotrack.js';
 import Wilaya from '../models/Wilaya.js';
+import { supabase } from '../supabase.js';
 
 router.post('/sync', async (req, res) => {
   const data = await ecotrackService.getFees();
@@ -24,33 +25,15 @@ router.get('/wilayas', async (req, res) => {
 
 router.get('/fee', async (req, res) => {
   const fee = await Wilaya.getLivraisonFee(parseInt(req.query.wilaya_id));
-  if (!fee) {
-    return res.json({ success: true, fees: { domicile: '0', stopdesk: '0' } });
-  }
+  if (!fee) return res.json({ success: true, fees: { domicile: '0', stopdesk: '0' } });
   res.json({ success: true, fees: fee });
 });
 
-export default router;
-
-router.get('/sync-communes', async (req, res) => {
-  const wilayas = await Wilaya.getWilayas();
-  let total = 0;
-  
-  for (const w of wilayas) {
-    const communes = await ecotrackService.getCommunes(w.wilaya_id);
-    if (communes && Array.isArray(communes)) {
-      for (const c of communes) {
-        await supabase.from('communes').upsert({
-          wilaya_id: w.wilaya_id,
-          name_ar: c.name || c.commune,
-          name_fr: c.name || c.commune,
-        });
-        total++;
-      }
-    }
-    // delay عشان rate limit
-    await new Promise(r => setTimeout(r, 500));
-  }
-  
-  res.json({ success: true, total });
+router.get('/communes', async (req, res) => {
+  const { wilaya_id } = req.query;
+  if (!wilaya_id) return res.json({ success: false, message: 'wilaya_id required' });
+  const { data } = await supabase.from('communes').select('id, name_ar, name_fr').eq('wilaya_id', wilaya_id).order('name_ar');
+  res.json({ success: true, communes: data || [] });
 });
+
+export default router;
