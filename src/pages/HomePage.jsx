@@ -195,7 +195,7 @@ export default function HomePage() {
                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                 <img src={brand.image} alt={brand.name} style={{ width: '50px', height: '35px', objectFit: 'contain' }} />
-                <span style={{ fontSize: '12px', fontWeight: 700 }}>{brand.name}</span>
+                
               </button>
             ))}
           </div>
