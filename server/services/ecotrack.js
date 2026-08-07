@@ -4,6 +4,12 @@ const H = { Authorization: `Bearer ${TOKEN}` };
 
 export const ecotrackService = {
   getFees: () => fetch(`${URL}/get/fees`, { headers: H }).then(r => r.json()),
+  
+  getCommunes: async (wilayaId) => {
+    const r = await fetch(`${URL}/get/communes?wilaya_id=${wilayaId}`, { headers: H });
+    return await r.json();
+  },
+
   createShipment: async (order) => {
     const p = new URLSearchParams({
       reference: String(order.id), nom_client: order.customer, telephone: order.phone, adresse: order.address,
@@ -16,5 +22,6 @@ export const ecotrackService = {
     const d = await r.json();
     return d.tracking ? { success: true, tracking: d.tracking } : { success: false, error: d.message };
   },
+  
   trackShipment: (tracking) => fetch(`${URL}/get/orders?tracking=${tracking}`, { headers: H }).then(r => r.json()),
 };

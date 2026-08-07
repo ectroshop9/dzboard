@@ -31,3 +31,26 @@ router.get('/fee', async (req, res) => {
 });
 
 export default router;
+
+router.get('/sync-communes', async (req, res) => {
+  const wilayas = await Wilaya.getWilayas();
+  let total = 0;
+  
+  for (const w of wilayas) {
+    const communes = await ecotrackService.getCommunes(w.wilaya_id);
+    if (communes && Array.isArray(communes)) {
+      for (const c of communes) {
+        await supabase.from('communes').upsert({
+          wilaya_id: w.wilaya_id,
+          name_ar: c.name || c.commune,
+          name_fr: c.name || c.commune,
+        });
+        total++;
+      }
+    }
+    // delay عشان rate limit
+    await new Promise(r => setTimeout(r, 500));
+  }
+  
+  res.json({ success: true, total });
+});
