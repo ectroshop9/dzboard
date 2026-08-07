@@ -22,19 +22,22 @@ export default {
   },
 
   getLivraisonFee: async (wilaya_id) => {
-    const { data } = await supabase
-      .from('shipping_fees')
-      .select('tarif, tarif_stopdesk')
-      .eq('wilaya_id', wilaya_id)
-      .eq('type', 'livraison')
-      .single();
-    return data ? { domicile: data.tarif, stopdesk: data.tarif_stopdesk } : null;
+    try {
+      const TOKEN = process.env.ECOTRACK_API_TOKEN;
+      const URL = process.env.ECOTRACK_API_URL;
+      const res = await fetch(`${URL}/get/fees`, { headers: { Authorization: `Bearer ${TOKEN}` } });
+      const data = await res.json();
+      const fee = data.livraison?.find(f => f.wilaya_id === wilaya_id);
+      if (fee) return { domicile: fee.tarif, stopdesk: fee.tarif_stopdesk || '0' };
+      return { domicile: '0', stopdesk: '0' };
+    } catch {
+      return { domicile: '0', stopdesk: '0' };
+    }
   },
 
   syncFromEcotrack: async (ecotrackData) => {
     const wilayas = [];
     const fees = [];
-    const communes = [];
 
     ['livraison', 'recouvrement'].forEach(type => {
       if (ecotrackData[type]) {
@@ -46,31 +49,14 @@ export default {
               has_stopdesk: parseInt(item.tarif_stopdesk || 0) > 0,
             });
           }
-          fees.push({
-            wilaya_id: item.wilaya_id,
-            type,
-            tarif: item.tarif,
-            tarif_stopdesk: item.tarif_stopdesk || '0',
-          });
+          fees.push({ wilaya_id: item.wilaya_id, type, tarif: item.tarif, tarif_stopdesk: item.tarif_stopdesk || '0' });
         });
       }
     });
 
-    // استخراج البلديات من البيانات (إذا موجودة في الـ response)
-    if (ecotrackData.communes) {
-      ecotrackData.communes.forEach(item => {
-        communes.push({
-          wilaya_id: item.wilaya_id,
-          name_ar: item.nom,
-          name_fr: item.nom,
-        });
-      });
-    }
-
     if (wilayas.length > 0) await supabase.from('wilayas').upsert(wilayas);
     if (fees.length > 0) await supabase.from('shipping_fees').upsert(fees);
-    if (communes.length > 0) await supabase.from('communes').upsert(communes);
 
-    return { wilayas: wilayas.length, fees: fees.length, communes: communes.length };
+    return { wilayas: wilayas.length, fees: fees.length };
   },
 };
