@@ -5,30 +5,16 @@ import rateLimit from 'express-rate-limit';
 
 const app = express();
 
-// CORS - فقط النطاقات المسموحة
-const allowedOrigins = [
-  'https://dzboard.vercel.app',
-  'http://localhost:5173',
-];
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-}));
+// CORS مفتوح للكل مؤقتاً
+app.use(cors());
 
 app.use(morgan('dev'));
 app.use(express.json());
 
-// Rate Limiting - 100 طلب في الدقيقة
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000,
-  max: 100,
-  message: { success: false, message: 'طلبات كثيرة! حاول لاحقاً' },
+  max: 200,
+  message: { success: false, message: 'طلبات كثيرة!' },
 });
 
 app.use('/api/', limiter);
