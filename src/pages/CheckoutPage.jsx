@@ -118,7 +118,7 @@ export default function CheckoutPage() {
                 <span>المجموع</span><span>{subtotal.toLocaleString("en-US")} دج</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#666', marginBottom: 6 }}>
-                <span>الشحن</span><span style={{ color: '#0a0' }}>{shippingCost === 0 ? 'مجاني' : `${shippingCost.toLocaleString("en-US")} دج`}</span>
+                <span>الشحن</span><span style={{ color: '#0a0' }}>{shippingCost === 0 ? 'يُحدد بعد اختيار الولاية' : `${shippingCost.toLocaleString("en-US")} دج`}</span>
               </div>
               <hr style={{ borderColor: '#eee', margin: '8px 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 18, fontWeight: 700, color: '#222' }}>
