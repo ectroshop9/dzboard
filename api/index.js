@@ -1,12 +1,16 @@
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import { initDB } from '../server/db.js';
 
 const app = express();
 
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
+
+// Initialize database
+initDB().then(() => console.log('DB Ready')).catch(console.error);
 
 import productRoutes from '../server/routes/products.js';
 import orderRoutes from '../server/routes/orders.js';
