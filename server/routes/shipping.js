@@ -24,7 +24,10 @@ router.get('/wilayas', async (req, res) => {
 
 router.get('/fee', async (req, res) => {
   const fee = await Wilaya.getLivraisonFee(parseInt(req.query.wilaya_id));
-  fee ? res.json({ success: true, fees: fee }) : res.status(404).json({ success: false });
+  if (!fee) {
+    return res.json({ success: true, fees: { domicile: '0', stopdesk: '0' } });
+  }
+  res.json({ success: true, fees: fee });
 });
 
 export default router;
