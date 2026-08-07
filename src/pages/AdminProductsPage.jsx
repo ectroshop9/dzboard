@@ -148,7 +148,7 @@ export default function AdminProductsPage() {
                         <span>{getCategoryName(product.category)}</span><span>•</span><span>{product.brand}</span><span>•</span><span>المخزون: {product.stock}</span>
                       </div>
                     </div>
-                    <div style={{ fontSize: 16, fontWeight: 900, color: '#f59e0b', marginRight: 'auto', marginLeft: 16 }}>{product.price.toLocaleString()} دج</div>
+                    <div style={{ fontSize: 16, fontWeight: 900, color: '#f59e0b', marginRight: 'auto', marginLeft: 16 }}>{product.price.toLocaleString('en-US')} دج</div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => handleEdit(product)} className="btn btn-ghost btn-sm" title="تعديل"><Edit size={14} /></button>
                       <button onClick={() => handleDelete(product.id)} className="btn btn-ghost btn-sm" title="حذف" style={{ color: '#ef4444' }}><Trash2 size={14} /></button>
