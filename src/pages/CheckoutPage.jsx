@@ -32,12 +32,9 @@ export default function CheckoutPage() {
       .catch(() => setLoadingWilayas(false));
   }, []);
 
-  // جلب سعر الشحن عند تغيير الولاية
+  // جلب سعر الشحن
   useEffect(() => {
-    if (!wilayaId) {
-      setFees(null);
-      return;
-    }
+    if (!wilayaId) { setFees(null); return; }
     fetch(`/api/shipping/fee?wilaya_id=${wilayaId}`)
       .then(res => res.json())
       .then(data => {
@@ -53,7 +50,6 @@ export default function CheckoutPage() {
         <div className="card" style={{ textAlign: 'center', padding: 40, maxWidth: 400 }}>
           <Package size={48} style={{ color: 'var(--text-muted)', marginBottom: 16 }} />
           <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>لا توجد منتجات</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 20 }}>لم تقم باختيار أي منتج بعد</p>
           <Link to="/store" className="btn btn-primary">تصفح المتجر</Link>
         </div>
       </div>
@@ -79,82 +75,53 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          full_name: fullName,
-          phone,
-          wilaya_id: parseInt(wilayaId),
-          commune,
-          address,
-          shipping_type: shippingType,
-          notes,
+          full_name: fullName, phone, wilaya_id: parseInt(wilayaId), commune, address,
+          shipping_type: shippingType, notes,
           items: cartItems.map(item => ({ name: item.name, quantity: item.quantity })),
-          total_price: subtotal,
-          shipping_cost: shippingCost,
+          total_price: subtotal, shipping_cost: shippingCost,
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        navigate('/thank-you', {
-          state: {
-            trackingNumber: data.trackingNumber,
-            orderId: data.orderId,
-          }
-        });
+        navigate('/thank-you', { state: { trackingNumber: data.trackingNumber, orderId: data.orderId } });
       } else {
         setError(data.message || 'فشل إنشاء الطلب');
       }
     } catch (err) {
       setError('خطأ في الاتصال');
     }
-    
     setSubmitting(false);
   };
 
   return (
     <div style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', sans-serif" }}>
-      
       <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', alignItems: 'center' }}>
-          <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm">
-            <ChevronLeft size={18} /> رجوع
-          </button>
+          <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm"><ChevronLeft size={18} /> رجوع</button>
           <h1 style={{ fontSize: 18, fontWeight: 900, marginRight: 8 }}>إتمام الطلب</h1>
         </div>
       </div>
 
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '16px' }}>
-        
-        {error && (
-          <div style={{ background: '#fef2f2', color: '#dc2626', padding: 12, borderRadius: 8, marginBottom: 16, textAlign: 'center', fontSize: 13 }}>
-            {error}
-          </div>
-        )}
+        {error && <div style={{ background: '#fef2f2', color: '#dc2626', padding: 12, borderRadius: 8, marginBottom: 16, textAlign: 'center', fontSize: 13 }}>{error}</div>}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', alignItems: 'start' }}>
-          
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div className="card" style={{ padding: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <div className="icon-box" style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981', width: 32, height: 32 }}>
-                  <Package size={16} />
-                </div>
+                <div className="icon-box" style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981', width: 32, height: 32 }}><Package size={16} /></div>
                 <h3 style={{ fontSize: 15, fontWeight: 800 }}>المنتجات المختارة</h3>
               </div>
               {cartItems.map((item, index) => (
                 <div key={index} style={{ display: 'flex', gap: 12, alignItems: 'center', borderBottom: index < cartItems.length - 1 ? '1px solid var(--border)' : 'none', paddingBottom: 10 }}>
                   <div style={{ position: 'relative', width: 64, height: 64, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', flexShrink: 0 }}>
                     <img src={item.image || 'https://via.placeholder.com/64'} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <button type="button" onClick={() => setSelectedImage(item.image || 'https://via.placeholder.com/400')}
-                      style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', border: 'none', cursor: 'pointer', opacity: 0, transition: 'opacity 0.2s' }}
-                      onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                      onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}>
-                      <ZoomIn size={16} />
-                    </button>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <h4 style={{ fontSize: 13, fontWeight: 700, margin: '0 0 4px 0' }}>{item.name}</h4>
-                    <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>الكمية: {item.quantity}</p>
+                    <h4 style={{ fontSize: 13, fontWeight: 700 }}>{item.name}</h4>
+                    <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>الكمية: {item.quantity}</p>
                   </div>
                   <div style={{ fontWeight: 800, fontSize: 13 }}>{(parseFloat(item.price) * item.quantity).toLocaleString()} دج</div>
                 </div>
@@ -164,19 +131,10 @@ export default function CheckoutPage() {
             <div className="card" style={{ padding: 16 }}>
               <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>ملخص الحساب</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>مجموع المنتجات:</span>
-                  <span style={{ fontWeight: 700 }}>{subtotal.toLocaleString()} دج</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>كلفة الشحن:</span>
-                  <span style={{ fontWeight: 700 }}>{shippingCost.toLocaleString()} دج</span>
-                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-secondary)' }}>مجموع المنتجات:</span><span style={{ fontWeight: 700 }}>{subtotal.toLocaleString()} دج</span></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-secondary)' }}>كلفة الشحن:</span><span style={{ fontWeight: 700 }}>{shippingCost.toLocaleString()} دج</span></div>
                 <hr style={{ borderColor: 'var(--border)', margin: '8px 0' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 900, fontSize: 16 }}>
-                  <span>المبلغ الإجمالي:</span>
-                  <span style={{ color: 'var(--accent)' }}>{total.toLocaleString()} دج</span>
-                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 900, fontSize: 16 }}><span>المبلغ الإجمالي:</span><span style={{ color: 'var(--accent)' }}>{total.toLocaleString()} دج</span></div>
               </div>
             </div>
           </div>
@@ -184,23 +142,16 @@ export default function CheckoutPage() {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div className="card" style={{ padding: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <div className="icon-box" style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--primary)', width: 32, height: 32 }}>
-                  <MapPin size={16} />
-                </div>
+                <div className="icon-box" style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--primary)', width: 32, height: 32 }}><MapPin size={16} /></div>
                 <h3 style={{ fontSize: 15, fontWeight: 800 }}>معلومات المشتري</h3>
               </div>
-              
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <input className="field-input" placeholder="الاسم الكامل *" value={fullName} onChange={e => setFullName(e.target.value)} required />
                 <input className="field-input" placeholder="رقم الهاتف *" value={phone} onChange={e => setPhone(e.target.value)} required type="tel" />
-                
                 <select className="field-input" value={wilayaId} onChange={e => setWilayaId(e.target.value)} required disabled={loadingWilayas}>
-                  <option value="">{loadingWilayas ? 'جاري تحميل الولايات...' : 'اختر الولاية *'}</option>
-                  {wilayas.map(w => (
-                    <option key={w.wilaya_id} value={w.wilaya_id}>{w.name_ar}</option>
-                  ))}
+                  <option value="">{loadingWilayas ? 'جاري التحميل...' : 'اختر الولاية *'}</option>
+                  {wilayas.map(w => (<option key={w.wilaya_id} value={w.wilaya_id}>{w.name_ar}</option>))}
                 </select>
-
                 <input className="field-input" placeholder="البلدية *" value={commune} onChange={e => setCommune(e.target.value)} required />
                 <textarea className="field-input" placeholder="العنوان التفصيلي *" value={address} onChange={e => setAddress(e.target.value)} required rows={2} />
                 <textarea className="field-input" placeholder="ملاحظات (اختياري)" value={notes} onChange={e => setNotes(e.target.value)} rows={1} />
@@ -210,36 +161,15 @@ export default function CheckoutPage() {
             {fees && (
               <div className="card" style={{ padding: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <div className="icon-box" style={{ background: 'rgba(245,158,11,0.12)', color: 'var(--accent)', width: 32, height: 32 }}>
-                    <Truck size={16} />
-                  </div>
+                  <div className="icon-box" style={{ background: 'rgba(245,158,11,0.12)', color: 'var(--accent)', width: 32, height: 32 }}><Truck size={16} /></div>
                   <h3 style={{ fontSize: 15, fontWeight: 800 }}>طريقة التوصيل</h3>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  <button type="button" onClick={() => setShippingType('domicile')}
-                    style={{
-                      padding: 10, textAlign: 'center', cursor: 'pointer', borderRadius: 8,
-                      border: shippingType === 'domicile' ? '2px solid var(--primary)' : '1px solid var(--border)',
-                      background: shippingType === 'domicile' ? 'rgba(99,102,241,0.06)' : 'var(--bg-secondary)',
-                      color: 'var(--text-primary)',
-                    }}>
-                    <Home size={18} style={{ marginBottom: 4, color: 'var(--primary)' }} />
-                    <div style={{ fontWeight: 800, fontSize: 12 }}>توصيل للمنزل</div>
-                    <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent)' }}>{fees.domicile} دج</div>
+                  <button type="button" onClick={() => setShippingType('domicile')} style={{ padding: 10, textAlign: 'center', cursor: 'pointer', borderRadius: 8, border: shippingType === 'domicile' ? '2px solid var(--primary)' : '1px solid var(--border)', background: shippingType === 'domicile' ? 'rgba(99,102,241,0.06)' : 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+                    <Home size={18} style={{ marginBottom: 4, color: 'var(--primary)' }} /><div style={{ fontWeight: 800, fontSize: 12 }}>توصيل للمنزل</div><div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent)' }}>{fees.domicile} دج</div>
                   </button>
-                  
-                  <button type="button" onClick={() => setShippingType('stopdesk')} disabled={fees.stopdesk === '0'}
-                    style={{
-                      padding: 10, textAlign: 'center', borderRadius: 8,
-                      cursor: fees.stopdesk === '0' ? 'not-allowed' : 'pointer',
-                      border: shippingType === 'stopdesk' ? '2px solid var(--primary)' : '1px solid var(--border)',
-                      background: shippingType === 'stopdesk' ? 'rgba(99,102,241,0.06)' : 'var(--bg-secondary)',
-                      opacity: fees.stopdesk === '0' ? 0.5 : 1,
-                      color: 'var(--text-primary)',
-                    }}>
-                    <Truck size={18} style={{ marginBottom: 4, color: 'var(--primary)' }} />
-                    <div style={{ fontWeight: 800, fontSize: 12 }}>Stop Desk</div>
-                    <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent)' }}>{fees.stopdesk} دج</div>
+                  <button type="button" onClick={() => setShippingType('stopdesk')} disabled={fees.stopdesk === '0'} style={{ padding: 10, textAlign: 'center', borderRadius: 8, cursor: fees.stopdesk === '0' ? 'not-allowed' : 'pointer', border: shippingType === 'stopdesk' ? '2px solid var(--primary)' : '1px solid var(--border)', background: shippingType === 'stopdesk' ? 'rgba(99,102,241,0.06)' : 'var(--bg-secondary)', opacity: fees.stopdesk === '0' ? 0.5 : 1, color: 'var(--text-primary)' }}>
+                    <Truck size={18} style={{ marginBottom: 4, color: 'var(--primary)' }} /><div style={{ fontWeight: 800, fontSize: 12 }}>Stop Desk</div><div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent)' }}>{fees.stopdesk} دج</div>
                   </button>
                 </div>
               </div>
@@ -252,17 +182,6 @@ export default function CheckoutPage() {
           </form>
         </div>
       </div>
-
-      {selectedImage && (
-        <div onClick={() => setSelectedImage(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ position: 'relative', maxWidth: '90%', maxHeight: '90%' }}>
-            <button onClick={() => setSelectedImage(null)} style={{ position: 'absolute', top: -40, right: 0, background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-              <X size={28} />
-            </button>
-            <img src={selectedImage} alt="Enlarged" style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 8, objectFit: 'contain' }} />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
