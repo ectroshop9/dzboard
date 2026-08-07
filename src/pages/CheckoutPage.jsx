@@ -107,7 +107,7 @@ export default function CheckoutPage() {
                 <div style={{ flex: 1 }}>
                   <h4 style={{ fontSize: 14, fontWeight: 600, color: '#222', marginBottom: 4 }}>{item.name}</h4>
                   <p style={{ fontSize: 12, color: '#999' }}>الكمية: {item.quantity}</p>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#ff6600', marginTop: 4 }}>{(parseFloat(item.price) * item.quantity).toLocaleString()} دج</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: '#ff6600', marginTop: 4 }}>{(parseFloat(item.price) * item.quantity).toLocaleString("en-US")} دج</div>
                 </div>
               </div>
             ))}
@@ -115,14 +115,14 @@ export default function CheckoutPage() {
             {/* ملخص سريع */}
             <div style={{ background: '#fff', borderRadius: 12, padding: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#666', marginBottom: 6 }}>
-                <span>المجموع</span><span>{subtotal.toLocaleString()} دج</span>
+                <span>المجموع</span><span>{subtotal.toLocaleString("en-US")} دج</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#666', marginBottom: 6 }}>
-                <span>الشحن</span><span style={{ color: '#0a0' }}>{shippingCost === 0 ? 'مجاني' : `${shippingCost.toLocaleString()} دج`}</span>
+                <span>الشحن</span><span style={{ color: '#0a0' }}>{shippingCost === 0 ? 'مجاني' : `${shippingCost.toLocaleString("en-US")} دج`}</span>
               </div>
               <hr style={{ borderColor: '#eee', margin: '8px 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 18, fontWeight: 700, color: '#222' }}>
-                <span>الإجمالي</span><span style={{ color: '#ff6600' }}>{total.toLocaleString()} دج</span>
+                <span>الإجمالي</span><span style={{ color: '#ff6600' }}>{total.toLocaleString("en-US")} دج</span>
               </div>
             </div>
           </div>
