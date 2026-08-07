@@ -15,11 +15,14 @@ export default function CheckoutPage() {
   const [notes, setNotes] = useState('');
   const [shippingType, setShippingType] = useState('domicile');
   const [wilayas, setWilayas] = useState([]);
+  const [communes, setCommunes] = useState([]);
   const [fees, setFees] = useState(null);
   const [loadingWilayas, setLoadingWilayas] = useState(true);
+  const [loadingCommunes, setLoadingCommunes] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  // جلب الولايات
   useEffect(() => {
     fetch('/api/shipping/wilayas')
       .then(res => res.json())
@@ -27,11 +30,23 @@ export default function CheckoutPage() {
       .catch(() => setLoadingWilayas(false));
   }, []);
 
+  // جلب البلديات عند تغيير الولاية
   useEffect(() => {
-    if (!wilayaId) { setFees(null); return; }
-    fetch(`/api/shipping/fee?wilaya_id=${wilayaId}`)
-      .then(res => res.json())
-      .then(data => { if (data.success) setFees(data.fees); });
+    if (!wilayaId) {
+      setCommunes([]);
+      setCommune('');
+      setFees(null);
+      return;
+    }
+    setLoadingCommunes(true);
+    Promise.all([
+      fetch(`/api/shipping/fee?wilaya_id=${wilayaId}`).then(r => r.json()),
+      fetch(`/api/shipping/communes?wilaya_id=${wilayaId}`).then(r => r.json()),
+    ]).then(([feeData, communesData]) => {
+      if (feeData.success) setFees(feeData.fees);
+      if (communesData.success) setCommunes(communesData.communes);
+      setLoadingCommunes(false);
+    });
   }, [wilayaId]);
 
   // تحويل تلقائي لـ domicile إذا stopdesk غير متاح
@@ -105,7 +120,10 @@ export default function CheckoutPage() {
                 <option value="">{loadingWilayas ? 'جاري التحميل...' : 'اختر الولاية *'}</option>
                 {wilayas.map(w => (<option key={w.wilaya_id} value={w.wilaya_id}>{w.name_ar}</option>))}
               </select>
-              <input className="field-input" placeholder="البلدية * (مثال: باب الوادي)" value={commune} onChange={e => setCommune(e.target.value)} required />
+              <select className="field-input" value={commune} onChange={e => setCommune(e.target.value)} required disabled={!wilayaId || loadingCommunes}>
+                <option value="">{!wilayaId ? 'اختر الولاية أولاً' : loadingCommunes ? 'جاري تحميل البلديات...' : communes.length === 0 ? 'لا توجد بلديات - اكتبها أدناه' : 'اختر البلدية *'}</option>
+                {communes.map(c => (<option key={c.id || c.name_fr} value={c.name_fr || c.name_ar}>{c.name_ar}</option>))}
+              </select>
               <textarea className="field-input" placeholder="العنوان التفصيلي *" value={address} onChange={e => setAddress(e.target.value)} required rows={2} />
               <textarea className="field-input" placeholder="ملاحظات (اختياري)" value={notes} onChange={e => setNotes(e.target.value)} rows={1} />
             </div>
