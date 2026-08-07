@@ -6,7 +6,7 @@ export const getAll = async (req, res) => {
   const { category, brand, q } = req.query;
   if (category && category !== 'all') filtered = filtered.filter(p => p.category === category);
   if (brand && brand !== 'all') filtered = filtered.filter(p => p.brand === brand);
-  if (q) filtered = filtered.filter(p => p.name.includes(q));
+  if (q) filtered = filtered.filter(p => p.name?.includes(q));
   res.json({ success: true, products: filtered });
 };
 

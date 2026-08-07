@@ -9,8 +9,7 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 
-// Initialize database
-initDB().then(() => console.log('DB Ready')).catch(console.error);
+initDB().catch(console.error);
 
 import productRoutes from '../server/routes/products.js';
 import orderRoutes from '../server/routes/orders.js';
