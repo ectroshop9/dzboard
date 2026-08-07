@@ -9,9 +9,9 @@ export default function HomePage() {
   const [searchBrand, setSearchBrand] = useState('ALL');
 
   const slides = [
-    { image: '/hero/tcon.jpg', title: 'كرت تيكون (T-Con)', subtitle: 'جميع بوردات T-Con' },
-    { image: '/hero/power.jpg', title: 'اليمونتاسيون', subtitle: 'باور سبلاي وبوردات تغذية' },
-    { image: '/hero/parts.jpg', title: 'قطع غيار أصلية', subtitle: 'بأسعار منافسة' },
+    { image: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1200', title: 'كرت تيكون (T-Con)', subtitle: 'جميع بوردات T-Con' },
+    { image: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=1200', title: 'اليمونتاسيون', subtitle: 'باور سبلاي وبوردات تغذية' },
+    { image: 'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=1200', title: 'قطع غيار أصلية', subtitle: 'بأسعار منافسة' },
   ];
 
   useEffect(() => {
@@ -78,7 +78,7 @@ export default function HomePage() {
       <header style={{ position: 'relative', height: '420px', overflow: 'hidden' }}>
         {slides.map((slide, index) => (
           <div key={index} style={{ position: 'absolute', inset: 0, backgroundImage: `url(${slide.image})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: currentSlide === index ? 1 : 0, transition: 'opacity 1s' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #fff 5%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.9) 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.5) 100%)' }} />
           </div>
         ))}
         <div style={{ position: 'relative', zIndex: 10, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
