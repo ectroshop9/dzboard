@@ -19,6 +19,17 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const elements = Array.from(document.querySelectorAll('[data-reveal]'));
+    if (!elements.length) return;
+    const revealElement = (el) => el.classList.add('is-visible');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => { if (entry.isIntersecting) { revealElement(entry.target); observer.unobserve(entry.target); } });
+    }, { threshold: 0.15 });
+    elements.forEach(el => { if (el.getBoundingClientRect().top < window.innerHeight * 0.9) revealElement(el); else observer.observe(el); });
+    return () => observer.disconnect();
+  }, []);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     const params = new URLSearchParams();
@@ -97,12 +108,12 @@ export default function HomePage() {
 
       <section style={{ padding: '40px 16px' }}>
         <div style={{ maxWidth: 700, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 22, fontWeight: 900, textAlign: 'center', marginBottom: 28 }}>تصنيفات القطع</h2>
+          <h2 data-reveal style={{ fontSize: 22, fontWeight: 900, textAlign: 'center', marginBottom: 28, opacity: 0, transform: 'translateY(20px)', transition: 'all 0.6s ease' }}>تصنيفات القطع</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            {categories.map(cat => {
+            {categories.map((cat, i) => {
               const Icon = cat.icon;
               return (
-                <button key={cat.key} onClick={() => navigate(`/store?category=${cat.key}`)} style={{ padding: 28, textAlign: 'center', cursor: 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, transition: 'all 0.2s' }}
+                <button key={cat.key} data-reveal onClick={() => navigate(`/store?category=${cat.key}`)} style={{ padding: 28, textAlign: 'center', cursor: 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, transition: 'all 0.2s', opacity: 0, transform: 'translateY(20px)' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = cat.color; e.currentTarget.style.transform = 'translateY(-4px)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                   <div style={{ background: `${cat.color}18`, color: cat.color, margin: '0 auto 14px', width: 56, height: 56, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={28} /></div>
@@ -116,13 +127,13 @@ export default function HomePage() {
 
       <section style={{ background: '#f8fafc', padding: '40px 16px' }}>
         <div style={{ maxWidth: 700, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 24 }}>لماذا DZBoard؟</h2>
+          <h2 data-reveal style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 24, opacity: 0, transform: 'translateY(20px)', transition: 'all 0.6s ease' }}>لماذا DZBoard؟</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {features.map((f, i) => {
               const Icon = f.icon;
               return (
-                <div key={i} style={{ padding: 24, textAlign: 'center', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12 }}>
-                  <div style={{ background: 'rgba(99,102,241,0.12)', color: '#6366f1', marginBottom: 12, width: 44, height: 44, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}><Icon size={22} /></div>
+                <div key={i} data-reveal style={{ padding: 24, textAlign: 'center', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, opacity: 0, transform: 'translateY(20px)', transition: 'all 0.6s ease' }}>
+                  <div style={{ background: 'rgba(99,102,241,0.12)', color: '#6366f1', width: 44, height: 44, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}><Icon size={22} /></div>
                   <h3 style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 6 }}>{f.title}</h3>
                   <p style={{ fontSize: 12, color: '#64748b' }}>{f.description}</p>
                 </div>
@@ -134,10 +145,10 @@ export default function HomePage() {
 
       <section style={{ padding: '36px 16px' }}>
         <div style={{ maxWidth: 700, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 20 }}>أشهر الماركات</h2>
+          <h2 data-reveal style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 20, opacity: 0, transform: 'translateY(20px)', transition: 'all 0.6s ease' }}>أشهر الماركات</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
             {brands.map((brand, i) => (
-              <button key={i} onClick={() => navigate(`/store?brand=${brand.code}`)} style={{ padding: 14, textAlign: 'center', cursor: 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10 }}
+              <button key={i} data-reveal onClick={() => navigate(`/store?brand=${brand.code}`)} style={{ padding: 14, textAlign: 'center', cursor: 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, opacity: 0, transform: 'translateY(20px)', transition: 'all 0.6s ease' }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = '#3b82f6'}
                 onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
                 <img src={brand.image} alt={brand.name} style={{ width: 50, height: 35, objectFit: 'contain' }} />
@@ -147,7 +158,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section style={{ background: '#f8fafc', padding: '40px 16px', textAlign: 'center' }}>
+      <section data-reveal style={{ background: '#f8fafc', padding: '40px 16px', textAlign: 'center', opacity: 0, transform: 'translateY(20px)', transition: 'all 0.6s ease' }}>
         <h2 style={{ fontSize: 22, fontWeight: 900, color: '#f59e0b', marginBottom: 8 }}>جاهز تطلب؟</h2>
         <p style={{ color: '#64748b', marginBottom: 20 }}>توصيل لكل الولايات - الدفع عند الاستلام</p>
         <Link to="/store" style={{ background: '#f59e0b', color: '#fff', padding: '14px 32px', borderRadius: 10, textDecoration: 'none', fontWeight: 800 }}>تصفح المتجر</Link>
@@ -162,6 +173,13 @@ export default function HomePage() {
       <a href="https://m.me/dzboard" target="_blank" rel="noopener noreferrer" style={{ position: 'fixed', bottom: 24, left: 24, width: 56, height: 56, borderRadius: '50%', background: '#0084FF', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,132,255,0.4)', zIndex: 40, color: '#fff' }}>
         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.145 2 11.258c0 2.91 1.45 5.513 3.714 7.214V22l3.355-1.843c.928.257 1.91.397 2.931.397 5.523 0 10-4.145 10-9.296C22 6.145 17.523 2 12 2zm1.193 12.48l-2.556-2.727-4.99 2.727 5.49-5.823 2.622 2.727 4.925-2.727-5.491 5.823z"/></svg>
       </a>
+
+      <style>{`
+        [data-reveal].is-visible {
+          opacity: 1 !important;
+          transform: translateY(0) !important;
+        }
+      `}</style>
     </div>
   );
 }
