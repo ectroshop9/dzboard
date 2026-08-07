@@ -17,7 +17,7 @@ export default function ThankYouPage() {
   };
 
   return (
-    <div style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', direction: 'rtl', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: "'Cairo', sans-serif" }}>
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: "'Cairo', sans-serif" }}>
       <div className="card" style={{ textAlign: 'center', padding: '48px 28px', maxWidth: 500, width: '100%' }}>
         
         {/* Success Icon */}
@@ -26,27 +26,27 @@ export default function ThankYouPage() {
         </div>
         
         <h1 style={{ fontSize: 26, fontWeight: 900, marginBottom: 8 }}>✅ تم تأكيد طلبك!</h1>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: 28, fontSize: 14, lineHeight: 1.6 }}>
+        <p style={{ color: '#64748b', marginBottom: 28, fontSize: 14, lineHeight: 1.6 }}>
           شكراً لثقتك في DZBoard. سيتم تجهيز طلبك والتواصل معك قريباً لتأكيد موعد التوصيل.
         </p>
 
         {/* Order Details */}
         {orderId && (
-          <div style={{ background: 'var(--bg-secondary)', padding: 12, borderRadius: 10, marginBottom: 12, fontSize: 13 }}>
-            <span style={{ color: 'var(--text-muted)' }}>رقم الطلب: </span>
+          <div style={{ background: '#fff', padding: 12, borderRadius: 10, marginBottom: 12, fontSize: 13 }}>
+            <span style={{ color: '#94a3b8' }}>رقم الطلب: </span>
             <span style={{ fontWeight: 800 }}>#{orderId}</span>
           </div>
         )}
 
         {/* Tracking Number */}
         {trackingNumber && (
-          <div style={{ background: 'var(--bg-secondary)', padding: 16, borderRadius: 12, marginBottom: 24, border: '1px solid var(--border)' }}>
+          <div style={{ background: '#fff', padding: 16, borderRadius: 12, marginBottom: 24, border: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
-              <Truck size={18} style={{ color: 'var(--accent)' }} />
+              <Truck size={18} style={{ color: '#f59e0b' }} />
               <p style={{ fontWeight: 800, fontSize: 12 }}>رقم تتبع الشحنة:</p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <p style={{ fontSize: 22, color: 'var(--accent)', fontWeight: 900 }}>{trackingNumber}</p>
+              <p style={{ fontSize: 22, color: '#f59e0b', fontWeight: 900 }}>{trackingNumber}</p>
               <button
                 onClick={handleCopyTracking}
                 className="btn btn-ghost btn-sm"
@@ -62,16 +62,16 @@ export default function ThankYouPage() {
 
         {/* Delivery Info */}
         <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginBottom: 28, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748b' }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b' }} />
             <span>قيد المعالجة</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)' }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--border)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#94a3b8' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#e2e8f0' }} />
             <span>جاري التوصيل</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)' }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--border)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#94a3b8' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#e2e8f0' }} />
             <span>تم التسليم</span>
           </div>
         </div>

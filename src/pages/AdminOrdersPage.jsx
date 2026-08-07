@@ -62,14 +62,14 @@ export default function AdminOrdersPage() {
   if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loader2 size={40} className="spin" /></div>;
 
   return (
-    <div style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', sans-serif" }}>
-      <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', padding: '12px 16px' }}>
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', sans-serif" }}>
+      <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Link to="/admin/dashboard" className="btn btn-ghost btn-sm"><ChevronLeft size={18} /> لوحة التحكم</Link>
             <h1 style={{ fontSize: 18, fontWeight: 900 }}>إدارة الطلبات</h1>
           </div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent)' }}>الإيرادات: {totalRevenue.toLocaleString('en-US')} دج</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#f59e0b' }}>الإيرادات: {totalRevenue.toLocaleString('en-US')} دج</div>
         </div>
       </div>
 
@@ -81,7 +81,7 @@ export default function AdminOrdersPage() {
             </div>
             <div style={{ flex: 1, position: 'relative', minWidth: 200 }}>
               <input className="field-input" placeholder="ابحث برقم الطلب، العميل..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-              <Search size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <Search size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
             </div>
           </div>
         </div>
@@ -89,15 +89,15 @@ export default function AdminOrdersPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {filteredOrders.map(order => (
             <div key={order.id} className="card" style={{ overflow: 'hidden' }}>
-              <div style={{ padding: '12px 16px', borderBottom: selectedOrder === order.id ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+              <div style={{ padding: '12px 16px', borderBottom: selectedOrder === order.id ? '1px solid #e2e8f0' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <span style={{ fontWeight: 900, fontSize: 15 }}>#{order.id}</span>
                   {getStatusBadge(order.status)}
-                  {order.tracking && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}><Truck size={12} /> {order.tracking}</span>}
+                  {order.tracking && <span style={{ fontSize: 11, color: '#94a3b8' }}><Truck size={12} /> {order.tracking}</span>}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{(parseFloat(order.amount) + parseFloat(order.shipping || 0)).toLocaleString('en-US')} دج</span>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{order.createdAt?.slice(0, 10)}</span>
+                  <span style={{ fontWeight: 700, color: '#f59e0b' }}>{(parseFloat(order.amount) + parseFloat(order.shipping || 0)).toLocaleString('en-US')} دج</span>
+                  <span style={{ fontSize: 12, color: '#94a3b8' }}>{order.createdAt?.slice(0, 10)}</span>
                   {order.status === 'pending' && <button onClick={() => handleStatusChange(order.id, 'confirmed')} className="btn btn-primary btn-sm"><Check size={12} /> تأكيد</button>}
                   {order.status === 'confirmed' && <button onClick={() => handleStatusChange(order.id, 'shipped')} className="btn btn-accent btn-sm"><Truck size={12} /> شحن</button>}
                   {order.status === 'shipped' && <button onClick={() => handleStatusChange(order.id, 'delivered')} className="btn btn-primary btn-sm" style={{ background: '#10b981', borderColor: '#10b981' }}><Check size={12} /> تم التوصيل</button>}
@@ -106,13 +106,13 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
               {selectedOrder === order.id && (
-                <div style={{ padding: 16, background: 'var(--bg-secondary)' }}>
+                <div style={{ padding: 16, background: '#fff' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 16 }}>
-                    <div><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}><MapPin size={14} /><span style={{ fontSize: 12, color: 'var(--text-muted)' }}>العميل:</span></div><span style={{ fontWeight: 700 }}>{order.customer}</span></div>
-                    <div><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}><Phone size={14} /><span style={{ fontSize: 12, color: 'var(--text-muted)' }}>الهاتف:</span></div><span style={{ fontWeight: 700 }}>{order.phone}</span></div>
-                    <div><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}><MapPin size={14} /><span style={{ fontSize: 12, color: 'var(--text-muted)' }}>العنوان:</span></div><span style={{ fontWeight: 700 }}>{order.commune}</span><div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{order.address}</div></div>
+                    <div><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}><MapPin size={14} /><span style={{ fontSize: 12, color: '#94a3b8' }}>العميل:</span></div><span style={{ fontWeight: 700 }}>{order.customer}</span></div>
+                    <div><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}><Phone size={14} /><span style={{ fontSize: 12, color: '#94a3b8' }}>الهاتف:</span></div><span style={{ fontWeight: 700 }}>{order.phone}</span></div>
+                    <div><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}><MapPin size={14} /><span style={{ fontSize: 12, color: '#94a3b8' }}>العنوان:</span></div><span style={{ fontWeight: 700 }}>{order.commune}</span><div style={{ fontSize: 12, color: '#94a3b8' }}>{order.address}</div></div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 900, paddingTop: 8, borderTop: '1px solid var(--border)' }}><span>الإجمالي:</span><span style={{ color: 'var(--accent)' }}>{(parseFloat(order.amount) + parseFloat(order.shipping || 0)).toLocaleString('en-US')} دج</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 900, paddingTop: 8, borderTop: '1px solid #e2e8f0' }}><span>الإجمالي:</span><span style={{ color: '#f59e0b' }}>{(parseFloat(order.amount) + parseFloat(order.shipping || 0)).toLocaleString('en-US')} دج</span></div>
                 </div>
               )}
             </div>

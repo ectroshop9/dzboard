@@ -50,8 +50,8 @@ export default function AdminDashboardPage() {
   if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loader2 size={40} className="spin" /></div>;
 
   return (
-    <div style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', sans-serif" }}>
-      <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', padding: '12px 16px' }}>
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', sans-serif" }}>
+      <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Link to="/" className="btn btn-ghost btn-sm"><ChevronLeft size={18} /> المتجر</Link>
@@ -74,7 +74,7 @@ export default function AdminDashboardPage() {
               <div key={i} className="card" style={{ padding: 18 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                   <div className="icon-box" style={{ background: `${stat.color}18`, color: stat.color, width: 36, height: 36 }}><Icon size={18} /></div>
-                  <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{stat.label}</span>
+                  <span style={{ fontSize: 12, color: '#64748b' }}>{stat.label}</span>
                 </div>
                 <div style={{ fontSize: 24, fontWeight: 900 }}>{stat.value}</div>
               </div>
@@ -88,19 +88,19 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="card" style={{ overflow: 'hidden' }}>
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)' }}><h3 style={{ fontSize: 15, fontWeight: 800 }}>آخر الطلبات</h3></div>
+          <div style={{ padding: '14px 16px', borderBottom: '1px solid #e2e8f0' }}><h3 style={{ fontSize: 15, fontWeight: 800 }}>آخر الطلبات</h3></div>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead><tr style={{ borderBottom: '1px solid var(--border)' }}>{['#', 'العميل', 'الولاية', 'المبلغ', 'الحالة', 'التاريخ'].map(h => <th key={h} style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-secondary)', fontSize: 12 }}>{h}</th>)}</tr></thead>
+              <thead><tr style={{ borderBottom: '1px solid #e2e8f0' }}>{['#', 'العميل', 'الولاية', 'المبلغ', 'الحالة', 'التاريخ'].map(h => <th key={h} style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: '#64748b', fontSize: 12 }}>{h}</th>)}</tr></thead>
               <tbody>
                 {stats?.recentOrders?.map(o => (
-                  <tr key={o.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <tr key={o.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                     <td style={{ padding: '10px 12px', fontWeight: 700 }}>#{o.id}</td>
                     <td style={{ padding: '10px 12px' }}>{o.customer}</td>
                     <td style={{ padding: '10px 12px' }}>{o.wilayaId}</td>
                     <td style={{ padding: '10px 12px', fontWeight: 700 }}>{(parseFloat(o.amount) + parseFloat(o.shipping || 0)).toLocaleString('en-US')} دج</td>
                     <td style={{ padding: '10px 12px' }}>{getStatusBadge(o.status)}</td>
-                    <td style={{ padding: '10px 12px', color: 'var(--text-muted)', fontSize: 12 }}>{o.createdAt?.slice(0, 10)}</td>
+                    <td style={{ padding: '10px 12px', color: '#94a3b8', fontSize: 12 }}>{o.createdAt?.slice(0, 10)}</td>
                   </tr>
                 ))}
               </tbody>

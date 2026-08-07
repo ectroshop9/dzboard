@@ -91,8 +91,8 @@ export default function AdminProductsPage() {
   );
 
   return (
-    <div style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', sans-serif" }}>
-      <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', padding: '12px 16px' }}>
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', sans-serif" }}>
+      <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Link to="/admin/dashboard" className="btn btn-ghost btn-sm"><ChevronLeft size={18} /> لوحة التحكم</Link>
@@ -120,11 +120,11 @@ export default function AdminProductsPage() {
 
         <div style={{ position: 'relative', marginBottom: 16 }}>
           <input className="field-input" placeholder="ابحث عن منتج..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-          <Search size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <Search size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 60 }}><Loader2 size={40} className="spin" style={{ color: 'var(--primary)' }} /></div>
+          <div style={{ textAlign: 'center', padding: 60 }}><Loader2 size={40} className="spin" style={{ color: '#3b82f6' }} /></div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {filteredProducts.map(product => (
@@ -139,16 +139,16 @@ export default function AdminProductsPage() {
                   </div>
                 ) : (
                   <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', flexShrink: 0 }}>
+                    <div style={{ width: 56, height: 56, borderRadius: 8, overflow: 'hidden', border: '1px solid #e2e8f0', flexShrink: 0 }}>
                       <img src={product.image || 'https://via.placeholder.com/56'} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{product.name}</h4>
-                      <div style={{ display: 'flex', gap: 8, fontSize: 11, color: 'var(--text-muted)' }}>
+                      <div style={{ display: 'flex', gap: 8, fontSize: 11, color: '#94a3b8' }}>
                         <span>{getCategoryName(product.category)}</span><span>•</span><span>{product.brand}</span><span>•</span><span>المخزون: {product.stock}</span>
                       </div>
                     </div>
-                    <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--accent)', marginRight: 'auto', marginLeft: 16 }}>{product.price.toLocaleString()} دج</div>
+                    <div style={{ fontSize: 16, fontWeight: 900, color: '#f59e0b', marginRight: 'auto', marginLeft: 16 }}>{product.price.toLocaleString()} دج</div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => handleEdit(product)} className="btn btn-ghost btn-sm" title="تعديل"><Edit size={14} /></button>
                       <button onClick={() => handleDelete(product.id)} className="btn btn-ghost btn-sm" title="حذف" style={{ color: '#ef4444' }}><Trash2 size={14} /></button>

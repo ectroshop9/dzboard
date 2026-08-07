@@ -37,15 +37,15 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', direction: 'rtl', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: "'Cairo', sans-serif" }}>
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: "'Cairo', sans-serif" }}>
       <div className="card" style={{ padding: '40px 28px', maxWidth: 420, width: '100%' }}>
         
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div className="icon-box icon-box-lg" style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--primary)', margin: '0 auto 16px auto', width: 64, height: 64 }}>
+          <div className="icon-box icon-box-lg" style={{ background: 'rgba(99,102,241,0.12)', color: '#3b82f6', margin: '0 auto 16px auto', width: 64, height: 64 }}>
             <Shield size={32} />
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 4 }}>لوحة التحكم</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>DZBoard Admin</p>
+          <p style={{ color: '#64748b', fontSize: 13 }}>DZBoard Admin</p>
         </div>
 
         {error && (
