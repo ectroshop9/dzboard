@@ -1,15 +1,35 @@
-let products = [
-  { id: 1, name: 'T-Con Samsung 32"', category: 'tcon', brand: 'samsung', price: 2500, stock: 5, description: 'كرت T-Con', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400', active: true },
-  { id: 2, name: 'Power Supply LG 43"', category: 'alimentation', brand: 'lg', price: 3200, stock: 3, description: 'باور سبلاي', image: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=400', active: true },
-  { id: 3, name: 'Main Board Condor 40"', category: 'main-board', brand: 'condor', price: 4500, stock: 2, description: 'مين بورد', image: 'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=400', active: true },
-  { id: 4, name: 'LED Strips Iris 50"', category: 'parts', brand: 'iris', price: 1800, stock: 10, description: 'مساطر LED', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400', active: true },
-];
-let nextId = 5;
+import { sql } from '../db.js';
 
 export default {
-  getAll: () => products.filter(p => p.active),
-  getById: (id) => products.find(p => p.id === id && p.active),
-  create: (data) => { const p = { id: nextId++, ...data, active: true }; products.push(p); return p; },
-  update: (id, data) => { const i = products.findIndex(p => p.id === id); if (i !== -1) { products[i] = {...products[i], ...data}; return products[i]; } return null; },
-  delete: (id) => { const i = products.findIndex(p => p.id === id); if (i !== -1) { products[i].active = false; return true; } return false; },
+  getAll: async () => {
+    const rows = await sql`SELECT * FROM products WHERE active = true ORDER BY id DESC`;
+    return rows;
+  },
+  
+  getById: async (id) => {
+    const [row] = await sql`SELECT * FROM products WHERE id = ${id} AND active = true`;
+    return row;
+  },
+  
+  create: async (data) => {
+    const [row] = await sql`
+      INSERT INTO products (name, category, brand, price, stock, description, image)
+      VALUES (${data.name}, ${data.category || 'tcon'}, ${data.brand || 'samsung'}, ${data.price}, ${data.stock || 0}, ${data.description || ''}, ${data.image || ''})
+      RETURNING *
+    `;
+    return row;
+  },
+  
+  update: async (id, data) => {
+    const [row] = await sql`
+      UPDATE products SET name=${data.name}, category=${data.category}, brand=${data.brand}, price=${data.price}, stock=${data.stock}, description=${data.description}, image=${data.image}
+      WHERE id = ${id} RETURNING *
+    `;
+    return row;
+  },
+  
+  delete: async (id) => {
+    await sql`UPDATE products SET active = false WHERE id = ${id}`;
+    return true;
+  },
 };
