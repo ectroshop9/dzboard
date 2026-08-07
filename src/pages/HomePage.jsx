@@ -66,9 +66,9 @@ export default function HomePage() {
   ];
 
   return (
-    <div style={{ background: '#0f172a', color: '#f8fafc', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', sans-serif" }}>
+    <div style={{ background: '#1e293b', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', sans-serif" }}>
       
-      <nav style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 50 }}>
+      <nav style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ textDecoration: 'none' }}>
             <span style={{ color: '#3b82f6', fontWeight: 900, fontSize: '22px' }}>DZ</span>
@@ -81,12 +81,12 @@ export default function HomePage() {
       <header style={{ position: 'relative', height: '420px', overflow: 'hidden' }}>
         {slides.map((slide, index) => (
           <div key={index} style={{ position: 'absolute', inset: 0, backgroundImage: `url(${slide.image})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: currentSlide === index ? 1 : 0, transition: 'opacity 1s ease-in-out' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0f172a 5%, rgba(15,23,42,0.7) 50%, rgba(15,23,42,0.85) 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #1e293b 5%, rgba(15,23,42,0.7) 50%, rgba(15,23,42,0.85) 100%)' }} />
           </div>
         ))}
         <div style={{ position: 'relative', zIndex: 10, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 16px' }}>
           <h1 style={{ fontSize: 'clamp(24px, 5vw, 38px)', fontWeight: 900, marginBottom: '8px', color: '#fff' }}>{slides[currentSlide].title}</h1>
-          <p style={{ fontSize: '15px', color: '#cbd5e1', marginBottom: '20px' }}>{slides[currentSlide].subtitle}</p>
+          <p style={{ fontSize: '15px', color: '#94a3b8', marginBottom: '20px' }}>{slides[currentSlide].subtitle}</p>
           <Link to="/store" className="btn btn-accent btn-lg" style={{ gap: 6 }}>تصفح القطع <ChevronLeft size={18} /></Link>
           <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
             {slides.map((_, i) => (
@@ -105,14 +105,14 @@ export default function HomePage() {
             </select>
             <div style={{ flex: 1, position: 'relative', minWidth: 220 }}>
               <input type="text" placeholder="أدخل رقم البوردة أو موديل التلفزيون..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="field-input" />
-              <Search size={18} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+              <Search size={18} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
             </div>
             <button type="submit" className="btn btn-primary" style={{ padding: '12px 24px' }}>بحث <Search size={16} /></button>
           </form>
         </div>
       </section>
 
-      <section style={{ background: '#1e293b', padding: '40px 16px' }}>
+      <section style={{ background: '#ffffff', padding: '40px 16px' }}>
         <div style={{ maxWidth: 700, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 22, fontWeight: 900, textAlign: 'center', marginBottom: 6 }}>تصنيفات القطع</h2>
           <p data-reveal style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, marginBottom: 28 }}>تصفح القطع حسب النوع</p>
@@ -120,12 +120,12 @@ export default function HomePage() {
             {categories.map(cat => {
               const Icon = cat.icon;
               return (
-                <button key={cat.key} onClick={() => navigate(`/store?category=${cat.key}`)} className="card" data-reveal style={{ padding: 28, textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s', color: 'inherit', background: '#0f172a', border: '1px solid #334155', borderRadius: 14 }}
+                <button key={cat.key} onClick={() => navigate(`/store?category=${cat.key}`)} className="card" data-reveal style={{ padding: 28, textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s', color: 'inherit', background: '#1e293b', border: '1px solid #e2e8f0', borderRadius: 14 }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = cat.color; e.currentTarget.style.transform = 'translateY(-4px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#334155'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                   <div style={{ background: `${cat.color}18`, color: cat.color, margin: '0 auto 14px auto', width: 56, height: 56, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={28} /></div>
                   <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>{cat.label}</div>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>{cat.desc}</div>
+                  <div style={{ fontSize: 12, color: '#94a3b8' }}>{cat.desc}</div>
                 </button>
               );
             })}
@@ -133,14 +133,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section style={{ background: '#0f172a', padding: '40px 16px' }}>
+      <section style={{ background: '#1e293b', padding: '40px 16px' }}>
         <div style={{ maxWidth: 700, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 24 }}>لماذا يفضل التقنيون DZBoard؟</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {features.map((f, i) => {
               const Icon = f.icon;
               return (
-                <div key={i} className="card" data-reveal style={{ padding: 24, textAlign: 'center', background: '#1e293b', border: '1px solid #334155', borderRadius: 12 }}>
+                <div key={i} className="card" data-reveal style={{ padding: 24, textAlign: 'center', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12 }}>
                   <div style={{ background: 'rgba(99,102,241,0.12)', color: '#6366f1', marginBottom: 12, width: 44, height: 44, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={22} /></div>
                   <h3 style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 6 }}>{f.title}</h3>
                   <p style={{ fontSize: 12, color: '#94a3b8' }}>{f.description}</p>
@@ -151,14 +151,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section style={{ background: '#1e293b', padding: '36px 16px' }}>
+      <section style={{ background: '#ffffff', padding: '36px 16px' }}>
         <div style={{ maxWidth: 700, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 20 }}>ندعم القطع لأشهر الماركات</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
             {brands.map((brand, i) => (
-              <button key={i} onClick={() => navigate(`/store?brand=${brand.code}`)} className="card" data-reveal style={{ padding: 14, textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s', color: 'inherit', background: '#0f172a', border: '1px solid #334155', borderRadius: 10 }}
+              <button key={i} onClick={() => navigate(`/store?brand=${brand.code}`)} className="card" data-reveal style={{ padding: 14, textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s', color: 'inherit', background: '#1e293b', border: '1px solid #e2e8f0', borderRadius: 10 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#334155'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                 <img src={brand.image} alt={brand.name} style={{ width: 50, height: 35, objectFit: 'contain' }} />
               </button>
             ))}
@@ -166,17 +166,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section data-reveal style={{ background: '#0f172a', padding: '40px 16px', textAlign: 'center' }}>
+      <section data-reveal style={{ background: '#1e293b', padding: '40px 16px', textAlign: 'center' }}>
         <h2 style={{ fontSize: 22, fontWeight: 900, marginBottom: 8, color: '#f59e0b' }}>لم تجد القطعة المناسبة؟</h2>
         <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 20 }}>تواصل مع فريق الدعم الفني لدينا مباشرة.</p>
         <Link to="/store" className="btn btn-accent btn-lg" style={{ gap: 8 }}>تصفح كافة القطع <ChevronLeft size={18} /></Link>
       </section>
 
-      <footer style={{ background: '#090d16', color: '#94a3b8', borderTop: '1px solid #334155', padding: '32px 16px 20px 16px', textAlign: 'center' }}>
+      <footer style={{ background: '#f1f5f9', color: '#94a3b8', borderTop: '1px solid #e2e8f0', padding: '32px 16px 20px 16px', textAlign: 'center' }}>
         <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', marginBottom: 8 }}>DZ<span style={{ color: '#f59e0b' }}>Board</span></div>
         <p style={{ fontSize: 12, marginBottom: 16 }}>متجر قطع غيار الشاشات الأول في الجزائر.</p>
-        <Link to="/store" style={{ color: '#cbd5e1', textDecoration: 'none', fontSize: 12 }}>المتجر</Link>
-        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #1e293b', fontSize: 11 }}>&copy; {new Date().getFullYear()} DZBoard.</div>
+        <Link to="/store" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 12 }}>المتجر</Link>
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #ffffff', fontSize: 11 }}>&copy; {new Date().getFullYear()} DZBoard.</div>
       </footer>
 
       <a href="https://m.me/dzboard" target="_blank" rel="noopener noreferrer" style={{ position: 'fixed', bottom: 24, left: 24, width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg, #0084FF, #00C6FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,132,255,0.45)', zIndex: 40, transition: 'all 0.3s', color: '#fff' }}>
