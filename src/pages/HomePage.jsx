@@ -90,7 +90,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section style={{ maxWidth: 850, margin: '-40px auto 0', padding: 20 }}>
+      <section style={{ maxWidth: 850, margin: '20px auto 0', padding: 20 }}>
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 24 }}>
           <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <select value={searchBrand} onChange={e => setSearchBrand(e.target.value)} style={{ padding: 12, border: '1px solid #e2e8f0', borderRadius: 10, background: '#f8fafc', minWidth: 130 }}>
