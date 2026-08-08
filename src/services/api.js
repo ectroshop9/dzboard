@@ -1,119 +1,22 @@
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
-// Get CSRF token
-let csrfToken = null;
-
-const getCsrfToken = async () => {
-  if (csrfToken) return csrfToken;
-  try {
-    const res = await fetch(`${API_BASE}/csrf-token`);
-    const data = await res.json();
-    csrfToken = data.csrfToken;
-    return csrfToken;
-  } catch (error) {
-    console.error('Failed to get CSRF token:', error);
-    return null;
-  }
-};
+const getToken = () => localStorage.getItem('dzboard_admin_token');
 
 const headers = () => ({
   'Content-Type': 'application/json',
+  ...(getToken() && { Authorization: `Bearer ${getToken()}` }),
 });
 
-const headersWithCsrf = async () => {
-  const csrf = await getCsrfToken();
-  return {
-    'Content-Type': 'application/json',
-    'X-CSRF-Token': csrf || '',
-  };
-};
-
 export const api = {
-  // Products
-  getProducts: (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    return fetch(`${API_BASE}/products?${query}`).then(res => res.json());
-  },
-  
-  getProduct: (id) => fetch(`${API_BASE}/products/${id}`).then(res => res.json()),
-  
-  createProduct: async (data) => {
-    const hdrs = await headersWithCsrf();
-    return fetch(`${API_BASE}/products`, {
-      method: 'POST',
-      headers: hdrs,
-      body: JSON.stringify(data),
-      credentials: 'include',
-    }).then(res => res.json());
-  },
-  
-  updateProduct: async (id, data) => {
-    const hdrs = await headersWithCsrf();
-    return fetch(`${API_BASE}/products/${id}`, {
-      method: 'PUT',
-      headers: hdrs,
-      body: JSON.stringify(data),
-      credentials: 'include',
-    }).then(res => res.json());
-  },
-  
-  deleteProduct: async (id) => {
-    const hdrs = await headersWithCsrf();
-    return fetch(`${API_BASE}/products/${id}`, {
-      method: 'DELETE',
-      headers: hdrs,
-      credentials: 'include',
-    }).then(res => res.json());
-  },
-  
-  // Orders
-  createOrder: async (data) => {
-    const hdrs = await headersWithCsrf();
-    return fetch(`${API_BASE}/orders`, {
-      method: 'POST',
-      headers: hdrs,
-      body: JSON.stringify(data),
-      credentials: 'include',
-    }).then(res => res.json());
-  },
-  
-  getOrders: () => fetch(`${API_BASE}/orders`, {
-    headers: headers(),
-    credentials: 'include',
-  }).then(res => res.json()),
-  
-  updateOrderStatus: async (id, status) => {
-    const hdrs = await headersWithCsrf();
-    return fetch(`${API_BASE}/orders/${id}/status`, {
-      method: 'PUT',
-      headers: hdrs,
-      body: JSON.stringify({ status }),
-      credentials: 'include',
-    }).then(res => res.json());
-  },
-  
-  // Admin
-  adminLogin: async (username, password) => {
-    const hdrs = await headersWithCsrf();
-    return fetch(`${API_BASE}/admin/login`, {
-      method: 'POST',
-      headers: hdrs,
-      body: JSON.stringify({ username, password }),
-      credentials: 'include',
-    }).then(res => res.json());
-  },
-  
-  verifyAdmin: () => fetch(`${API_BASE}/admin/verify`, {
-    headers: headers(),
-    credentials: 'include',
-  }).then(res => res.json()),
-  
-  adminLogout: async () => {
-    const hdrs = await headersWithCsrf();
-    return fetch(`${API_BASE}/admin/logout`, {
-      method: 'POST',
-      headers: hdrs,
-      credentials: 'include',
-    }).then(res => res.json());
-  },
+  getProducts: (params = {}) => fetch(`${API_BASE}/products?${new URLSearchParams(params)}`).then(r => r.json()),
+  getProduct: (id) => fetch(`${API_BASE}/products/${id}`).then(r => r.json()),
+  createProduct: (data) => fetch(`${API_BASE}/products`, { method: 'POST', headers: headers(), body: JSON.stringify(data) }).then(r => r.json()),
+  updateProduct: (id, data) => fetch(`${API_BASE}/products/${id}`, { method: 'PUT', headers: headers(), body: JSON.stringify(data) }).then(r => r.json()),
+  deleteProduct: (id) => fetch(`${API_BASE}/products/${id}`, { method: 'DELETE', headers: headers() }).then(r => r.json()),
+  createOrder: (data) => fetch(`${API_BASE}/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
+  getOrders: () => fetch(`${API_BASE}/orders`, { headers: headers() }).then(r => r.json()),
+  updateOrderStatus: (id, status) => fetch(`${API_BASE}/orders/${id}/status`, { method: 'PUT', headers: headers(), body: JSON.stringify({ status }) }).then(r => r.json()),
+  adminLogin: (username, password) => fetch(`${API_BASE}/admin/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) }).then(r => r.json()),
+  verifyAdmin: () => fetch(`${API_BASE}/admin/verify`, { headers: headers() }).then(r => r.json()),
+  adminLogout: () => localStorage.removeItem('dzboard_admin_token'),
 };
