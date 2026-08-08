@@ -8,14 +8,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "node server/index.js",
-    "start": "node server/index.js",
     "server:dev": "npx nodemon server/index.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
     "@supabase/supabase-js": "^2.112.2",
     "cloudinary": "^2.10.0",
-    "cookie-parser": "^1.4.6",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "csurf": "^1.11.0",
     "dotenv": "^16.4.7",

@@ -36,7 +36,7 @@ const corsOptions = {
   origin: ['https://dzboard.vercel.app', 'http://localhost:5173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'x-csrf-token'],
   maxAge: 86400,
 };
 app.use(cors(corsOptions));
@@ -62,12 +62,19 @@ app.use(limiter);
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: 10,
   skipSuccessfulRequests: true,
 });
 
-// CSRF Protection
-const csrfProtection = csrf({ cookie: false });
+// ✅ تصحيح CSRF Protection لاستخدام الكوكيز الآمنة
+const csrfProtection = csrf({ 
+  cookie: {
+    key: '_csrf',
+    httpOnly: true,
+    secure: true, // ضروري لأن الموقع يعمل بـ HTTPS على Vercel و Render
+    sameSite: 'none' // ضروري لتبادل الكوكيز بين نطاقين مختلفين
+  } 
+});
 
 // Routes
 app.get('/api/csrf-token', csrfProtection, (req, res) => {
@@ -76,6 +83,8 @@ app.get('/api/csrf-token', csrfProtection, (req, res) => {
 
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+
+// ✅ تطبيق CSRF Protection على مسارات الأدمن
 app.use('/api/admin', authLimiter, csrfProtection, adminRoutes);
 app.use('/api/shipping', shippingRoutes);
 
@@ -84,7 +93,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 // Error Handler
 app.use((err, req, res, next) => {
   if (err.code === 'EBADCSRFTOKEN') {
-    return res.status(403).json({ success: false, message: 'رمز CSRF غير صحيح' });
+    return res.status(403).json({ success: false, message: 'رمز CSRF غير صحيح أو منتهي الصلاحية' });
   }
   console.error('Error:', err);
   res.status(err.status || 500).json({
