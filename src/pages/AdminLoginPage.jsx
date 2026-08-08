@@ -24,8 +24,8 @@ export default function AdminLoginPage() {
       const data = await api.adminLogin(username, password);
       
       if (data.success) {
-        // Token is now stored in httpOnly cookie automatically
-        // No need to store in localStorage
+        localStorage.setItem('dzboard_admin_token', data.token)
+        
         navigate('/admin/dashboard');
       } else {
         setError(data.message || 'بيانات الدخول غير صحيحة');
