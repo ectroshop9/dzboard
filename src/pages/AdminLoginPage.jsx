@@ -21,24 +21,24 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
-      const data = await api.adminLogin(username, password);
+      // 1. جلب CSRF Token أولاً
+      const { csrfToken } = await api.getCsrfToken();
       
-      // التحقق من وجود التوكن أو نجاح العملية
+      // 2. إرسال طلب تسجيل الدخول مع التوكن
+      const data = await api.adminLogin(username, password, csrfToken);
+      
       const token = data.token || data.accessToken;
 
       if (token || data.success) {
         if (token) {
           localStorage.setItem('dzboard_admin_token', token);
         }
-        
-        // التوجيه للوحة التحكم
         navigate('/admin/dashboard');
       } else {
         setError(data.message || 'بيانات الدخول غير صحيحة');
       }
     } catch (err) {
       console.error('Login error:', err);
-      // إظهار الرسالة القادمة من السيرفر مباشرة
       setError(err.message || 'خطأ في الاتصال بالسيرفر، تأكد من تشغيل الـ Backend');
     } finally {
       setLoading(false);
