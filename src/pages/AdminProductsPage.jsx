@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, Edit, Trash2, Save, X, Package, ChevronLeft, Monitor, Zap, Cpu, Search, Loader2, LogOut } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Package, ChevronLeft, Monitor, Zap, Cpu, Search, Loader2, LogOut, Upload } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function AdminProductsPage() {
@@ -11,6 +11,7 @@ export default function AdminProductsPage() {
   const [editingId, setEditingId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({ name: '', category: 'tcon', brand: 'samsung', price: '', stock: '', description: '', image: '' });
 
   const categories = [
@@ -35,7 +36,6 @@ export default function AdminProductsPage() {
       }
       loadProducts();
     } catch (error) {
-      console.error('Verification failed:', error);
       navigate('/admin');
     }
   };
@@ -45,15 +45,36 @@ export default function AdminProductsPage() {
     api.getProducts().then(data => {
       if (data.success) setProducts(data.products);
       setLoading(false);
-    }).catch(err => {
-      console.error('Error loading products:', err);
-      setLoading(false);
-    });
+    }).catch(() => setLoading(false));
+  };
+
+  // ✅ رفع الصورة إلى Cloudinary
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    setUploading(true);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      try {
+        const res = await fetch('/api/products/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ image: reader.result })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setFormData({...formData, image: data.url});
+        }
+      } catch (err) {
+        console.error('Upload failed:', err);
+      }
+      setUploading(false);
+    };
   };
 
   const handleSave = async () => {
     if (!formData.name || !formData.price) return;
-    
     if (editingId) {
       await api.updateProduct(editingId, formData);
       setEditingId(null);
@@ -81,7 +102,6 @@ export default function AdminProductsPage() {
       await api.adminLogout();
       navigate('/admin');
     } catch (error) {
-      console.error('Logout error:', error);
       navigate('/admin');
     }
   };
@@ -111,7 +131,19 @@ export default function AdminProductsPage() {
         <input className="field-input" type="number" placeholder="المخزون *" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
       </div>
       <textarea className="field-input" placeholder="الوصف" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} rows={2} />
-      <input className="field-input" placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
+      
+      {/* ✅ حقل رفع الصورة */}
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <input className="field-input" placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
+        <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: '#3b82f6', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap' }}>
+          <Upload size={14} />
+          {uploading ? 'جاري...' : 'رفع'}
+          <input type="file" accept="image/*" hidden onChange={(e) => handleImageUpload(e.target.files[0])} />
+        </label>
+      </div>
+      {formData.image && (
+        <img src={formData.image} alt="Preview" style={{ width: '100%', maxHeight: 150, objectFit: 'cover', borderRadius: 8, border: '1px solid #e2e8f0' }} />
+      )}
     </div>
   );
 
@@ -176,7 +208,7 @@ export default function AdminProductsPage() {
                         <span>{getCategoryName(product.category)}</span><span>•</span><span>{product.brand}</span><span>•</span><span>المخزون: {product.stock}</span>
                       </div>
                     </div>
-                    <div style={{ fontSize: 16, fontWeight: 900, color: '#f59e0b', marginRight: 'auto', marginLeft: 16 }}>{product.price.toLocaleString('en-US')} دج</div>
+                    <div style={{ fontSize: 16, fontWeight: 900, color: '#f59e0b', marginRight: 'auto', marginLeft: 16 }}>{product.price?.toLocaleString('en-US')} دج</div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => handleEdit(product)} className="btn btn-ghost btn-sm" title="تعديل"><Edit size={14} /></button>
                       <button onClick={() => handleDelete(product.id)} className="btn btn-ghost btn-sm" title="حذف" style={{ color: '#ef4444' }}><Trash2 size={14} /></button>
