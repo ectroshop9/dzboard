@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, Edit, Trash2, Save, X, Package, ChevronLeft, Monitor, Zap, Cpu, Search, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Package, ChevronLeft, Monitor, Zap, Cpu, Search, Loader2, LogOut } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function AdminProductsPage() {
   const navigate = useNavigate();
-  const token = localStorage.getItem('dzboard_admin_token');
   
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,14 +23,30 @@ export default function AdminProductsPage() {
   const brands = ['samsung', 'lg', 'condor', 'iris', 'geant', 'stream', 'maxtor', 'kiowa'];
 
   useEffect(() => {
-    if (!token) { navigate('/admin'); return; }
-    loadProducts();
-  }, [navigate, token]);
+    verifyAdmin();
+  }, [navigate]);
+
+  const verifyAdmin = async () => {
+    try {
+      const data = await api.verifyAdmin();
+      if (!data.success) {
+        navigate('/admin');
+        return;
+      }
+      loadProducts();
+    } catch (error) {
+      console.error('Verification failed:', error);
+      navigate('/admin');
+    }
+  };
 
   const loadProducts = () => {
     setLoading(true);
     api.getProducts().then(data => {
       if (data.success) setProducts(data.products);
+      setLoading(false);
+    }).catch(err => {
+      console.error('Error loading products:', err);
       setLoading(false);
     });
   };
@@ -40,7 +55,7 @@ export default function AdminProductsPage() {
     if (!formData.name || !formData.price) return;
     
     if (editingId) {
-      await api.updateProduct(editingId, formData, token);
+      await api.updateProduct(editingId, formData);
       setEditingId(null);
     }
     loadProducts();
@@ -48,7 +63,7 @@ export default function AdminProductsPage() {
 
   const handleAdd = async () => {
     if (!formData.name || !formData.price) return;
-    await api.createProduct(formData, token);
+    await api.createProduct(formData);
     setShowAddForm(false);
     setFormData({ name: '', category: 'tcon', brand: 'samsung', price: '', stock: '', description: '', image: '' });
     loadProducts();
@@ -56,8 +71,18 @@ export default function AdminProductsPage() {
 
   const handleDelete = async (id) => {
     if (window.confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
-      await api.deleteProduct(id, token);
+      await api.deleteProduct(id);
       loadProducts();
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await api.adminLogout();
+      navigate('/admin');
+    } catch (error) {
+      console.error('Logout error:', error);
+      navigate('/admin');
     }
   };
 
@@ -98,7 +123,10 @@ export default function AdminProductsPage() {
             <Link to="/admin/dashboard" className="btn btn-ghost btn-sm"><ChevronLeft size={18} /> لوحة التحكم</Link>
             <h1 style={{ fontSize: 18, fontWeight: 900 }}>إدارة المنتجات</h1>
           </div>
-          <button onClick={() => setShowAddForm(!showAddForm)} className="btn btn-primary btn-sm" style={{ gap: 6 }}><Plus size={16} /> إضافة منتج</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setShowAddForm(!showAddForm)} className="btn btn-primary btn-sm" style={{ gap: 6 }}><Plus size={16} /> إضافة منتج</button>
+            <button onClick={handleLogout} className="btn btn-ghost btn-sm" title="تسجيل الخروج" style={{ color: '#ef4444' }}><LogOut size={16} /></button>
+          </div>
         </div>
       </div>
 

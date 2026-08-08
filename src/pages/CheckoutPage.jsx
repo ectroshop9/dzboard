@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Truck, Home, Loader2, Package, ChevronLeft, Shield } from 'lucide-react';
+import { api } from '../services/api';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -25,7 +26,10 @@ export default function CheckoutPage() {
     fetch('/api/shipping/wilayas')
       .then(res => res.json())
       .then(data => { if (data.success) setWilayas(data.wilayas); setLoadingWilayas(false); })
-      .catch(() => setLoadingWilayas(false));
+      .catch(err => {
+        console.error('Error loading wilayas:', err);
+        setLoadingWilayas(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -37,6 +41,9 @@ export default function CheckoutPage() {
     ]).then(([feeData, communesData]) => {
       if (feeData.success) setFees(feeData.fees);
       if (communesData.success) setCommunes(communesData.communes);
+      setLoadingCommunes(false);
+    }).catch(err => {
+      console.error('Error loading communes/fees:', err);
       setLoadingCommunes(false);
     });
   }, [wilayaId]);
@@ -64,16 +71,37 @@ export default function CheckoutPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!fullName || !phone || !address || !wilayaId || !commune) { setError('جميع الحقول مطلوبة'); return; }
-    setSubmitting(true); setError('');
+    
+    // Validate phone format
+    if (!/^0[5-7]\d{8}$/.test(phone)) {
+      setError('رقم هاتف غير صالح');
+      return;
+    }
+    
+    setSubmitting(true);
+    setError('');
     try {
-      const res = await fetch('/api/orders', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ full_name: fullName, phone, wilaya_id: parseInt(wilayaId), commune, address, shipping_type: shippingType, items: cartItems.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, price: i.price })), total_price: subtotal, shipping_cost: shippingCost }),
+      const res = await api.createOrder({
+        full_name: fullName,
+        phone,
+        wilaya_id: parseInt(wilayaId),
+        commune,
+        address,
+        shipping_type: shippingType,
+        items: cartItems.map(i => ({ id: i.id, name: i.name, quantity: i.quantity })),
+        total_price: subtotal,
+        shipping_cost: shippingCost,
       });
-      const data = await res.json();
-      if (data.success) navigate('/thank-you', { state: { trackingNumber: data.trackingNumber, orderId: data.orderId } });
-      else setError(data.message || 'فشل');
-    } catch { setError('خطأ'); }
+      
+      if (res.success) {
+        navigate('/thank-you', { state: { trackingNumber: res.trackingNumber, orderId: res.orderId } });
+      } else {
+        setError(res.message || 'فشل إنشاء الطلب');
+      }
+    } catch (err) {
+      console.error('Order creation error:', err);
+      setError('خطأ في الاتصال بالسيرفر');
+    }
     setSubmitting(false);
   };
 
@@ -110,32 +138,94 @@ export default function CheckoutPage() {
             <div style={{ background: '#fff', borderRadius: 12, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               <h3 style={{ fontSize: 16, fontWeight: 700, color: '#222', marginBottom: 14 }}>معلومات التوصيل</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <input style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} placeholder="الاسم الكامل *" value={fullName} onChange={e => setFullName(e.target.value)} required />
-                <input style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} placeholder="رقم الهاتف *" value={phone} onChange={e => setPhone(e.target.value)} required type="tel" />
-                <select style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }} value={wilayaId} onChange={e => setWilayaId(e.target.value)} required disabled={loadingWilayas}>
+                <input
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  placeholder="الاسم الكامل *"
+                  value={fullName}
+                  onChange={e => setFullName(e.target.value)}
+                  maxLength={100}
+                />
+                <input
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  placeholder="رقم الهاتف *"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  type="tel"
+                />
+                <select
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
+                  value={wilayaId}
+                  onChange={e => setWilayaId(e.target.value)}
+                >
                   <option value="">{loadingWilayas ? 'جاري التحميل...' : 'اختر الولاية *'}</option>
                   {wilayas.map(w => (<option key={w.wilaya_id} value={w.wilaya_id}>{w.name_ar}</option>))}
                 </select>
-                <select style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }} value={commune} onChange={e => setCommune(e.target.value)} required disabled={!wilayaId || loadingCommunes}>
+                <select
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
+                  value={commune}
+                  onChange={e => setCommune(e.target.value)}
+                >
                   <option value="">{!wilayaId ? 'اختر الولاية أولاً' : loadingCommunes ? 'جاري تحميل البلديات...' : communes.length === 0 ? 'لا توجد بلديات' : 'اختر البلدية *'}</option>
                   {communes.map(c => (<option key={c.id || c.name_fr} value={c.name_fr || c.name_ar}>{c.name_ar}</option>))}
                 </select>
-                <textarea style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} placeholder="العنوان التفصيلي *" value={address} onChange={e => setAddress(e.target.value)} required rows={2} />
+                <textarea
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+                  placeholder="العنوان بالتفصيل *"
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
+                  maxLength={200}
+                />
               </div>
             </div>
 
             {fees && (
               <div style={{ background: '#fff', borderRadius: 12, padding: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  <button type="button" onClick={() => setShippingType('domicile')} style={{ padding: 10, textAlign: 'center', cursor: 'pointer', borderRadius: 8, border: shippingType === 'domicile' ? '2px solid #ff6600' : '1px solid #ddd', background: shippingType === 'domicile' ? '#fff5f0' : '#fff', color: '#333' }}>
-                    <Home size={18} /><div style={{ fontWeight: 600, fontSize: 12, marginTop: 4 }}>توصيل للمنزل</div><div style={{ fontSize: 14, fontWeight: 700, color: '#ff6600', marginTop: 2 }}>{fees.domicile} دج</div>
+                  <button
+                    type="button"
+                    onClick={() => setShippingType('domicile')}
+                    style={{
+                      padding: 10,
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      borderRadius: 8,
+                      border: shippingType === 'domicile' ? '2px solid #ff6600' : '1px solid #ddd',
+                      background: shippingType === 'domicile' ? '#fff9f0' : '#fff',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <Home size={18} />
+                    <div style={{ fontWeight: 600, fontSize: 12, marginTop: 4 }}>توصيل للمنزل</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#ff6600', marginTop: 2 }}>{parseFloat(fees.domicile).toLocaleString('en-US')} دج</div>
                   </button>
-                  <button type="button" onClick={() => setShippingType('stopdesk')} disabled={!fees.stopdesk || parseFloat(fees.stopdesk) === 0} style={{ padding: 10, textAlign: 'center', borderRadius: 8, cursor: !fees.stopdesk || parseFloat(fees.stopdesk) === 0 ? 'not-allowed' : 'pointer', border: shippingType === 'stopdesk' ? '2px solid #ff6600' : '1px solid #ddd', background: shippingType === 'stopdesk' ? '#fff5f0' : '#fff', opacity: !fees.stopdesk || parseFloat(fees.stopdesk) === 0 ? 0.5 : 1, color: '#333' }}>
-                    <Truck size={18} /><div style={{ fontWeight: 600, fontSize: 12, marginTop: 4 }}>Stop Desk</div><div style={{ fontSize: 14, fontWeight: 700, color: '#ff6600', marginTop: 2 }}>{fees.stopdesk} دج</div>
+                  <button
+                    type="button"
+                    onClick={() => setShippingType('stopdesk')}
+                    disabled={!fees.stopdesk || parseFloat(fees.stopdesk) === 0}
+                    style={{
+                      padding: 10,
+                      textAlign: 'center',
+                      cursor: parseFloat(fees.stopdesk) > 0 ? 'pointer' : 'not-allowed',
+                      borderRadius: 8,
+                      border: shippingType === 'stopdesk' ? '2px solid #ff6600' : '1px solid #ddd',
+                      background: shippingType === 'stopdesk' ? '#fff9f0' : '#fff',
+                      opacity: parseFloat(fees.stopdesk) === 0 ? 0.5 : 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <Truck size={18} />
+                    <div style={{ fontWeight: 600, fontSize: 12, marginTop: 4 }}>Stop Desk</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#ff6600', marginTop: 2 }}>{parseFloat(fees.stopdesk || 0).toLocaleString('en-US')} دج</div>
                   </button>
                 </div>
 
-                {/* ملخص الحساب أسفل التوصيل */}
+                {/* ملخص الحساب */}
                 <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #eee' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#666', marginBottom: 6 }}>
                     <span>المجموع</span><span>{subtotal.toLocaleString('en-US')} دج</span>
@@ -150,7 +240,25 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            <button type="submit" disabled={submitting || !wilayaId} style={{ width: '100%', padding: 14, background: submitting ? '#ccc' : '#ff6600', color: '#fff', border: 'none', borderRadius: 8, fontSize: 16, fontWeight: 700, cursor: submitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 2px 8px rgba(255,102,0,0.3)' }}>
+            <button
+              type="submit"
+              disabled={submitting || !wilayaId}
+              style={{
+                width: '100%',
+                padding: 14,
+                background: submitting ? '#ccc' : '#ff6600',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                fontSize: 16,
+                fontWeight: 700,
+                cursor: submitting || !wilayaId ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
               {submitting ? <Loader2 size={18} className="spin" /> : <Shield size={18} />}
               {submitting ? 'جاري التأكيد...' : 'تأكيد الطلب - الدفع عند الاستلام'}
             </button>

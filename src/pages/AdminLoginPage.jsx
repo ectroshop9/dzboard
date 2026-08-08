@@ -24,12 +24,14 @@ export default function AdminLoginPage() {
       const data = await api.adminLogin(username, password);
       
       if (data.success) {
-        localStorage.setItem('dzboard_admin_token', data.token);
+        // Token is now stored in httpOnly cookie automatically
+        // No need to store in localStorage
         navigate('/admin/dashboard');
       } else {
         setError(data.message || 'بيانات الدخول غير صحيحة');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError('خطأ في الاتصال بالسيرفر');
     }
     
