@@ -1,5 +1,20 @@
 export const verifyAdmin = (req, res, next) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (token === (process.env.ADMIN_TOKEN || 'dzboard_admin_2026')) return next();
-  res.status(401).json({ success: false, message: 'غير مصرح' });
+  try {
+    // Get token from secure httpOnly cookie
+    const token = req.cookies.admin_token;
+    
+    if (!token) {
+      return res.status(401).json({ success: false, message: 'غير مصرح - لم يتم العثور على التوكن' });
+    }
+    
+    const validToken = process.env.ADMIN_TOKEN;
+    if (!validToken || token !== validToken) {
+      return res.status(401).json({ success: false, message: 'غير مصرح - توكن غير صحيح' });
+    }
+    
+    next();
+  } catch (error) {
+    console.error('Auth error:', error);
+    res.status(500).json({ success: false, message: 'خطأ في التحقق' });
+  }
 };
