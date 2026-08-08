@@ -16,21 +16,20 @@ const getCsrfToken = async () => {
   }
 };
 
-const headers = (token) => ({
+const headers = () => ({
   'Content-Type': 'application/json',
-  ...(token && { Authorization: `Bearer ${token}` }),
 });
 
-const headersWithCsrf = async (token) => {
+const headersWithCsrf = async () => {
   const csrf = await getCsrfToken();
   return {
     'Content-Type': 'application/json',
     'X-CSRF-Token': csrf || '',
-    ...(token && { Authorization: `Bearer ${token}` }),
   };
 };
 
 export const api = {
+  // Products
   getProducts: (params = {}) => {
     const query = new URLSearchParams(params).toString();
     return fetch(`${API_BASE}/products?${query}`).then(res => res.json());
@@ -38,8 +37,8 @@ export const api = {
   
   getProduct: (id) => fetch(`${API_BASE}/products/${id}`).then(res => res.json()),
   
-  createProduct: async (data, token) => {
-    const hdrs = await headersWithCsrf(token);
+  createProduct: async (data) => {
+    const hdrs = await headersWithCsrf();
     return fetch(`${API_BASE}/products`, {
       method: 'POST',
       headers: hdrs,
@@ -48,8 +47,8 @@ export const api = {
     }).then(res => res.json());
   },
   
-  updateProduct: async (id, data, token) => {
-    const hdrs = await headersWithCsrf(token);
+  updateProduct: async (id, data) => {
+    const hdrs = await headersWithCsrf();
     return fetch(`${API_BASE}/products/${id}`, {
       method: 'PUT',
       headers: hdrs,
@@ -58,8 +57,8 @@ export const api = {
     }).then(res => res.json());
   },
   
-  deleteProduct: async (id, token) => {
-    const hdrs = await headersWithCsrf(token);
+  deleteProduct: async (id) => {
+    const hdrs = await headersWithCsrf();
     return fetch(`${API_BASE}/products/${id}`, {
       method: 'DELETE',
       headers: hdrs,
@@ -67,6 +66,7 @@ export const api = {
     }).then(res => res.json());
   },
   
+  // Orders
   createOrder: async (data) => {
     const hdrs = await headersWithCsrf();
     return fetch(`${API_BASE}/orders`, {
@@ -77,15 +77,13 @@ export const api = {
     }).then(res => res.json());
   },
   
-  getOrders: async () => {
-    return fetch(`${API_BASE}/orders`, {
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-    }).then(res => res.json());
-  },
+  getOrders: () => fetch(`${API_BASE}/orders`, {
+    headers: headers(),
+    credentials: 'include',
+  }).then(res => res.json()),
   
-  updateOrderStatus: async (id, status, token) => {
-    const hdrs = await headersWithCsrf(token);
+  updateOrderStatus: async (id, status) => {
+    const hdrs = await headersWithCsrf();
     return fetch(`${API_BASE}/orders/${id}/status`, {
       method: 'PUT',
       headers: hdrs,
@@ -94,6 +92,7 @@ export const api = {
     }).then(res => res.json());
   },
   
+  // Admin
   adminLogin: async (username, password) => {
     const hdrs = await headersWithCsrf();
     return fetch(`${API_BASE}/admin/login`, {
@@ -104,18 +103,16 @@ export const api = {
     }).then(res => res.json());
   },
   
+  verifyAdmin: () => fetch(`${API_BASE}/admin/verify`, {
+    headers: headers(),
+    credentials: 'include',
+  }).then(res => res.json()),
+  
   adminLogout: async () => {
     const hdrs = await headersWithCsrf();
     return fetch(`${API_BASE}/admin/logout`, {
       method: 'POST',
       headers: hdrs,
-      credentials: 'include',
-    }).then(res => res.json());
-  },
-  
-  verifyAdmin: async () => {
-    return fetch(`${API_BASE}/admin/verify`, {
-      headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
     }).then(res => res.json());
   },
