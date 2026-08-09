@@ -9,6 +9,7 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminProductsPage from './pages/AdminProductsPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
 import AdminInventoryPage from './pages/AdminInventoryPage';
+import AdminScanPage from './pages/AdminScanPage';
 
 function App() {
   return (
@@ -25,6 +26,8 @@ function App() {
         <Route path="/admin/products" element={<AdminProductsPage />} />
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
         <Route path="/admin/inventory" element={<AdminInventoryPage />} />
+<Route path="/admin/scan" element={<AdminScanPage />} />
+import AdminScanPage from './pages/AdminScanPage';
       </Routes>
     </BrowserRouter>
   );
