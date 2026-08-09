@@ -85,6 +85,7 @@ export default function AdminDashboardPage() {
         <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
           <Link to="/admin/products" className="btn btn-primary" style={{ gap: 6 }}><Plus size={16} /> إضافة منتج</Link>
           <Link to="/admin/orders" className="btn btn-ghost" style={{ gap: 6 }}><List size={16} /> كل الطلبات</Link>
+<Link to="/admin/inventory" className="btn btn-ghost" style={{ gap: 6 }}><Package size={16} /> المخزون</Link>
         </div>
 
         <div className="card" style={{ overflow: 'hidden' }}>

@@ -155,6 +155,7 @@ export default function AdminProductsPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Link to="/admin/dashboard" className="btn btn-ghost btn-sm"><ChevronLeft size={18} /> لوحة التحكم</Link>
             <h1 style={{ fontSize: 18, fontWeight: 900 }}>إدارة المنتجات</h1>
+<Link to="/admin/inventory" className="btn btn-ghost btn-sm" style={{ gap: 6 }}><Package size={16} /> المخزون</Link>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={handleOpenAddForm} className="btn btn-primary btn-sm" style={{ gap: 6 }}>

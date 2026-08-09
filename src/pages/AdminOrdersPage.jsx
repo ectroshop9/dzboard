@@ -109,6 +109,7 @@ export default function AdminOrdersPage() {
               <ChevronLeft size={18} /> لوحة التحكم
             </Link>
             <h1 style={{ fontSize: 18, fontWeight: 900, margin: 0 }}>إدارة الطلبات</h1>
+<Link to="/admin/inventory" className="btn btn-ghost btn-sm" style={{ gap: 6 }}><Package size={16} /> المخزون</Link>
           </div>
           <div style={{ fontSize: 14, fontWeight: 700, color: '#f59e0b' }}>
             الإيرادات: {totalRevenue.toLocaleString('en-US')} دج
