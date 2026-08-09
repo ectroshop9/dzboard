@@ -10,21 +10,20 @@ router.post('/', verifyAdmin, ctrl.create);
 router.put('/:id', verifyAdmin, ctrl.update);
 router.delete('/:id', verifyAdmin, ctrl.remove);
 
-// ✅ رفع الصورة مع تحويل WebP وضغط
-router.post('/upload', verifyAdmin, async (req, res) => {
+router.post('/upload', async (req, res) => {
   try {
     const { image } = req.body;
+    if (!image) return res.json({ success: false, message: 'No image' });
+    
     const result = await cloudinary.uploader.upload(image, {
       folder: 'dzboard-products',
-      quality: 'auto',        // ✅ ضغط تلقائي
-      format: 'webp',         // ✅ تحويل لـ WebP
-      width: 800,             // ✅ عرض أقصى 800px
-      height: 800,            // ✅ ارتفاع أقصى 800px
-      crop: 'limit',          // ✅ بدون تشويه
+      quality: 'auto',
+      format: 'webp',
     });
+    
     res.json({ success: true, url: result.secure_url });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'فشل رفع الصورة' });
+    res.json({ success: false, message: error.message });
   }
 });
 
