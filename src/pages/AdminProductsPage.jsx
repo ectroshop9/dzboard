@@ -112,7 +112,7 @@ export default function AdminProductsPage() {
         {showAddForm && (
           <div className="card" style={{ padding: 16, marginBottom: 16 }}>
             <h3 style={{ marginBottom: 12 }}>إضافة منتج جديد (مع قطع مخزون)</h3>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <input className="field-input" style={{ width: '100%' }} placeholder="اسم المنتج *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
               <input className="field-input" style={{ width: '100%' }} placeholder="السعر (دج)" type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
               <input className="field-input" style={{ width: '100%' }} placeholder="الكمية" type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
