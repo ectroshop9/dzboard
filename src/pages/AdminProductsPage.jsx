@@ -47,6 +47,21 @@ export default function AdminProductsPage() {
   };
 
   const handleAdd = async () => {
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    setUploading(true);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      const res = await fetch('https://dzboard.onrender.com/api/products/upload', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: reader.result }),
+      });
+      const data = await res.json();
+      if (data.success) setFormData({...formData, image: data.url});
+      setUploading(false);
+    };
+  };
     if (!formData.name || !formData.price) return;
     
     // 1. إنشاء المنتج في المتجر
