@@ -2,29 +2,25 @@ import express from 'express';
 const router = express.Router();
 import { supabase } from '../supabase.js';
 
-router.get('/shelves', async (req, res) => {
-  const { data } = await supabase.from('shelves').select('*').order('code');
-  res.json({ success: true, shelves: data || [] });
-});
-
 router.get('/items', async (req, res) => {
-  const { shelf, status, search } = req.query;
-  let query = supabase.from('inventory_items').select('*, shelves!inner(name), products!inner(name)').order('sku');
-  if (shelf && shelf !== 'all') query = query.eq('shelf_id', shelf);
-  if (status && status !== 'all') query = query.eq('status', status);
-  if (search) query = query.or(`sku.ilike.%${search}%,barcode.ilike.%${search}%`);
+  const { search } = req.query;
+  let query = supabase.from('inventory_items').select('*').order('id', { ascending: false });
+  if (search) query = query.or(`sku.ilike.%${search}%,name.ilike.%${search}%`);
   const { data } = await query;
   res.json({ success: true, items: data || [] });
 });
 
 router.post('/items', async (req, res) => {
-  const { product_id, shelf_id, position } = req.body;
+  const { name, shelf, position } = req.body;
+  
+  // توليد SKU وباركود
   const { count } = await supabase.from('inventory_items').select('*', { count: 'exact' });
-  const sku = `DZB-${String((count || 0) + 1).padStart(3, '0')}`;
-  const barcode = `613${String((count || 0) + 1).padStart(6, '0')}`;
+  const num = (count || 0) + 1;
+  const sku = `DZB-${String(num).padStart(3, '0')}`;
+  const barcode = `613${String(num).padStart(6, '0')}`;
   
   const { data, error } = await supabase.from('inventory_items').insert({
-    sku, barcode, product_id, shelf_id, position, status: 'available'
+    sku, barcode, name, shelf, position, status: 'available'
   }).select().single();
   
   if (error) return res.status(500).json({ success: false, error });
@@ -33,7 +29,7 @@ router.post('/items', async (req, res) => {
 
 router.put('/items/:id', async (req, res) => {
   const { status } = req.body;
-  const { data } = await supabase.from('inventory_items').update({ status, updated_at: new Date() }).eq('id', req.params.id).select().single();
+  const { data } = await supabase.from('inventory_items').update({ status }).eq('id', req.params.id).select().single();
   res.json({ success: true, item: data });
 });
 

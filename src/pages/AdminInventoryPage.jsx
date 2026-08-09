@@ -80,7 +80,7 @@ export default function AdminInventoryPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                  <th style={{ padding: 10 }}>SKU</th>
+                  <th style={{ padding: 10 }}>SKU</th><th style={{ padding: 10 }}>باركود</th>
                   <th style={{ padding: 10 }}>المنتج</th>
                   <th style={{ padding: 10 }}>الرف</th>
                   <th style={{ padding: 10 }}>الموقع</th>
@@ -91,7 +91,7 @@ export default function AdminInventoryPage() {
               <tbody>
                 {items.map(item => (
                   <tr key={item.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: 10, fontWeight: 700 }}>{item.sku}</td>
+                    <td style={{ padding: 10, fontWeight: 700 }}>{item.sku}</td><td style={{ padding: 10, fontFamily: 'monospace', fontSize: 12 }}>{item.barcode}</td>
                     <td style={{ padding: 10 }}>{item.name || '-'}</td>
                     <td style={{ padding: 10 }}>{item.shelf || '-'}</td>
                     <td style={{ padding: 10 }}>{item.position || '-'}</td>
