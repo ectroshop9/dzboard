@@ -14,7 +14,7 @@ export default function AdminDashboardPage() {
     
     Promise.all([
       api.getProducts(),
-      api.getOrders(token),
+      api.getOrders(),
     ]).then(([productsData, ordersData]) => {
       const products = productsData.products || [];
       const orders = ordersData.orders || [];

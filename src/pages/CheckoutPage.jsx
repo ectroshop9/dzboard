@@ -22,34 +22,61 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  // جلب الولايات عند تحضير الصفحة
   useEffect(() => {
+    let isMounted = true;
     fetch('/api/shipping/wilayas')
       .then(res => res.json())
-      .then(data => { if (data.success) setWilayas(data.wilayas); setLoadingWilayas(false); })
+      .then(data => { 
+        if (isMounted && data.success) setWilayas(data.wilayas);
+      })
       .catch(err => {
         console.error('Error loading wilayas:', err);
-        setLoadingWilayas(false);
+      })
+      .finally(() => {
+        if (isMounted) setLoadingWilayas(false);
       });
+
+    return () => { isMounted = false; };
   }, []);
 
+  // جلب أسعار الشحن والبلديات بحسب الولاية (مع إلغاء الطلبات القديمة)
   useEffect(() => {
-    if (!wilayaId) { setCommunes([]); setCommune(''); setFees(null); return; }
+    if (!wilayaId) { 
+      setCommunes([]); 
+      setCommune(''); 
+      setFees(null); 
+      return; 
+    }
+
+    const controller = new AbortController();
+    const { signal } = controller;
+
     setLoadingCommunes(true);
+    setCommune('');
+
     Promise.all([
-      fetch(`/api/shipping/fee?wilaya_id=${wilayaId}`).then(r => r.json()),
-      fetch(`/api/shipping/communes?wilaya_id=${wilayaId}`).then(r => r.json()),
+      fetch(`/api/shipping/fee?wilaya_id=${wilayaId}`, { signal }).then(r => r.json()),
+      fetch(`/api/shipping/communes?wilaya_id=${wilayaId}`, { signal }).then(r => r.json()),
     ]).then(([feeData, communesData]) => {
       if (feeData.success) setFees(feeData.fees);
       if (communesData.success) setCommunes(communesData.communes);
-      setLoadingCommunes(false);
     }).catch(err => {
-      console.error('Error loading communes/fees:', err);
-      setLoadingCommunes(false);
+      if (err.name !== 'AbortError') {
+        console.error('Error loading communes/fees:', err);
+      }
+    }).finally(() => {
+      if (!signal.aborted) setLoadingCommunes(false);
     });
+
+    return () => controller.abort();
   }, [wilayaId]);
 
+  // تحويل خيار الشحن التلقائي لـ domicile إذا كان stopdesk غير متاح
   useEffect(() => {
-    if (fees && parseFloat(fees.stopdesk) === 0 && shippingType === 'stopdesk') setShippingType('domicile');
+    if (fees && (fees.stopdesk === undefined || parseFloat(fees.stopdesk) === 0) && shippingType === 'stopdesk') {
+      setShippingType('domicile');
+    }
   }, [fees, shippingType]);
 
   if (cartItems.length === 0) {
@@ -57,7 +84,7 @@ export default function CheckoutPage() {
       <div style={{ background: '#f5f5f5', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui' }}>
         <div style={{ textAlign: 'center', padding: 40, background: '#fff', borderRadius: 12, maxWidth: 400, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
           <Package size={48} style={{ color: '#999', marginBottom: 16 }} />
-          <h2>لا توجد منتجات</h2>
+          <h2 style={{ marginBottom: 12 }}>لا توجد منتجات في السلة</h2>
           <Link to="/store" style={{ color: '#ff6600', textDecoration: 'none', fontWeight: 600 }}>تصفح المتجر</Link>
         </div>
       </div>
@@ -70,11 +97,14 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!fullName || !phone || !address || !wilayaId || !commune) { setError('جميع الحقول مطلوبة'); return; }
+    if (!fullName || !phone || !address || !wilayaId || !commune) { 
+      setError('جميع الحقول مطلوبة'); 
+      return; 
+    }
     
-    // Validate phone format
-    if (!/^0[5-7]\d{8}$/.test(phone)) {
-      setError('رقم هاتف غير صالح');
+    // التحقق من صيغة الأرقام الجزائرية (05 / 06 / 07)
+    if (!/^0[5-7]\d{8}$/.test(phone.trim())) {
+      setError('يرجى إدخال رقم هاتف جزائري صالح (مثال: 0661234567)');
       return;
     }
     
@@ -82,11 +112,11 @@ export default function CheckoutPage() {
     setError('');
     try {
       const res = await api.createOrder({
-        full_name: fullName,
-        phone,
+        full_name: fullName.trim(),
+        phone: phone.trim(),
         wilaya_id: parseInt(wilayaId),
         commune,
-        address,
+        address: address.trim(),
         shipping_type: shippingType,
         items: cartItems.map(i => ({ id: i.id, name: i.name, quantity: i.quantity })),
         total_price: subtotal,
@@ -101,39 +131,45 @@ export default function CheckoutPage() {
     } catch (err) {
       console.error('Order creation error:', err);
       setError('خطأ في الاتصال بالسيرفر');
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   return (
     <div style={{ background: '#f5f5f5', minHeight: '100vh', fontFamily: 'system-ui', direction: 'rtl' }}>
       <div style={{ background: '#fff', padding: '12px 16px', borderBottom: '1px solid #eee', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', alignItems: 'center' }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#333' }}><ChevronLeft size={20} /></button>
+          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#333' }}>
+            <ChevronLeft size={20} />
+          </button>
           <h1 style={{ fontSize: 18, fontWeight: 700, marginRight: 8, color: '#222' }}>تأكيد الطلب</h1>
         </div>
       </div>
 
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '16px' }}>
-        {error && <div style={{ background: '#fff0f0', color: '#e44', padding: 12, borderRadius: 8, marginBottom: 16, fontSize: 13 }}>{error}</div>}
+        {error && <div style={{ background: '#fff0f0', color: '#e44', padding: 12, borderRadius: 8, marginBottom: 16, fontSize: 13, border: '1px solid #fcc' }}>{error}</div>}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16, alignItems: 'start' }}>
           
-          {/* العمود اليمين - المنتجات */}
+          {/* العمود الأول - قائمة المنتجات */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#444' }}>ملخص السلة ({cartItems.length})</h3>
             {cartItems.map((item, index) => (
               <div key={index} style={{ background: '#fff', borderRadius: 12, padding: 12, display: 'flex', gap: 12, alignItems: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                <img src={item.image || 'https://via.placeholder.com/80'} alt={item.name} style={{ width: 80, height: 80, borderRadius: 8, objectFit: 'cover' }} />
+                <img src={item.image || 'https://via.placeholder.com/80'} alt={item.name} style={{ width: 70, height: 70, borderRadius: 8, objectFit: 'cover' }} />
                 <div style={{ flex: 1 }}>
                   <h4 style={{ fontSize: 14, fontWeight: 600, color: '#222', marginBottom: 4 }}>{item.name}</h4>
-                  <p style={{ fontSize: 12, color: '#999' }}>الكمية: {item.quantity}</p>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#ff6600', marginTop: 4 }}>{(parseFloat(item.price) * item.quantity).toLocaleString('en-US')} دج</div>
+                  <p style={{ fontSize: 12, color: '#888' }}>الكمية: {item.quantity}</p>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#ff6600', marginTop: 4 }}>
+                    {(parseFloat(item.price) * item.quantity).toLocaleString('en-US')} دج
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* العمود اليسار - النموذج */}
+          {/* العمود الثاني - نموذج إدخال البيانات والتأكيد */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ background: '#fff', borderRadius: 12, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               <h3 style={{ fontSize: 16, fontWeight: 700, color: '#222', marginBottom: 14 }}>معلومات التوصيل</h3>
@@ -147,7 +183,7 @@ export default function CheckoutPage() {
                 />
                 <input
                   style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-                  placeholder="رقم الهاتف *"
+                  placeholder="رقم الهاتف (مثال: 0661234567) *"
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   type="tel"
@@ -157,23 +193,39 @@ export default function CheckoutPage() {
                   value={wilayaId}
                   onChange={e => setWilayaId(e.target.value)}
                 >
-                  <option value="">{loadingWilayas ? 'جاري التحميل...' : 'اختر الولاية *'}</option>
-                  {wilayas.map(w => (<option key={w.wilaya_id} value={w.wilaya_id}>{w.name_ar}</option>))}
+                  <option value="">{loadingWilayas ? 'جاري تحميل الولايات...' : 'اختر الولاية *'}</option>
+                  {wilayas.map(w => (<option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_id} - {w.name_ar}</option>))}
                 </select>
+
                 <select
                   style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
                   value={commune}
                   onChange={e => setCommune(e.target.value)}
+                  disabled={!wilayaId || loadingCommunes}
                 >
-                  <option value="">{!wilayaId ? 'اختر الولاية أولاً' : loadingCommunes ? 'جاري تحميل البلديات...' : communes.length === 0 ? 'لا توجد بلديات' : 'اختر البلدية *'}</option>
-                  {communes.map(c => (<option key={c.id || c.name_fr} value={c.name_fr || c.name_ar}>{c.name_ar}</option>))}
+                  <option value="">
+                    {!wilayaId 
+                      ? 'اختر الولاية أولاً' 
+                      : loadingCommunes 
+                      ? 'جاري تحميل البلديات...' 
+                      : communes.length === 0 
+                      ? 'لا توجد بلديات' 
+                      : 'اختر البلدية *'}
+                  </option>
+                  {communes.map(c => (
+                    <option key={c.id || c.name_fr || c.name_ar} value={c.name_ar || c.name_fr}>
+                      {c.name_ar}
+                    </option>
+                  ))}
                 </select>
+
                 <textarea
                   style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
                   placeholder="العنوان بالتفصيل *"
                   value={address}
                   onChange={e => setAddress(e.target.value)}
                   maxLength={200}
+                  rows={3}
                 />
               </div>
             </div>
@@ -194,13 +246,14 @@ export default function CheckoutPage() {
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
-                      gap: 6,
+                      gap: 4,
                     }}
                   >
                     <Home size={18} />
-                    <div style={{ fontWeight: 600, fontSize: 12, marginTop: 4 }}>توصيل للمنزل</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#ff6600', marginTop: 2 }}>{parseFloat(fees.domicile).toLocaleString('en-US')} دج</div>
+                    <div style={{ fontWeight: 600, fontSize: 12 }}>توصيل للمنزل</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#ff6600' }}>{parseFloat(fees.domicile).toLocaleString('en-US')} دج</div>
                   </button>
+
                   <button
                     type="button"
                     onClick={() => setShippingType('stopdesk')}
@@ -208,33 +261,35 @@ export default function CheckoutPage() {
                     style={{
                       padding: 10,
                       textAlign: 'center',
-                      cursor: parseFloat(fees.stopdesk) > 0 ? 'pointer' : 'not-allowed',
+                      cursor: (fees.stopdesk && parseFloat(fees.stopdesk) > 0) ? 'pointer' : 'not-allowed',
                       borderRadius: 8,
                       border: shippingType === 'stopdesk' ? '2px solid #ff6600' : '1px solid #ddd',
                       background: shippingType === 'stopdesk' ? '#fff9f0' : '#fff',
-                      opacity: parseFloat(fees.stopdesk) === 0 ? 0.5 : 1,
+                      opacity: (!fees.stopdesk || parseFloat(fees.stopdesk) === 0) ? 0.5 : 1,
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
-                      gap: 6,
+                      gap: 4,
                     }}
                   >
                     <Truck size={18} />
-                    <div style={{ fontWeight: 600, fontSize: 12, marginTop: 4 }}>Stop Desk</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#ff6600', marginTop: 2 }}>{parseFloat(fees.stopdesk || 0).toLocaleString('en-US')} دج</div>
+                    <div style={{ fontWeight: 600, fontSize: 12 }}>توصيل للمكتب (Stop Desk)</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#ff6600' }}>
+                      {fees.stopdesk && parseFloat(fees.stopdesk) > 0 ? `${parseFloat(fees.stopdesk).toLocaleString('en-US')} دج` : 'غير متاح'}
+                    </div>
                   </button>
                 </div>
 
                 {/* ملخص الحساب */}
                 <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #eee' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#666', marginBottom: 6 }}>
-                    <span>المجموع</span><span>{subtotal.toLocaleString('en-US')} دج</span>
+                    <span>المجموع الفرعي</span><span>{subtotal.toLocaleString('en-US')} دج</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#666', marginBottom: 6 }}>
-                    <span>الشحن</span><span>{shippingCost.toLocaleString('en-US')} دج</span>
+                    <span>تكلفة الشحن</span><span>{shippingCost.toLocaleString('en-US')} دج</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#222', marginTop: 8 }}>
-                    <span>الإجمالي</span><span style={{ color: '#ff6600' }}>{total.toLocaleString('en-US')} دج</span>
+                    <span>المجموع الإجمالي</span><span style={{ color: '#ff6600' }}>{total.toLocaleString('en-US')} دج</span>
                   </div>
                 </div>
               </div>
@@ -242,27 +297,30 @@ export default function CheckoutPage() {
 
             <button
               type="submit"
-              disabled={submitting || !wilayaId}
+              disabled={submitting || !wilayaId || !commune}
               style={{
                 width: '100%',
                 padding: 14,
-                background: submitting ? '#ccc' : '#ff6600',
+                background: (submitting || !wilayaId || !commune) ? '#ccc' : '#ff6600',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 8,
                 fontSize: 16,
                 fontWeight: 700,
-                cursor: submitting || !wilayaId ? 'not-allowed' : 'pointer',
+                cursor: (submitting || !wilayaId || !commune) ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justify: 'center',
                 gap: 8,
               }}
             >
               {submitting ? <Loader2 size={18} className="spin" /> : <Shield size={18} />}
               {submitting ? 'جاري التأكيد...' : 'تأكيد الطلب - الدفع عند الاستلام'}
             </button>
-            <p style={{ textAlign: 'center', fontSize: 11, color: '#999' }}><Shield size={12} style={{ verticalAlign: 'middle' }} /> دفع آمن عند الاستلام</p>
+            <p style={{ textAlign: 'center', fontSize: 11, color: '#999' }}>
+              <Shield size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} /> 
+              الدفع نقدًا عند استلام الطلبية
+            </p>
           </form>
         </div>
       </div>

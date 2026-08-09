@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Loader2, Shield } from 'lucide-react';
 import { api } from '../services/api';
@@ -8,7 +8,24 @@ export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [error, setError] = useState('');
+
+  // 1. التاكد مما إذا كان المستخدم مسجّل الدخول بالفعل
+  useEffect(() => {
+    api.verifyAdmin()
+      .then((res) => {
+        if (res.success) {
+          navigate('/admin/dashboard', { replace: true });
+        }
+      })
+      .catch(() => {
+        // إذا فشل التحقق نترك المستخدم في صفحة الدخول عادي
+      })
+      .finally(() => {
+        setCheckingAuth(false);
+      });
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -21,10 +38,10 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
-      // 1. جلب CSRF Token أولاً
+      // 2. جلب CSRF Token أولاً لتخزين الكوكي
       const { csrfToken } = await api.getCsrfToken();
       
-      // 2. إرسال طلب تسجيل الدخول مع التوكن
+      // 3. إرسال بيانات الدخول مع التوكن
       const data = await api.adminLogin(username, password, csrfToken);
       
       const token = data.token || data.accessToken;
@@ -44,6 +61,14 @@ export default function AdminLoginPage() {
       setLoading(false);
     }
   };
+
+  if (checkingAuth) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+        <Loader2 size={36} className="spin" style={{ color: '#3b82f6' }} />
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: "'Cairo', sans-serif" }}>

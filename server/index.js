@@ -12,6 +12,8 @@ import productRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
 import adminRoutes from './routes/admin.js';
 import shippingRoutes from './routes/shipping.js';
+app.use('/api/inventory', inventoryRoutes);
+import inventoryRoutes from './routes/inventory.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -87,6 +89,8 @@ app.use('/api/orders', orderRoutes);
 // ✅ تطبيق CSRF Protection على مسارات الأدمن
 app.use('/api/admin', authLimiter, csrfProtection, adminRoutes);
 app.use('/api/shipping', shippingRoutes);
+app.use('/api/inventory', inventoryRoutes);
+import inventoryRoutes from './routes/inventory.js';
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
