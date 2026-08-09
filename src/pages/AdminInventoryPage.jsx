@@ -26,7 +26,7 @@ export default function AdminInventoryPage() {
     const [itemsRes, shelvesRes, productsRes] = await Promise.all([
       fetch(`${API}/inventory/items?shelf=${filterShelf}&status=${filterStatus}&search=${search}`).then(r => r.json()),
       fetch(`${API}/inventory/shelves`).then(r => r.json()),
-      fetch(`${API}/products`).then(r => r.json()),
+      fetch(`${API}/products`, { headers: { Authorization: `Bearer ${localStorage.getItem('dzboard_admin_token')}` } }).then(r => r.json()),
     ]);
     if (itemsRes.success) setItems(itemsRes.items);
     if (shelvesRes.success) setShelves(shelvesRes.shelves);
