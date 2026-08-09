@@ -88,14 +88,12 @@ export default function AdminInventoryPage() {
             <select className="field-input" style={{ width: 'auto' }} value={filterShelf} onChange={e => setFilterShelf(e.target.value)}>
               <option value="all">كل الرفوف</option>
               {shelves.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
             <select className="field-input" style={{ width: 'auto' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
               <option value="all">كل الحالات</option>
               <option value="available">متوفر</option>
               <option value="sold">مباع</option>
               <option value="reserved">محجوز</option>
               <option value="damaged">تالف</option>
-            </select>
           </div>
         </div>
 
@@ -103,14 +101,10 @@ export default function AdminInventoryPage() {
         {showAdd && (
           <div className="card" style={{ padding: 16, marginBottom: 16 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-              <select className="field-input" value={form.product_id} onChange={e => setForm({...form, product_id: e.target.value})}>
-                <option value="">اختر المنتج</option>
-                {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
+              <input className="field-input" placeholder="اسم المنتج" value={form.product_id} onChange={e => setForm({...form, product_id: e.target.value})} />
               <select className="field-input" value={form.shelf_id} onChange={e => setForm({...form, shelf_id: e.target.value})}>
                 <option value="">اختر الرف</option>
                 {shelves.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
               <input className="field-input" type="number" placeholder="الموقع" value={form.position} onChange={e => setForm({...form, position: e.target.value})} />
             </div>
             <button onClick={handleAdd} className="btn btn-accent btn-sm" style={{ marginTop: 10 }}>حفظ</button>
