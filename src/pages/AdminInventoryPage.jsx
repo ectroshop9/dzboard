@@ -81,6 +81,7 @@ export default function AdminInventoryPage() {
               <thead>
                 <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                   <th style={{ padding: 10 }}>SKU</th><th style={{ padding: 10 }}>باركود</th>
+<th style={{ padding: 10 }}>طباعة</th>
                   <th style={{ padding: 10 }}>المنتج</th>
                   <th style={{ padding: 10 }}>الرف</th>
                   <th style={{ padding: 10 }}>الموقع</th>
@@ -92,6 +93,7 @@ export default function AdminInventoryPage() {
                 {items.map(item => (
                   <tr key={item.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                     <td style={{ padding: 10, fontWeight: 700 }}>{item.sku}</td><td style={{ padding: 10, fontFamily: 'monospace', fontSize: 12 }}>{item.barcode}</td>
+<td style={{ padding: 10 }}><button onClick={() => window.open(`https://barcode.tec-it.com/barcode.ashx?data=${item.barcode}&code=Code128&translate-esc=true`, '_blank')} className="btn btn-ghost btn-sm">🖨️</button></td>
                     <td style={{ padding: 10 }}>{item.name || '-'}</td>
                     <td style={{ padding: 10 }}>{item.shelf || '-'}</td>
                     <td style={{ padding: 10 }}>{item.position || '-'}</td>
