@@ -63,6 +63,7 @@ export default function AdminInventoryPage() {
               <input className="field-input" style={{ flex: 1 }} placeholder="اسم المنتج *" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
               <input className="field-input" style={{ width: 150 }} placeholder="الرف (A,B,C,D)" value={form.shelf} onChange={e => setForm({...form, shelf: e.target.value})} />
               <input className="field-input" style={{ width: 100 }} placeholder="الموقع" value={form.position} onChange={e => setForm({...form, position: e.target.value})} />
+<input className="field-input" style={{ width: 200 }} placeholder="رابط الصورة (اختياري)" value={form.image} onChange={e => setForm({...form, image: e.target.value})} />
               <button onClick={handleAdd} className="btn btn-accent btn-sm">حفظ</button>
             </div>
           </div>
