@@ -8,6 +8,7 @@ import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminProductsPage from './pages/AdminProductsPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
+import AdminSettingsPage from './pages/AdminSettingsPage';
 import AdminInventoryPage from './pages/AdminInventoryPage';
 import AdminScanPage from './pages/AdminScanPage';
 
@@ -25,6 +26,8 @@ function App() {
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         <Route path="/admin/products" element={<AdminProductsPage />} />
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
+<Route path="/admin/settings" element={<AdminSettingsPage />} />
+import AdminSettingsPage from './pages/AdminSettingsPage';
         <Route path="/admin/inventory" element={<AdminInventoryPage />} />
 <Route path="/admin/scan" element={<AdminScanPage />} />
 import AdminScanPage from './pages/AdminScanPage';
