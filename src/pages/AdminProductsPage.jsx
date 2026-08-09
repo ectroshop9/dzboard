@@ -113,11 +113,11 @@ export default function AdminProductsPage() {
           <div className="card" style={{ padding: 16, marginBottom: 16 }}>
             <h3 style={{ marginBottom: 12 }}>إضافة منتج جديد (مع قطع مخزون)</h3>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-              <input className="field-input" style={{ flex: 2, minWidth: 200 }} placeholder="اسم المنتج *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-              <input className="field-input" style={{ width: 120 }} placeholder="السعر (دج)" type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
-              <input className="field-input" style={{ width: 80 }} placeholder="الكمية" type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
+              <input className="field-input" style={{ width: '100%' }} placeholder="اسم المنتج *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+              <input className="field-input" style={{ width: '100%' }} placeholder="السعر (دج)" type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
+              <input className="field-input" style={{ width: '100%' }} placeholder="الكمية" type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
               <input className="field-input" style={{ width: 100 }} placeholder="الرف" value={formData.shelf} onChange={e => setFormData({...formData, shelf: e.target.value})} />
-              <input className="field-input" style={{ width: 200 }} placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
+              <input className="field-input" style={{ width: '100%' }} placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
 <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: '#3b82f6', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', width: 'fit-content' }}><Upload size={14} /> رفع صورة<input type="file" accept="image/*" hidden onChange={(e) => handleImageUpload(e.target.files[0])} /></label>
               <button onClick={handleAdd} className="btn btn-accent btn-sm"><Save size={16} /> حفظ</button>
             </div>
