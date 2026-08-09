@@ -20,7 +20,7 @@ export default function AdminProductsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [formData, setFormData] = useState({ name: '', category: 'tcon', price: '', stock: '1', image: '', shelf: '' });
+  const [formData, setFormData] = useState({ name: '', category: 'tcon', price: '', stock: '1', description: '', image: '', shelf: '' });
 
   useEffect(() => {
     if (!localStorage.getItem('dzboard_admin_token')) { navigate('/admin'); return; }
@@ -70,7 +70,7 @@ export default function AdminProductsPage() {
       }
     }
     setShowAddForm(false);
-    setFormData({ name: '', category: 'tcon', price: '', stock: '1', image: '', shelf: '' });
+    setFormData({ name: '', category: 'tcon', price: '', stock: '1', description: '', image: '', shelf: '' });
     loadAll();
   };
 
@@ -96,6 +96,7 @@ export default function AdminProductsPage() {
               <input className="field-input" placeholder="اسم المنتج *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
               <input className="field-input" placeholder="السعر (دج)" type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
               <input className="field-input" placeholder="الكمية" type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
+<textarea className="field-input" style={{ fontSize: 13, padding: '8px 12px', maxWidth: 400 }} placeholder="الوصف" value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} rows={2} />
               <input className="field-input" placeholder="الرف" value={formData.shelf} onChange={e => setFormData({...formData, shelf: e.target.value})} />
               <input className="field-input" placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
               <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: '#3b82f6', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 13, width: 'fit-content' }}>
