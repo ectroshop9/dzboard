@@ -24,7 +24,7 @@ function App() {
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         <Route path="/admin/products" element={<AdminProductsPage />} />
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
-import AdminInventoryPage from './pages/AdminInventoryPage';
+        <Route path="/admin/inventory" element={<AdminInventoryPage />} />
       </Routes>
     </BrowserRouter>
   );
