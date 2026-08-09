@@ -1,17 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, Edit, Trash2, Save, X, Package, ChevronLeft, Monitor, Zap, Cpu, Search, Loader2, LogOut, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Package, ChevronLeft, Monitor, Zap, Cpu, Search, Loader2, LogOut, Upload, QrCode, Printer } from 'lucide-react';
 import { api } from '../services/api';
-
-const INITIAL_FORM_STATE = {
-  name: '',
-  category: 'tcon',
-  brand: 'samsung',
-  price: '',
-  stock: '',
-  description: '',
-  image: ''
-};
 
 const CATEGORIES = [
   { key: 'tcon', label: 'كرت تيكون', icon: Monitor, color: '#3b82f6' },
@@ -21,286 +11,186 @@ const CATEGORIES = [
 ];
 
 const BRANDS = ['samsung', 'lg', 'condor', 'iris', 'geant', 'stream', 'maxtor', 'kiowa'];
+const API = 'https://dzboard.onrender.com/api';
 
 export default function AdminProductsPage() {
   const navigate = useNavigate();
-
   const [products, setProducts] = useState([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [formData, setFormData] = useState(INITIAL_FORM_STATE);
+  const [formData, setFormData] = useState({ name: '', category: 'tcon', brand: 'samsung', price: '', stock: '1', description: '', image: '', shelf: '', position: '' });
 
-  useEffect(() => {
-    verifyAdmin();
-  }, [navigate]);
+  useEffect(() => { verifyAdmin(); }, []);
 
   const verifyAdmin = async () => {
     try {
       const data = await api.verifyAdmin();
-      if (!data.success) {
-        navigate('/admin');
-        return;
-      }
-      loadProducts();
-    } catch (error) {
-      navigate('/admin');
-    }
+      if (!data.success) { navigate('/admin'); return; }
+      loadAll();
+    } catch { navigate('/admin'); }
   };
 
-  const loadProducts = () => {
+  const loadAll = () => {
     setLoading(true);
-    api.getProducts().then(data => {
-      if (data.success) setProducts(data.products);
+    Promise.all([
+      api.getProducts(),
+      fetch(`${API}/inventory/items`).then(r => r.json()),
+    ]).then(([prodData, invData]) => {
+      if (prodData.success) setProducts(prodData.products);
+      if (invData.success) setItems(invData.items);
       setLoading(false);
-    }).catch(() => setLoading(false));
-  };
-
-  const handleImageUpload = async (file) => {
-    if (!file) return;
-    setUploading(true);
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-      try {
-        const res = await fetch('/api/products/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ image: reader.result })
-        });
-        const data = await res.json();
-        if (data.success) {
-          setFormData(prev => ({ ...prev, image: data.url }));
-        }
-      } catch (err) {
-        console.error('Upload failed:', err);
-      } finally {
-        setUploading(false);
-      }
-    };
-  };
-
-  const resetForm = () => {
-    setFormData(INITIAL_FORM_STATE);
-    setEditingId(null);
-    setShowAddForm(false);
-  };
-
-  const handleSave = async () => {
-    if (!formData.name || !formData.price) return;
-    if (editingId) {
-      await api.updateProduct(editingId, formData);
-      resetForm();
-      loadProducts();
-    }
+    });
   };
 
   const handleAdd = async () => {
     if (!formData.name || !formData.price) return;
-    await api.createProduct(formData);
-    resetForm();
-    loadProducts();
+    
+    // 1. إنشاء المنتج في المتجر
+    const prod = await api.createProduct(formData);
+    
+    // 2. إضافة قطع للمخزون (حسب العدد)
+    if (prod.success && formData.stock > 0) {
+      for (let i = 0; i < parseInt(formData.stock); i++) {
+        await fetch(`${API}/inventory/items`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            shelf: formData.shelf,
+            position: i + 1,
+            price: formData.price,
+            image: formData.image,
+            product_id: prod.product?.id,
+            category: formData.category,
+            brand: formData.brand,
+          }),
+        });
+      }
+    }
+    
+    setShowAddForm(false);
+    setFormData({ name: '', category: 'tcon', brand: 'samsung', price: '', stock: '1', description: '', image: '', shelf: '', position: '' });
+    loadAll();
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
       await api.deleteProduct(id);
-      loadProducts();
+      loadAll();
     }
   };
 
   const handleLogout = async () => {
-    try {
-      await api.adminLogout();
-      navigate('/admin');
-    } catch (error) {
-      navigate('/admin');
-    }
-  };
-
-  const handleEdit = (product) => {
-    setShowAddForm(false);
-    setEditingId(product.id);
-    setFormData({
-      name: product.name,
-      category: product.category,
-      brand: product.brand,
-      price: product.price ? product.price.toString() : '',
-      stock: product.stock ? product.stock.toString() : '',
-      description: product.description || '',
-      image: product.image || ''
-    });
-  };
-
-  const handleOpenAddForm = () => {
-    setEditingId(null);
-    setFormData(INITIAL_FORM_STATE);
-    setShowAddForm(prev => !prev);
+    try { await api.adminLogout(); navigate('/admin'); } catch { navigate('/admin'); }
   };
 
   const getCategoryName = (key) => CATEGORIES.find(c => c.key === key)?.label || key;
-
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredProducts = products.filter(p => p.name?.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', sans-serif" }}>
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Link to="/admin/dashboard" className="btn btn-ghost btn-sm"><ChevronLeft size={18} /> لوحة التحكم</Link>
-            <h1 style={{ fontSize: 18, fontWeight: 900 }}>إدارة المنتجات</h1>
-<Link to="/admin/inventory" className="btn btn-ghost btn-sm" style={{ gap: 6 }}><Package size={16} /> المخزون</Link>
+            <Link to="/admin/dashboard" className="btn btn-ghost btn-sm"><ChevronLeft size={18} /></Link>
+            <h1 style={{ fontSize: 18, fontWeight: 900 }}>المنتجات والمخزون</h1>
+            <Link to="/admin/scan" className="btn btn-ghost btn-sm" style={{ gap: 6 }}><QrCode size={16} /> مسح</Link>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleOpenAddForm} className="btn btn-primary btn-sm" style={{ gap: 6 }}>
-              <Plus size={16} /> إضافة منتج
-            </button>
-            <button onClick={handleLogout} className="btn btn-ghost btn-sm" title="تسجيل الخروج" style={{ color: '#ef4444' }}>
-              <LogOut size={16} />
-            </button>
+            <button onClick={() => setShowAddForm(!showAddForm)} className="btn btn-primary btn-sm" style={{ gap: 6 }}><Plus size={16} /> إضافة منتج</button>
+            <button onClick={handleLogout} className="btn btn-ghost btn-sm" style={{ color: '#ef4444' }}><LogOut size={16} /></button>
           </div>
         </div>
       </div>
 
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '16px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '16px' }}>
+        
         {showAddForm && (
           <div className="card" style={{ padding: 16, marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 800 }}>إضافة منتج جديد</h3>
-              <button onClick={resetForm} className="btn btn-ghost btn-sm"><X size={16} /></button>
-            </div>
-            
-            <FormFieldsInputs formData={formData} setFormData={setFormData} uploading={uploading} handleImageUpload={handleImageUpload} />
-            
-            <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-              <button onClick={handleAdd} className="btn btn-accent" disabled={!formData.name || !formData.price} style={{ gap: 6 }}>
-                <Save size={16} /> حفظ المنتج
-              </button>
-              <button onClick={resetForm} className="btn btn-ghost">إلغاء</button>
+            <h3 style={{ marginBottom: 12 }}>إضافة منتج جديد (مع قطع مخزون)</h3>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+              <input className="field-input" style={{ flex: 2, minWidth: 200 }} placeholder="اسم المنتج *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+              <input className="field-input" style={{ width: 120 }} placeholder="السعر (دج)" type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
+              <input className="field-input" style={{ width: 80 }} placeholder="الكمية" type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
+              <input className="field-input" style={{ width: 100 }} placeholder="الرف" value={formData.shelf} onChange={e => setFormData({...formData, shelf: e.target.value})} />
+              <input className="field-input" style={{ width: 200 }} placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
+              <button onClick={handleAdd} className="btn btn-accent btn-sm"><Save size={16} /> حفظ</button>
             </div>
           </div>
         )}
 
-        <div style={{ position: 'relative', marginBottom: 16 }}>
-          <input className="field-input" placeholder="ابحث عن منتج..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+        <div style={{ marginBottom: 16, position: 'relative' }}>
+          <input className="field-input" placeholder="بحث..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
           <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 60 }}><Loader2 size={40} className="spin" style={{ color: '#3b82f6' }} /></div>
+          <div style={{ textAlign: 'center', padding: 40 }}><Loader2 size={32} className="spin" /></div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {filteredProducts.map(product => (
-              <div key={product.id} className="card" style={{ padding: 14 }}>
-                {editingId === product.id ? (
-                  <div>
-                    <FormFieldsInputs formData={formData} setFormData={setFormData} uploading={uploading} handleImageUpload={handleImageUpload} />
-                    <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-                      <button onClick={handleSave} className="btn btn-primary btn-sm" style={{ gap: 6 }}><Save size={14} /> حفظ</button>
-                      <button onClick={resetForm} className="btn btn-ghost btn-sm"><X size={14} /> إلغاء</button>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 8, overflow: 'hidden', border: '1px solid #e2e8f0', flexShrink: 0 }}>
-                      <img src={product.image || 'https://via.placeholder.com/56'} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
+            {filteredProducts.map(product => {
+              const productItems = items.filter(i => i.product_id === product.id);
+              const available = productItems.filter(i => i.status === 'available').length;
+              return (
+                <div key={product.id} className="card" style={{ padding: 14 }}>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: productItems.length > 0 ? 10 : 0 }}>
+                    <img src={product.image || 'https://via.placeholder.com/56'} style={{ width: 56, height: 56, borderRadius: 8, objectFit: 'cover' }} />
                     <div style={{ flex: 1 }}>
-                      <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{product.name}</h4>
-                      <div style={{ display: 'flex', gap: 8, fontSize: 11, color: '#94a3b8' }}>
-                        <span>{getCategoryName(product.category)}</span><span>•</span><span>{product.brand}</span><span>•</span><span>المخزون: {product.stock}</span>
+                      <h4 style={{ fontSize: 14, fontWeight: 700 }}>{product.name}</h4>
+                      <div style={{ fontSize: 12, color: '#64748b' }}>
+                        {getCategoryName(product.category)} • {product.brand} • 
+                        <span style={{ color: available > 0 ? '#10b981' : '#ef4444', fontWeight: 700 }}>
+                          {available} قطعة متوفرة
+                        </span>
                       </div>
                     </div>
-                    <div style={{ fontSize: 16, fontWeight: 900, color: '#f59e0b', marginLeft: 16 }}>
-                      {product.price?.toLocaleString('en-US')} دج
-                    </div>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button onClick={() => handleEdit(product)} className="btn btn-ghost btn-sm" title="تعديل"><Edit size={14} /></button>
-                      <button onClick={() => handleDelete(product.id)} className="btn btn-ghost btn-sm" title="حذف" style={{ color: '#ef4444' }}><Trash2 size={14} /></button>
-                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: '#f59e0b' }}>{product.price?.toLocaleString('en-US')} دج</div>
+                    <button onClick={() => handleDelete(product.id)} className="btn btn-ghost btn-sm" style={{ color: '#ef4444' }}><Trash2 size={14} /></button>
                   </div>
-                )}
-              </div>
-            ))}
+                  
+                  {/* قطع المخزون لهذا المنتج */}
+                  {productItems.length > 0 && (
+                    <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
+                      <table style={{ width: '100%', fontSize: 12 }}>
+                        <thead>
+                          <tr style={{ color: '#94a3b8' }}>
+                            <th style={{ padding: 4, textAlign: 'right' }}>SKU</th>
+                            <th style={{ padding: 4, textAlign: 'right' }}>باركود</th>
+                            <th style={{ padding: 4, textAlign: 'right' }}>الرف</th>
+                            <th style={{ padding: 4, textAlign: 'right' }}>الحالة</th>
+                            <th style={{ padding: 4 }}></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {productItems.map(item => (
+                            <tr key={item.id}>
+                              <td style={{ padding: 4, fontWeight: 700 }}>{item.sku}</td>
+                              <td style={{ padding: 4, fontFamily: 'monospace', fontSize: 11 }}>{item.barcode}</td>
+                              <td style={{ padding: 4 }}>{item.shelf}-{item.position}</td>
+                              <td style={{ padding: 4 }}>
+                                <span style={{ padding: '2px 6px', borderRadius: 4, fontSize: 10, background: item.status === 'available' ? '#d1fae5' : '#fee2e2', color: item.status === 'available' ? '#065f46' : '#991b1b' }}>
+                                  {item.status === 'available' ? 'متوفر' : 'مباع'}
+                                </span>
+                              </td>
+                              <td style={{ padding: 4 }}>
+                                <button onClick={() => window.open(`https://barcode.tec-it.com/barcode.ashx?data=${item.barcode}&code=Code128`, '_blank')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>🖨️</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-// ⬇️ مكون الحقول مفصول خارج المكون الرئيسي لمنع مشاكل الـ Re-render و فقدان الـ Focus
-function FormFieldsInputs({ formData, setFormData, uploading, handleImageUpload }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <input 
-        className="field-input" 
-        placeholder="اسم المنتج *" 
-        value={formData.name} 
-        onChange={e => setFormData({ ...formData, name: e.target.value })} 
-      />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-        <select 
-          className="field-input" 
-          value={formData.category} 
-          onChange={e => setFormData({ ...formData, category: e.target.value })}
-        >
-          {CATEGORIES.map(c => (<option key={c.key} value={c.key}>{c.label}</option>))}
-        </select>
-        <select 
-          className="field-input" 
-          value={formData.brand} 
-          onChange={e => setFormData({ ...formData, brand: e.target.value })}
-        >
-          {BRANDS.map(b => (<option key={b} value={b}>{b}</option>))}
-        </select>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-        <input 
-          className="field-input" 
-          type="number" 
-          placeholder="السعر (دج) *" 
-          value={formData.price} 
-          onChange={e => setFormData({ ...formData, price: e.target.value })} 
-        />
-        <input 
-          className="field-input" 
-          type="number" 
-          placeholder="المخزون *" 
-          value={formData.stock} 
-          onChange={e => setFormData({ ...formData, stock: e.target.value })} 
-        />
-      </div>
-      <textarea 
-        className="field-input" 
-        placeholder="الوصف" 
-        value={formData.description} 
-        onChange={e => setFormData({ ...formData, description: e.target.value })} 
-        rows={2} 
-      />
-      
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <input 
-          className="field-input" 
-          placeholder="رابط الصورة" 
-          value={formData.image} 
-          onChange={e => setFormData({ ...formData, image: e.target.value })} 
-        />
-        <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: '#3b82f6', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap' }}>
-          <Upload size={14} />
-          {uploading ? 'جاري...' : 'رفع'}
-          <input type="file" accept="image/*" hidden onChange={(e) => handleImageUpload(e.target.files[0])} />
-        </label>
-      </div>
-      {formData.image && (
-        <img src={formData.image} alt="Preview" style={{ width: '100%', maxHeight: 150, objectFit: 'cover', borderRadius: 8, border: '1px solid #e2e8f0' }} />
-      )}
     </div>
   );
 }
