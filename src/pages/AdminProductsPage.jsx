@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, Edit, Trash2, Save, X, Package, ChevronLeft, Monitor, Zap, Cpu, Search, Loader2, LogOut, Upload, QrCode, Printer } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Package, ChevronLeft, Monitor, Zap, Cpu, Search, Loader2, LogOut, Upload, QrCode, Printer, Upload } from 'lucide-react';
 import { api } from '../services/api';
 
 const CATEGORIES = [
@@ -118,6 +118,7 @@ export default function AdminProductsPage() {
               <input className="field-input" style={{ width: 80 }} placeholder="الكمية" type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
               <input className="field-input" style={{ width: 100 }} placeholder="الرف" value={formData.shelf} onChange={e => setFormData({...formData, shelf: e.target.value})} />
               <input className="field-input" style={{ width: 200 }} placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
+<label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: '#3b82f6', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', width: 'fit-content' }}><Upload size={14} /> رفع صورة<input type="file" accept="image/*" hidden onChange={(e) => handleImageUpload(e.target.files[0])} /></label>
               <button onClick={handleAdd} className="btn btn-accent btn-sm"><Save size={16} /> حفظ</button>
             </div>
           </div>
