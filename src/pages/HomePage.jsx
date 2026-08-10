@@ -95,7 +95,7 @@ export default function HomePage() {
       </header>
 
       <section style={{ maxWidth: 850, margin: '20px auto 0', padding: '0 16px', position: 'relative', zIndex: 20 }}>
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 18, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)' }}>
+        <div style={{ background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 16, padding: 18, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)' }}>
           <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <select value={searchBrand} onChange={e => setSearchBrand(e.target.value)} style={{ padding: '12px 14px', border: '1px solid #e2e8f0', borderRadius: 10, background: '#f8fafc', minWidth: 130, flex: '1 1 130px', outline: 'none', fontSize: 13, color: '#334155', cursor: 'pointer' }}>
               <option value="ALL">كل الماركات</option>
@@ -118,7 +118,7 @@ export default function HomePage() {
             {categories.map((cat) => {
               const Icon = cat.icon;
               return (
-                <button key={cat.key} data-reveal onClick={() => navigate(`/store?category=${cat.key}`)} className="reveal-item" style={{ padding: 22, textAlign: 'center', cursor: 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, transition: 'all 0.2s ease' }}
+                <button key={cat.key} data-reveal onClick={() => navigate(`/store?category=${cat.key}`)} className="reveal-item" style={{ padding: 22, textAlign: 'center', cursor: 'pointer', background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 14, transition: 'all 0.2s ease' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = cat.color; e.currentTarget.style.transform = 'translateY(-4px)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                   <div style={{ background: `${cat.color}15`, color: cat.color, margin: '0 auto 12px', width: 54, height: 54, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={26} /></div>
@@ -145,7 +145,7 @@ export default function HomePage() {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
               {featuredProducts.map(product => (
-                <div key={product.id} onClick={() => navigate(`/product/${product.id}`)} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 12, cursor: 'pointer', transition: 'all 0.2s ease', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+                <div key={product.id} onClick={() => navigate(`/product/${product.id}`)} style={{ background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 12, padding: 12, cursor: 'pointer', transition: 'all 0.2s ease', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
                   onMouseEnter={e => e.currentTarget.style.borderColor = '#3b82f6'} onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
                   <div style={{ height: 120, background: '#fafafa', borderRadius: 8, overflow: 'hidden', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <img src={product.image || 'https://via.placeholder.com/150'} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
@@ -171,8 +171,8 @@ export default function HomePage() {
             {features.map((f, i) => {
               const Icon = f.icon;
               return (
-                <div key={i} data-reveal className="reveal-item" style={{ padding: 20, textAlign: 'center', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12 }}>
-                  <div style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1', width: 44, height: 44, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}><Icon size={22} /></div>
+                <div key={i} data-reveal className="reveal-item" style={{ padding: 20, textAlign: 'center', background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 12 }}>
+                  <div style={{ background: 'rgba(99,102,241,0.1)', border: 'none', boxShadow: 'none', color: '#6366f1', width: 44, height: 44, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}><Icon size={22} /></div>
                   <h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 6, color: '#0f172a' }}>{f.title}</h3>
                   <p style={{ fontSize: 12, color: '#64748b', margin: 0, lineHeight: 1.4 }}>{f.description}</p>
                 </div>
@@ -187,7 +187,7 @@ export default function HomePage() {
           <h2 data-reveal style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 20 }} className="reveal-item">قطع متوافقة مع جميع الماركات</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
             {brands.map((brand, i) => (
-              <button key={i} data-reveal onClick={() => navigate(`/store?brand=${brand.code}`)} className="reveal-item" style={{ padding: '12px 8px', textAlign: 'center', cursor: 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 60, transition: 'all 0.2s' }}
+              <button key={i} data-reveal onClick={() => navigate(`/store?brand=${brand.code}`)} className="reveal-item" style={{ padding: '12px 8px', textAlign: 'center', cursor: 'pointer', background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 60, transition: 'all 0.2s' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                 <img src={brand.image} alt={brand.name} style={{ maxWidth: 70, maxHeight: 35, objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; e.target.parentNode.innerText = brand.name; e.target.parentNode.style.fontWeight = '700'; e.target.parentNode.style.color = '#334155'; }} />
