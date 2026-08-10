@@ -10,6 +10,7 @@ import AdminProductsPage from './pages/AdminProductsPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 import AdminScanPage from './pages/AdminScanPage';
+import AdminRequestsPage from './pages/AdminRequestsPage';
 
 function App() {
   return (
@@ -30,7 +31,9 @@ import RequestPartPage from './pages/RequestPartPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 <Route path="/admin/scan" element={<AdminScanPage />} />
 <Route path="/admin/requests" element={<AdminRequestsPage />} />
+import AdminRequestsPage from './pages/AdminRequestsPage';
 import AdminScanPage from './pages/AdminScanPage';
+import AdminRequestsPage from './pages/AdminRequestsPage';
       </Routes>
     </BrowserRouter>
   );
