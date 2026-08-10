@@ -88,7 +88,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div style={{ background: '#fff', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', sans-serif" }}>
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', sans-serif" }}>
       
       <nav style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -124,7 +124,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* تصنيفات القطع: إطار فقط وبدون خلفية (transparent) */}
+      {/* تصنيفات القطع */}
       <section style={{ padding: '50px 16px 30px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 22, fontWeight: 900, textAlign: 'center', marginBottom: 28, color: '#0f172a' }} className="reveal-item">تصنيفات القطع</h2>
@@ -132,7 +132,7 @@ export default function HomePage() {
             {categories.map((cat) => {
               const Icon = cat.icon;
               return (
-                <button key={cat.key} data-reveal onClick={() => navigate(`/store?category=${cat.key}`)} className="reveal-item" style={{ padding: 18, textAlign: 'center', cursor: 'pointer', background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 12, transition: 'all 0.2s ease' }}
+                <button key={cat.key} data-reveal onClick={() => navigate(`/store?category=${cat.key}`)} className="reveal-item" style={{ padding: 18, textAlign: 'center', cursor: 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, transition: 'all 0.2s ease' }}
                   onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.borderColor = cat.color; }}
                   onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#e2e8f0'; }}>
                   <div style={{ background: `${cat.color}15`, color: cat.color, margin: '0 auto 12px', width: 54, height: 54, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={26} /></div>
@@ -144,8 +144,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* أحدث القطع المتوفرة مع أزرار "اشتري الآن" وبدون أيقونة السلة */}
-      <section style={{ padding: '20px 16px 40px', background: '#f8fafc' }}>
+      {/* أحدث القطع المتوفرة */}
+      <section style={{ padding: '20px 16px 40px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 20 }}>
             <div>
@@ -189,7 +189,7 @@ export default function HomePage() {
             {features.map((f, i) => {
               const Icon = f.icon;
               return (
-                <div key={i} data-reveal className="reveal-item" style={{ padding: 16, textAlign: 'center', background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 12 }}>
+                <div key={i} data-reveal className="reveal-item" style={{ padding: 16, textAlign: 'center', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12 }}>
                   <div style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1', width: 44, height: 44, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}><Icon size={22} /></div>
                   <h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 6, color: '#0f172a' }}>{f.title}</h3>
                   <p style={{ fontSize: 12, color: '#64748b', margin: 0, lineHeight: 1.4 }}>{f.description}</p>
@@ -200,7 +200,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section style={{ padding: '36px 16px', background: '#f8fafc' }}>
+      <section style={{ padding: '36px 16px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 20 }} className="reveal-item">قطع متوافقة مع جميع الماركات</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 }}>
