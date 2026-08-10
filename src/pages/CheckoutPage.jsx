@@ -38,7 +38,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     let isMounted = true;
-    api.getWilayas?.() || fetch('/api/shipping/wilayas').then(r => r.json())
+    api.getWilayas?.() || fetch('https://dzboard.onrender.com/api/shipping/wilayas').then(r => r.json())
       .then(data => {
         if (isMounted && data.success) setWilayas(data.wilayas);
       })
@@ -62,8 +62,8 @@ export default function CheckoutPage() {
     setLoadingCommunes(true);
 
     Promise.all([
-      fetch(`/api/shipping/fee?wilaya_id=${wilayaId}`, { signal: controller.signal }).then(r => r.json()),
-      fetch(`/api/shipping/communes?wilaya_id=${wilayaId}`, { signal: controller.signal }).then(r => r.json())
+      fetch(`https://dzboard.onrender.com/api/shipping/fee?wilaya_id=${wilayaId}`, { signal: controller.signal }).then(r => r.json()),
+      fetch(`https://dzboard.onrender.com/api/shipping/communes?wilaya_id=${wilayaId}`, { signal: controller.signal }).then(r => r.json())
     ])
       .then(([feeData, communesData]) => {
         if (feeData?.success) setFees(feeData.fees);
