@@ -132,12 +132,11 @@ export default function HomePage() {
 
       <section style={{ padding: '20px 16px 40px', background: '#f8fafc' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
             <div>
               <h2 style={{ fontSize: 20, fontWeight: 900, color: '#0f172a', margin: 0 }}>أحدث القطع المتوفرة</h2>
               <p style={{ fontSize: 12, color: '#64748b', margin: '4px 0 0 0' }}>قطع مجربة وجاهزة للشحن المباشر</p>
             </div>
-            <Link to="/store" style={{ color: '#2563eb', fontSize: 13, fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>عرض الكل <ArrowRight size={14} style={{ transform: 'rotate(180deg)' }} /></Link>
           </div>
           {loadingProducts ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
@@ -153,7 +152,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h3 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name || product.title}</h3>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                    <div style={{ textAlign: 'center', marginTop: 8 }}>
                       <span style={{ fontSize: 14, fontWeight: 800, color: '#d97706' }}>{(parseFloat(product.price) || 0).toLocaleString('en-US')} <span style={{ fontSize: 10 }}>دج</span></span>
                       <span style={{ color: '#3b82f6', background: '#eff6ff', padding: 6, borderRadius: 6 }}><ShoppingCart size={14} /></span>
                     </div>
