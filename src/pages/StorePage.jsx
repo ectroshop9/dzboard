@@ -23,7 +23,6 @@ export default function StorePage() {
     { key: 'alimentation', label: 'اليمونتاسيون', icon: Zap, color: '#f59e0b' },
     { key: 'main-board', label: 'مين بورد', icon: Cpu, color: '#6366f1' },
     { key: 'parts', label: 'قطع غيار', icon: Package, color: '#10b981' },
-<Link to="/request-part" style={{ padding: '8px 14px', borderRadius: 8, border: '2px dashed #d97706', background: '#fffbeb', color: '#d97706', cursor: 'pointer', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', textDecoration: 'none' }}>📦 طلب قطعة خاصة</Link>
   ];
 
   const brands = [
@@ -113,7 +112,6 @@ export default function StorePage() {
               <ChevronLeft size={18} /> الرئيسية
             </Link>
             <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#0f172a' }}>المتجر الإلكتروني</h1>
-<Link to="/request-part" style={{ background: '#d97706', color: '#fff', padding: '8px 14px', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 13, marginRight: 8 }}>طلب قطعة غير متوفرة</Link>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button
