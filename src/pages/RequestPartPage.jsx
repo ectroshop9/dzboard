@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Send, Loader2, CheckCircle2, Camera, ArrowRight } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Send, Loader2, CheckCircle2, ArrowRight } from 'lucide-react';
 
 const API = 'https://dzboard.onrender.com/api';
 
 export default function RequestPartPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ customer_name: '', phone: '', part_name: '', brand: '', model: '', notes: '', image: '' });
+  const [form, setForm] = useState({ customer_name: '', phone: '', part_name: '', brand: '', model: '', notes: '' });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -49,10 +49,10 @@ export default function RequestPartPage() {
         <ArrowRight size={20} /> رجوع
       </button>
       
-      <h2 style={{ marginBottom: 20 }}>طلب قطعة غير متوفرة</h2>
-      <p style={{ color: '#64748b', marginBottom: 20 }}>أدخل بيانات القطعة اللي تبحث عنها ونتواصل معك</p>
+      <h2 style={{ marginBottom: 8 }}>طلب قطعة غير متوفرة</h2>
+      <p style={{ color: '#64748b', marginBottom: 20, fontSize: 13 }}>أدخل بيانات القطعة اللي تبحث عنها ونتواصل معك</p>
       
-      {error && <div style={{ background: '#fee2e2', color: '#dc2626', padding: 10, borderRadius: 8, marginBottom: 16 }}>{error}</div>}
+      {error && <div style={{ background: '#fee2e2', color: '#dc2626', padding: 10, borderRadius: 8, marginBottom: 16, fontSize: 13 }}>{error}</div>}
       
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <input className="field-input" placeholder="اسمك الكامل *" value={form.customer_name} onChange={e => setForm({...form, customer_name: e.target.value})} />
