@@ -185,6 +185,7 @@ export default function RequestPartPage() {
 
         <div>
           <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4, color: '#334155' }}>ملاحظات إضافية</label>
+{form.image && <img src={form.image} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 8, marginTop: 8 }} />}
           <textarea 
             style={{ ...inputStyle, resize: 'vertical' }} 
             placeholder="اكتب رقم البوردة أو أي تفاصيل أخرى قد تساعدنا..." 
