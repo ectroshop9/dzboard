@@ -98,7 +98,7 @@ export default function HomePage() {
           <Link to="/" style={{ textDecoration: 'none', fontSize: 22, fontWeight: 900 }}>
             <span style={{ color: '#3b82f6' }}>DZ</span><span style={{ color: '#f59e0b' }}>Board</span>
           </Link>
-          <Link to="/store" style={{ background: '#3b82f6', color: '#fff', padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>المتجر الكامل</Link>
+          <Link to="/store" style={{ background: '#3b82f6', color: '#fff', padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>المتجر</Link>
         </div>
       </nav>
 
@@ -170,7 +170,7 @@ export default function HomePage() {
                       <img src={product.image || 'https://via.placeholder.com/150'} alt={product.name || product.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     </div>
                     <h3 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name || product.title}</h3>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#d97706', marginBottom: 10 }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#2563eb', marginBottom: 10 }}>
                       {(parseFloat(product.price) || 0).toLocaleString('en-US')} <span style={{ fontSize: 10 }}>دج</span>
                     </div>
                   </div>
@@ -229,7 +229,7 @@ export default function HomePage() {
         <Link to="/store" style={{ background: '#f59e0b', color: '#fff', padding: '14px 32px', borderRadius: 10, textDecoration: 'none', fontWeight: 800, display: 'inline-block', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)' }}>تصفح المتجر الآن</Link>
       </section>
 
-      <section style={{ padding: '40px 16px', background: '#fffbeb' }}><div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}><h2 data-reveal style={{ fontSize: 20, fontWeight: 900, color: '#d97706', marginBottom: 12 }} className="reveal-item">لم تجد القطعة اللي تبحث عنها؟</h2><p style={{ color: '#92400e', marginBottom: 20, fontSize: 14 }}>أرسل لنا اسم القطعة أو البوردة وصورتها ونجيبها لك خصيصاً</p><Link to="/request-part" className="reveal-item" style={{ background: '#d97706', boxShadow: '0 4px 14px rgba(217, 119, 6, 0.4)', fontSize: 16, padding: '16px 40px', color: '#fff', padding: '14px 32px', borderRadius: 10, textDecoration: 'none', fontWeight: 800, display: 'inline-block', fontSize: 15 }}>اطلب قطعتك الخاصة الآن ←</Link></div></section>
+      <section style={{ padding: '40px 16px', background: '#eff6ff' }}><div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}><h2 data-reveal style={{ fontSize: 20, fontWeight: 900, color: '#2563eb', marginBottom: 12 }} className="reveal-item">لم تجد القطعة اللي تبحث عنها؟</h2><p style={{ color: '#1e40af', marginBottom: 20, fontSize: 14 }}>أرسل لنا اسم القطعة أو البوردة وصورتها ونجيبها لك خصيصاً</p><Link to="/request-part" className="reveal-item" style={{ background: '#2563eb', boxShadow: '0 4px 14px rgba(217, 119, 6, 0.4)', fontSize: 16, padding: '16px 40px', color: '#fff', padding: '14px 32px', borderRadius: 10, textDecoration: 'none', fontWeight: 800, display: 'inline-block', fontSize: 15 }}>اطلب قطعتك الخاصة الآن ←</Link></div></section>
       <footer style={{ background: '#fff', borderTop: '1px solid #e2e8f0', padding: '32px 16px', textAlign: 'center' }}>
         <div style={{ fontSize: 18, fontWeight: 900, marginBottom: 6 }}>DZ<span style={{ color: '#f59e0b' }}>Board</span></div>
         <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>متجر قطع غيار الشاشات الأول في الجزائر</p>
