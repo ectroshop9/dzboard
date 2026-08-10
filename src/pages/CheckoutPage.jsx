@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Truck, Home, Loader2, Package, ChevronLeft, Shield } from 'lucide-react';
+import { Truck, Home, Loader2, Package, ChevronLeft, Shield, CheckCircle2, Clock } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function CheckoutPage() {
@@ -9,11 +9,12 @@ export default function CheckoutPage() {
 
   const cartItems = location.state?.items || JSON.parse(localStorage.getItem('cartItems') || '[]');
 
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [wilayaId, setWilayaId] = useState('');
-  const [commune, setCommune] = useState('');
-  const [address, setAddress] = useState('');
+  // استرجاع البيانات المحفوظة سابقاً إن وجدت
+  const [fullName, setFullName] = useState(() => localStorage.getItem('checkout_name') || '');
+  const [phone, setPhone] = useState(() => localStorage.getItem('checkout_phone') || '');
+  const [wilayaId, setWilayaId] = useState(() => localStorage.getItem('checkout_wilaya') || '');
+  const [commune, setCommune] = useState(() => localStorage.getItem('checkout_commune') || '');
+  const [address, setAddress] = useState(() => localStorage.getItem('checkout_address') || '');
   const [shippingType, setShippingType] = useState('domicile');
   
   const [wilayas, setWilayas] = useState([]);
@@ -24,6 +25,16 @@ export default function CheckoutPage() {
   const [loadingCommunes, setLoadingCommunes] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const formRef = useRef(null);
+
+  // حفظ التغييرات محلياً
+  useEffect(() => { localStorage.setItem('checkout_name', fullName); }, [fullName]);
+  useEffect(() => { localStorage.setItem('checkout_phone', phone); }, [phone]);
+  useEffect(() => { localStorage.setItem('checkout_wilaya', wilayaId); }, [wilayaId]);
+  useEffect(() => { localStorage.setItem('checkout_commune', commune); }, [commune]);
+  useEffect(() => { localStorage.setItem('checkout_address', address); }, [address]);
 
   useEffect(() => {
     let isMounted = true;
@@ -49,7 +60,6 @@ export default function CheckoutPage() {
 
     const controller = new AbortController();
     setLoadingCommunes(true);
-    setCommune('');
 
     Promise.all([
       fetch(`/api/shipping/fee?wilaya_id=${wilayaId}`, { signal: controller.signal }).then(r => r.json()),
@@ -60,9 +70,7 @@ export default function CheckoutPage() {
         if (communesData?.success) setCommunes(communesData.communes);
       })
       .catch(err => {
-        if (err.name !== 'AbortError') {
-          console.error('Error loading communes/fees:', err);
-        }
+        if (err.name !== 'AbortError') console.error('Error loading communes/fees:', err);
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoadingCommunes(false);
@@ -82,42 +90,49 @@ export default function CheckoutPage() {
   const shippingCost = fees ? (parseFloat(fees[shippingType]) || 0) : 0;
   const total = subtotal + shippingCost;
 
+  const validate = () => {
+    const errors = {};
+    const cleanPhone = phone.replace(/\s+/g, '').trim();
+    
+    if (!fullName.trim()) errors.fullName = 'الاسم الكامل مطلوب';
+    if (!cleanPhone) {
+      errors.phone = 'رقم الهاتف مطلوب';
+    } else if (!/^0[5-7]\d{8}$/.test(cleanPhone)) {
+      errors.phone = 'رقم غير صحيح (مثال: 0661234567)';
+    }
+    if (!wilayaId) errors.wilayaId = 'يرجى اختيار الولاية';
+    if (!commune) errors.commune = 'يرجى اختيار البلدية';
+    if (!address.trim()) errors.address = 'العنوان التفصيلي مطلوب';
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const cleanPhone = phone.replace(/\s+/g, '').trim();
-    const cleanName = fullName.trim();
-    const cleanAddress = address.trim();
+    setError('');
 
-    if (!cleanName || !cleanPhone || !cleanAddress || !wilayaId || !commune) {
-      setError('جميع الحقول مطلوبة');
-      return;
-    }
-
-    if (!/^0[5-7]\d{8}$/.test(cleanPhone)) {
-      setError('يرجى إدخال رقم هاتف جزائري صالح (مثال: 0661234567)');
+    if (!validate()) {
+      setError('يرجى تصحيح الأخطاء الموضحة أدناه');
       return;
     }
 
     setSubmitting(true);
-    setError('');
 
     try {
       const res = await api.createOrder({
-        full_name: cleanName,
-        phone: cleanPhone,
+        full_name: fullName.trim(),
+        phone: phone.replace(/\s+/g, '').trim(),
         wilaya_id: parseInt(wilayaId, 10),
         commune,
-        address: cleanAddress,
+        address: address.trim(),
         shipping_type: shippingType,
-        items: cartItems.map(i => ({ 
-          id: i.id, 
-          quantity: parseInt(i.quantity, 10) 
-        }))
+        items: cartItems.map(i => ({ id: i.id, quantity: parseInt(i.quantity, 10) }))
       });
 
       if (res.success) {
         localStorage.removeItem('cartItems');
+        ['checkout_name', 'checkout_phone', 'checkout_wilaya', 'checkout_commune', 'checkout_address'].forEach(k => localStorage.removeItem(k));
         navigate('/thank-you', { state: { trackingNumber: res.trackingNumber, orderId: res.orderId } });
       } else {
         setError(res.message || 'فشل إنشاء الطلب');
@@ -142,129 +157,148 @@ export default function CheckoutPage() {
     );
   }
 
+  const getInputStyle = (errorKey) => ({
+    width: '100%',
+    padding: '12px',
+    border: fieldErrors[errorKey] ? '1.5px solid #e44' : '1px solid #ddd',
+    borderRadius: 8,
+    fontSize: 15,
+    outline: 'none',
+    boxSizing: 'border-box',
+    background: fieldErrors[errorKey] ? '#fff8f8' : '#fff'
+  });
+
   return (
-    <div style={{ background: '#f5f5f5', minHeight: '100vh', fontFamily: 'system-ui', direction: 'rtl' }}>
+    <div style={{ background: '#f8f9fa', minHeight: '100vh', fontFamily: 'system-ui', direction: 'rtl', paddingBottom: 40 }}>
+      {/* الشريط العلوي */}
       <div style={{ background: '#fff', padding: '12px 16px', borderBottom: '1px solid #eee', position: 'sticky', top: 0, zIndex: 30 }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', alignItems: 'center' }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#333' }}>
-            <ChevronLeft size={20} />
-          </button>
-          <h1 style={{ fontSize: 18, fontWeight: 700, marginRight: 8, color: '#222' }}>تأكيد الطلب</h1>
+        <div style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#333', padding: 4 }}>
+              <ChevronLeft size={22} />
+            </button>
+            <h1 style={{ fontSize: 18, fontWeight: 700, marginRight: 8, color: '#222' }}>تأكيد الطلب</h1>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#2e7d32', fontSize: 12, fontWeight: 600, background: '#e8f5e9', padding: '4px 8px', borderRadius: 20 }}>
+            <Shield size={14} /> دفع عند الاستلام
+          </div>
         </div>
       </div>
 
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '16px' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px' }}>
         {error && <div style={{ background: '#fff0f0', color: '#e44', padding: 12, borderRadius: 8, marginBottom: 16, fontSize: 13, border: '1px solid #fcc' }}>{error}</div>}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16, alignItems: 'start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           
-          {/* العمود الأول - قائمة المنتجات مع صور مكبّرة */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#444' }}>ملخص السلة ({cartItems.length})</h3>
-            {cartItems.map((item) => (
-              <div 
-                key={item.id} 
-                style={{ 
-                  background: '#fff', 
-                  borderRadius: 12, 
-                  padding: 14, 
-                  display: 'flex', 
-                  gap: 16, 
-                  alignItems: 'center', 
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.06)' 
-                }}
-              >
-                {/* تم تكبير حجم الصورة هنا من 70px إلى 110px مع إطار خفيف */}
-                <img 
-                  src={item.image || 'https://via.placeholder.com/150'} 
-                  alt={item.name} 
-                  style={{ 
-                    width: 110, 
-                    height: 110, 
-                    borderRadius: 10, 
-                    objectFit: 'cover',
-                    border: '1px solid #f0f0f0',
-                    flexShrink: 0
-                  }} 
-                />
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <h4 style={{ fontSize: 15, fontWeight: 600, color: '#222', margin: 0, lineHeight: 1.3 }}>
-                    {item.name}
-                  </h4>
-                  <p style={{ fontSize: 13, color: '#777', margin: 0 }}>
-                    الكمية: <span style={{ fontWeight: 600, color: '#333' }}>{item.quantity}</span>
-                  </p>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#ff6600', marginTop: 4 }}>
-                    {(parseFloat(item.price || 0) * item.quantity).toLocaleString('en-US')} دج
-                  </div>
+          {/* معرض الصور - أسلوب AliExpress كبير وبدون كتابة بجانبه */}
+          <div style={{ background: '#fff', borderRadius: 12, padding: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', border: '1px solid #f0f0f0' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {cartItems.map((item) => (
+                <div key={item.id} style={{ width: '100%', overflow: 'hidden', borderRadius: 8 }}>
+                  <img 
+                    src={item.image || 'https://via.placeholder.com/600x400'} 
+                    alt="صورة المنتج" 
+                    style={{ 
+                      width: '100%', 
+                      height: '220px', 
+                      objectFit: 'cover',
+                      borderRadius: 8,
+                      display: 'block'
+                    }} 
+                  />
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, color: '#555', fontSize: 12 }}>
+              <Clock size={16} style={{ color: '#ff6600', flexShrink: 0 }} />
+              <span>مدة التوصيل المقدرة: من 24 إلى 72 ساعة حسب الولاية</span>
+            </div>
           </div>
 
-          {/* العمود الثاني - النموذج */}
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ background: '#fff', borderRadius: 12, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#222', marginBottom: 14 }}>معلومات التوصيل</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <input
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-                  placeholder="الاسم الكامل *"
-                  value={fullName}
-                  onChange={e => setFullName(e.target.value)}
-                  maxLength={100}
-                />
-                <input
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-                  placeholder="رقم الهاتف (مثال: 0661234567) *"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  type="tel"
-                />
-                <select
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
-                  value={wilayaId}
-                  onChange={e => setWilayaId(e.target.value)}
-                >
-                  <option value="">{loadingWilayas ? 'جاري تحميل الولايات...' : 'اختر الولاية *'}</option>
-                  {wilayas.map(w => (<option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_id} - {w.name_ar}</option>))}
-                </select>
+          {/* نموذج البيانات */}
+          <form ref={formRef} onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ background: '#fff', borderRadius: 12, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', border: '1px solid #f0f0f0' }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#222', marginBottom: 14 }}>معلومات الاستلام</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                
+                <div>
+                  <input
+                    style={getInputStyle('fullName')}
+                    placeholder="الاسم الكامل *"
+                    value={fullName}
+                    onChange={e => { setFullName(e.target.value); setFieldErrors(prev => ({...prev, fullName: null})); }}
+                    maxLength={100}
+                  />
+                  {fieldErrors.fullName && <span style={{ color: '#e44', fontSize: 11, marginTop: 2, display: 'block' }}>{fieldErrors.fullName}</span>}
+                </div>
 
-                <select
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
-                  value={commune}
-                  onChange={e => setCommune(e.target.value)}
-                  disabled={!wilayaId || loadingCommunes}
-                >
-                  <option value="">
-                    {!wilayaId 
-                      ? 'اختر الولاية أولاً' 
-                      : loadingCommunes 
-                      ? 'جاري تحميل البلديات...' 
-                      : communes.length === 0 
-                      ? 'لا توجد بلديات' 
-                      : 'اختر البلدية *'}
-                  </option>
-                  {communes.map(c => (
-                    <option key={c.id || c.name_ar || c.name_fr} value={c.name_ar || c.name_fr}>
-                      {c.name_ar || c.name_fr}
+                <div>
+                  <input
+                    style={getInputStyle('phone')}
+                    placeholder="رقم الهاتف (06/07/05) *"
+                    value={phone}
+                    onChange={e => { setPhone(e.target.value); setFieldErrors(prev => ({...prev, phone: null})); }}
+                    type="tel"
+                    inputMode="numeric"
+                  />
+                  {fieldErrors.phone && <span style={{ color: '#e44', fontSize: 11, marginTop: 2, display: 'block' }}>{fieldErrors.phone}</span>}
+                </div>
+
+                <div>
+                  <select
+                    style={getInputStyle('wilayaId')}
+                    value={wilayaId}
+                    onChange={e => { setWilayaId(e.target.value); setFieldErrors(prev => ({...prev, wilayaId: null})); }}
+                  >
+                    <option value="">{loadingWilayas ? 'جاري تحميل الولايات...' : 'اختر الولاية *'}</option>
+                    {wilayas.map(w => (<option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_id} - {w.name_ar}</option>))}
+                  </select>
+                  {fieldErrors.wilayaId && <span style={{ color: '#e44', fontSize: 11, marginTop: 2, display: 'block' }}>{fieldErrors.wilayaId}</span>}
+                </div>
+
+                <div>
+                  <select
+                    style={getInputStyle('commune')}
+                    value={commune}
+                    onChange={e => { setCommune(e.target.value); setFieldErrors(prev => ({...prev, commune: null})); }}
+                    disabled={!wilayaId || loadingCommunes}
+                  >
+                    <option value="">
+                      {!wilayaId 
+                        ? 'اختر الولاية أولاً' 
+                        : loadingCommunes 
+                        ? 'جاري تحميل البلديات...' 
+                        : communes.length === 0 
+                        ? 'لا توجد بلديات' 
+                        : 'اختر البلدية *'}
                     </option>
-                  ))}
-                </select>
+                    {communes.map(c => (
+                      <option key={c.id || c.name_ar || c.name_fr} value={c.name_ar || c.name_fr}>
+                        {c.name_ar || c.name_fr}
+                      </option>
+                    ))}
+                  </select>
+                  {fieldErrors.commune && <span style={{ color: '#e44', fontSize: 11, marginTop: 2, display: 'block' }}>{fieldErrors.commune}</span>}
+                </div>
 
-                <textarea
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
-                  placeholder="العنوان بالتفصيل *"
-                  value={address}
-                  onChange={e => setAddress(e.target.value)}
-                  maxLength={200}
-                  rows={3}
-                />
+                <div>
+                  <textarea
+                    style={{ ...getInputStyle('address'), resize: 'vertical' }}
+                    placeholder="العنوان بالتفصيل *"
+                    value={address}
+                    onChange={e => { setAddress(e.target.value); setFieldErrors(prev => ({...prev, address: null})); }}
+                    maxLength={200}
+                    rows={2}
+                  />
+                  {fieldErrors.address && <span style={{ color: '#e44', fontSize: 11, marginTop: 2, display: 'block' }}>{fieldErrors.address}</span>}
+                </div>
+
               </div>
             </div>
 
             {fees && (
-              <div style={{ background: '#fff', borderRadius: 12, padding: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+              <div style={{ background: '#fff', borderRadius: 12, padding: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', border: '1px solid #f0f0f0' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <button
                     type="button"
@@ -282,7 +316,7 @@ export default function CheckoutPage() {
                       gap: 4,
                     }}
                   >
-                    <Home size={18} />
+                    <Home size={18} style={{ color: shippingType === 'domicile' ? '#ff6600' : '#666' }} />
                     <div style={{ fontWeight: 600, fontSize: 12 }}>توصيل للمنزل</div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#ff6600' }}>{parseFloat(fees.domicile).toLocaleString('en-US')} دج</div>
                   </button>
@@ -305,8 +339,8 @@ export default function CheckoutPage() {
                       gap: 4,
                     }}
                   >
-                    <Truck size={18} />
-                    <div style={{ fontWeight: 600, fontSize: 12 }}>توصيل للمكتب (Stop Desk)</div>
+                    <Truck size={18} style={{ color: shippingType === 'stopdesk' ? '#ff6600' : '#666' }} />
+                    <div style={{ fontWeight: 600, fontSize: 12 }}>توصيل للمكتب</div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#ff6600' }}>
                       {fees.stopdesk && parseFloat(fees.stopdesk) > 0 ? `${parseFloat(fees.stopdesk).toLocaleString('en-US')} دج` : 'غير متاح'}
                     </div>
@@ -321,7 +355,7 @@ export default function CheckoutPage() {
                     <span>تكلفة الشحن</span><span>{shippingCost.toLocaleString('en-US')} دج</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#222', marginTop: 8 }}>
-                    <span>المجموع الإجمالي المقدر</span><span style={{ color: '#ff6600' }}>{total.toLocaleString('en-US')} دج</span>
+                    <span>المجموع الإجمالي</span><span style={{ color: '#ff6600' }}>{total.toLocaleString('en-US')} دج</span>
                   </div>
                 </div>
               </div>
@@ -329,30 +363,26 @@ export default function CheckoutPage() {
 
             <button
               type="submit"
-              disabled={submitting || !wilayaId || !commune}
+              disabled={submitting}
               style={{
                 width: '100%',
                 padding: 14,
-                background: (submitting || !wilayaId || !commune) ? '#ccc' : '#ff6600',
+                background: submitting ? '#ccc' : '#ff6600',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 8,
                 fontSize: 16,
                 fontWeight: 700,
-                cursor: (submitting || !wilayaId || !commune) ? 'not-allowed' : 'pointer',
+                cursor: submitting ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 8,
               }}
             >
-              {submitting ? <Loader2 size={18} className="spin" /> : <Shield size={18} />}
-              {submitting ? 'جاري التأكيد...' : 'تأكيد الطلب - الدفع عند الاستلام'}
+              {submitting ? <Loader2 size={18} className="spin" /> : <CheckCircle2 size={18} />}
+              {submitting ? 'جاري التأكيد...' : 'تأكيد الطلب الآن'}
             </button>
-            <p style={{ textAlign: 'center', fontSize: 11, color: '#999' }}>
-              <Shield size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} /> 
-              الدفع نقدًا عند استلام الطلبية
-            </p>
           </form>
         </div>
       </div>
