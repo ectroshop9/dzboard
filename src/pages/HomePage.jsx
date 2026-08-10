@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Cpu, Zap, Monitor, Package, Wrench, Shield, Truck, Star, Search, X, TrendingUp, ArrowRight } from 'lucide-react';
+import { Cpu, Zap, Monitor, Package, Wrench, Shield, Truck, Star, Search, X, TrendingUp, ArrowRight, MessageCircle } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function HomePage() {
@@ -76,7 +76,6 @@ export default function HomePage() {
     { icon: TrendingUp, title: 'أسعار تنافسية', description: 'أفضل الأسعار في السوق.' },
   ];
 
-  // إضافة بطاقتين جديدتين (TCL و Toshiba)
   const brands = [
     { name: 'Samsung', code: 'samsung', image: '/brands/samsung.png' },
     { name: 'LG', code: 'lg', image: '/brands/lg.png' },
@@ -203,8 +202,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* قسم الماركات أصبح بـ 10 ماركات الآن */}
-      <section style={{ padding: '36px 16px' }}>
+      <section style={{ padding: '36px 16px 20px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 20 }} className="reveal-item">قطع متوافقة مع جميع الماركات</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 }}>
@@ -223,19 +221,32 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section data-reveal className="reveal-item" style={{ background: '#0f172a', padding: '48px 16px', textAlign: 'center', color: '#fff' }}>
-        <h2 style={{ fontSize: 22, fontWeight: 900, color: '#f59e0b', marginBottom: 8 }}>هل تبحث عن قطعة غيار نادرة؟</h2>
-        <p style={{ color: '#cbd5e1', marginBottom: 24, fontSize: 14 }}>نوفر لك البوردات الأصلية مع إمكانية التوصيل والدفع عند الاستلام</p>
-        <Link to="/store" style={{ background: '#f59e0b', color: '#fff', padding: '14px 32px', borderRadius: 10, textDecoration: 'none', fontWeight: 800, display: 'inline-block', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)' }}>تصفح المتجر الآن</Link>
+      {/* القسم الأخير المنسق ككارت دعائي عالي التباين */}
+      <section style={{ padding: '40px 16px' }}>
+        <div data-reveal className="reveal-item" style={{ maxWidth: 850, margin: '0 auto', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: 20, padding: '36px 24px', textAlign: 'center', color: '#fff', boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.25)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'relative', zIndex: 2 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 900, color: '#f59e0b', marginBottom: 10 }}>هل تبحث عن قطعة غيار نادرة؟</h2>
+            <p style={{ color: '#94a3b8', marginBottom: 24, fontSize: 14, maxWidth: 500, margin: '0 auto 24px', lineHeight: 1.6 }}>نوفر لك البوردات الأصلية لمختلف الشاشات والماركات مع إمكانية التوصيل والدفع عند الاستلام.</p>
+            <Link to="/store" style={{ background: '#3b82f6', color: '#fff', padding: '12px 28px', borderRadius: 10, textDecoration: 'none', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'all 0.2s ease', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)' }}>
+              <span>تصفح المتجر الآن</span>
+              <ArrowRight size={16} style={{ transform: 'rotate(180deg)' }} />
+            </Link>
+          </div>
+        </div>
       </section>
-      <footer style={{ background: '#fff', borderTop: '1px solid #e2e8f0', padding: '32px 16px', textAlign: 'center' }}>
-        <div style={{ fontSize: 18, fontWeight: 900, marginBottom: 6 }}>DZ<span style={{ color: '#f59e0b' }}>Board</span></div>
-        <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>متجر قطع غيار الشاشات الأول في الجزائر</p>
-        <div style={{ marginTop: 16, fontSize: 11, color: '#94a3b8' }}>&copy; {new Date().getFullYear()} DZBoard. جميع الحقوق محفوظة.</div>
+
+      {/* الفوتر المنسق */}
+      <footer style={{ background: '#fff', borderTop: '1px solid #e2e8f0', padding: '32px 16px 40px', textAlign: 'center' }}>
+        <div style={{ maxWidth: 850, margin: '0 auto' }}>
+          <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 6 }}>DZ<span style={{ color: '#f59e0b' }}>Board</span></div>
+          <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 16px 0' }}>متجر قطع غيار الشاشات الأول في الجزائر</p>
+          <div style={{ fontSize: 11, color: '#94a3b8', borderTop: '1px dashed #f1f5f9', paddingTop: 16 }}>&copy; {new Date().getFullYear()} DZBoard. جميع الحقوق محفوظة.</div>
+        </div>
       </footer>
 
-      <a href="https://m.me/dzboard" target="_blank" rel="noopener noreferrer" style={{ position: 'fixed', bottom: 24, left: 24, width: 56, height: 56, borderRadius: '50%', background: '#0084FF', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,132,255,0.4)', zIndex: 40, color: '#fff' }}>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.145 2 11.258c0 2.91 1.45 5.513 3.714 7.214V22l3.355-1.843c.928.257 1.91.397 2.931.397 5.523 0 10-4.145 10-9.296C22 6.145 17.523 2 12 2zm1.193 12.48l-2.556-2.727-4.99 2.727 5.49-5.823 2.622 2.727 4.925-2.727-5.491 5.823z"/></svg>
+      {/* زر التواصل العائم مع تلميح تعريفي */}
+      <a href="https://m.me/dzboard" target="_blank" rel="noopener noreferrer" aria-label="تواصل معنا عبر ماسنجر" style={{ position: 'fixed', bottom: 24, left: 24, width: 52, height: 52, borderRadius: '50%', background: '#0084FF', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,132,255,0.4)', zIndex: 40, color: '#fff', textDecoration: 'none' }}>
+        <MessageCircle size={26} />
       </a>
 
       <style>{`
