@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Cpu, Zap, Monitor, Package, Wrench, Shield, Truck, Star, Search, ShoppingCart, X, TrendingUp } from 'lucide-react';
+import { Cpu, Zap, Monitor, Package, Wrench, Shield, Truck, Star, Search, X, TrendingUp, ArrowRight } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function HomePage() {
@@ -124,6 +124,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* قسم تصنيفات القطع (بدون خلفية بيضاء) */}
       <section style={{ padding: '50px 16px 30px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 22, fontWeight: 900, textAlign: 'center', marginBottom: 28, color: '#0f172a' }} className="reveal-item">تصنيفات القطع</h2>
@@ -131,9 +132,9 @@ export default function HomePage() {
             {categories.map((cat) => {
               const Icon = cat.icon;
               return (
-                <button key={cat.key} data-reveal onClick={() => navigate(`/store?category=${cat.key}`)} className="reveal-item" style={{ padding: 22, textAlign: 'center', cursor: 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, transition: 'all 0.2s ease' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = cat.color; e.currentTarget.style.transform = 'translateY(-4px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                <button key={cat.key} data-reveal onClick={() => navigate(`/store?category=${cat.key}`)} className="reveal-item" style={{ padding: 16, textAlign: 'center', cursor: 'pointer', background: 'transparent', border: 'none', transition: 'all 0.2s ease' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}>
                   <div style={{ background: `${cat.color}15`, color: cat.color, margin: '0 auto 12px', width: 54, height: 54, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={26} /></div>
                   <div style={{ fontSize: 15, fontWeight: 800, color: '#1e293b' }}>{cat.label}</div>
                 </button>
@@ -143,6 +144,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* قسم أحدث القطع المتوفرة مع أزرار "اشتري الآن" وتصميم دقيق بدون أيقونة السلة */}
       <section style={{ padding: '20px 16px 40px', background: '#f8fafc' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 20 }}>
@@ -153,23 +155,26 @@ export default function HomePage() {
           </div>
           {loadingProducts ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 14 }}>
-              {[1, 2, 3, 4].map(n => <div key={n} style={{ background: '#fff', height: 220, borderRadius: 12, border: '1px solid #e2e8f0', animation: 'pulse 1.5s infinite ease-in-out' }} />)}
+              {[1, 2, 3, 4].map(n => <div key={n} style={{ background: '#fff', height: 240, borderRadius: 12, border: '1px solid #e2e8f0', animation: 'pulse 1.5s infinite ease-in-out' }} />)}
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 14 }}>
               {featuredProducts.map(product => (
                 <div key={product.id} onClick={() => navigate(`/product/${product.id}`)} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 12, cursor: 'pointer', transition: 'all 0.2s ease', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
                   onMouseEnter={e => e.currentTarget.style.borderColor = '#3b82f6'} onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
-                  <div style={{ height: 120, background: '#fafafa', borderRadius: 8, overflow: 'hidden', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <img src={product.image || 'https://via.placeholder.com/150'} alt={product.name || product.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                  </div>
                   <div>
+                    <div style={{ height: 120, background: '#fafafa', borderRadius: 8, overflow: 'hidden', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <img src={product.image || 'https://via.placeholder.com/150'} alt={product.name || product.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    </div>
                     <h3 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name || product.title}</h3>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: '#d97706' }}>{(parseFloat(product.price) || 0).toLocaleString('en-US')} <span style={{ fontSize: 10 }}>دج</span></span>
-                      <span style={{ color: '#3b82f6', background: '#eff6ff', padding: 6, borderRadius: 6, display: 'flex', alignItems: 'center' }}><ShoppingCart size={14} /></span>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#d97706', marginBottom: 10 }}>
+                      {(parseFloat(product.price) || 0).toLocaleString('en-US')} <span style={{ fontSize: 10 }}>دج</span>
                     </div>
                   </div>
+                  <button style={{ width: '100%', background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <span>اشتري الآن</span>
+                    <ArrowRight size={14} style={{ transform: 'rotate(180deg)' }} />
+                  </button>
                 </div>
               ))}
             </div>
@@ -177,6 +182,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* قسم لماذا يفضل التقنيون التعامل مع DZBoard (بدون خلفية بيضاء) */}
       <section style={{ padding: '40px 16px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 24 }} className="reveal-item">لماذا يفضل التقنيون التعامل مع DZBoard؟</h2>
@@ -184,7 +190,7 @@ export default function HomePage() {
             {features.map((f, i) => {
               const Icon = f.icon;
               return (
-                <div key={i} data-reveal className="reveal-item" style={{ padding: 20, textAlign: 'center', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12 }}>
+                <div key={i} data-reveal className="reveal-item" style={{ padding: 16, textAlign: 'center', background: 'transparent', border: 'none' }}>
                   <div style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1', width: 44, height: 44, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}><Icon size={22} /></div>
                   <h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 6, color: '#0f172a' }}>{f.title}</h3>
                   <p style={{ fontSize: 12, color: '#64748b', margin: 0, lineHeight: 1.4 }}>{f.description}</p>
