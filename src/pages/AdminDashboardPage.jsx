@@ -10,6 +10,7 @@ const MENU = [
   { path: '/admin/products', label: 'المنتجات والمخزون', icon: Package },
   { path: '/admin/orders', label: 'الطلبات', icon: ShoppingBag },
   { path: '/admin/scan', label: 'مسح QR', icon: QrCode },
+{ path: '/admin/requests', label: 'طلبات خاصة', icon: ShoppingBag },
   { path: '/admin/settings', label: 'الإعدادات', icon: Settings },
 ];
 
@@ -184,6 +185,7 @@ export default function AdminDashboardPage() {
             </button>
             <Link to="/admin/products" style={{ background: '#2563eb', color: '#fff', textDecoration: 'none', borderRadius: 8, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
               <Plus size={16} /> إضافة منتج
+<Link to="/admin/requests" style={{ background: '#d97706', color: '#fff', textDecoration: 'none', borderRadius: 8, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, marginLeft: 8 }}><ShoppingBag size={16} /> طلبات خاصة</Link>
             </Link>
           </div>
         </header>
