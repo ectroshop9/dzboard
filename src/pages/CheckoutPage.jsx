@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Truck, Home, Loader2, Package, ChevronLeft, Shield, CheckCircle2, Clock } from 'lucide-react';
+import { Truck, Home, Loader2, Package, ChevronLeft, Shield, CheckCircle2, Clock, Check, RefreshCw } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function CheckoutPage() {
@@ -165,7 +165,8 @@ export default function CheckoutPage() {
     fontSize: 15,
     outline: 'none',
     boxSizing: 'border-box',
-    background: fieldErrors[errorKey] ? '#fff8f8' : '#fff'
+    background: fieldErrors[errorKey] ? '#fff8f8' : '#fff',
+    transition: 'all 0.2s ease-in-out'
   });
 
   return (
@@ -185,40 +186,60 @@ export default function CheckoutPage() {
         </div>
       </div>
 
+      {/* تحسين 1: مؤشر خطوات الشراء المتبقية */}
+      <div style={{ background: '#fff', borderBottom: '1px solid #f0f0f0', padding: '10px 0' }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, fontSize: 12, color: '#888' }}>
+          <span style={{ color: '#2e7d32', display: 'flex', alignItems: 'center', gap: 4 }}><Check size={14} /> السلة</span>
+          <span>←</span>
+          <span style={{ color: '#ff6600', fontWeight: 700 }}>معلومات الشحن</span>
+          <span>←</span>
+          <span>تأكيد الطلب</span>
+        </div>
+      </div>
+
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '16px' }}>
         {error && <div style={{ background: '#fff0f0', color: '#e44', padding: 12, borderRadius: 8, marginBottom: 16, fontSize: 13, border: '1px solid #fcc' }}>{error}</div>}
 
-        {/* توزيع التنسيق: الصورة باليمين والنموذج باليسار */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, alignItems: 'start' }}>
           
-          {/* الجانب الأيمن: الصورة المكبّرة مع خاصية التكبير عند Hover */}
+          {/* الجانب الأيمن: الصورة مع خاصية التكبير وتفاصيل المنتجات */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ background: '#fff', borderRadius: 12, padding: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', border: '1px solid #f0f0f0' }}>
               {cartItems.map((item) => (
-                <div 
-                  key={item.id} 
-                  style={{ 
-                    width: '100%', 
-                    borderRadius: 8, 
-                    overflow: 'hidden', 
-                    position: 'relative',
-                    cursor: 'zoom-in'
-                  }}
-                >
-                  <img 
-                    src={item.image || 'https://via.placeholder.com/500'} 
-                    alt="صورة المنتج" 
+                <div key={item.id}>
+                  <div 
                     style={{ 
                       width: '100%', 
-                      maxHeight: '380px', 
-                      objectFit: 'cover', 
-                      borderRadius: 8,
-                      display: 'block',
-                      transition: 'transform 0.35s ease-in-out'
-                    }} 
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.35)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-                  />
+                      borderRadius: 8, 
+                      overflow: 'hidden', 
+                      position: 'relative',
+                      cursor: 'zoom-in'
+                    }}
+                  >
+                    <img 
+                      src={item.image || 'https://via.placeholder.com/500'} 
+                      alt="صورة المنتج" 
+                      style={{ 
+                        width: '100%', 
+                        maxHeight: '380px', 
+                        objectFit: 'cover', 
+                        borderRadius: 8,
+                        display: 'block',
+                        transition: 'transform 0.35s ease-in-out'
+                      }} 
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.35)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                    />
+                  </div>
+
+                  {/* تحسين 2: تفاصيل المنتج المختصرة وتحت الصورة مباشرة */}
+                  <div style={{ padding: '10px 4px 0 4px', borderBottom: cartItems.length > 1 ? '1px solid #eee' : 'none' }}>
+                    <div style={{ fontWeight: 700, fontSize: 15, color: '#333' }}>{item.title || item.name || 'منتج متميز'}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                      <span style={{ fontSize: 13, color: '#666' }}>الكمية: {item.quantity}</span>
+                      <span style={{ fontWeight: 700, color: '#ff6600', fontSize: 15 }}>{(parseFloat(item.price || 0) * item.quantity).toLocaleString('en-US')} دج</span>
+                    </div>
+                  </div>
                 </div>
               ))}
 
@@ -227,9 +248,22 @@ export default function CheckoutPage() {
                 <span>مرر الفأرة فوق الصورة لتكبير التفاصيل • التوصيل متوفر لجميع الولايات</span>
               </div>
             </div>
+
+            {/* تحسين 3: شارات الضمان لرفع نسبة المبيعات */}
+            <div style={{ background: '#fff', borderRadius: 12, padding: 12, border: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
+              <div>
+                <Shield size={20} style={{ color: '#ff6600', marginBottom: 2 }} />
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#444' }}>ضمان الجودة</div>
+              </div>
+              <div style={{ borderRight: '1px solid #eee' }}></div>
+              <div>
+                <RefreshCw size={20} style={{ color: '#ff6600', marginBottom: 2 }} />
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#444' }}>المعاينة عند الاستلام</div>
+              </div>
+            </div>
           </div>
 
-          {/* الجانب الأيسر: نموذج معلومات الشحن وتأكيد الطلب */}
+          {/* الجانب الأيسر: نموذج البيانات */}
           <form ref={formRef} onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ background: '#fff', borderRadius: 12, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', border: '1px solid #f0f0f0' }}>
               <h3 style={{ fontSize: 16, fontWeight: 700, color: '#222', marginBottom: 14 }}>معلومات الاستلام</h3>
@@ -248,8 +282,12 @@ export default function CheckoutPage() {
 
                 <div>
                   <input
-                    style={getInputStyle('phone')}
-                    placeholder="رقم الهاتف (06/07/05) *"
+                    style={{ 
+                      ...getInputStyle('phone'), 
+                      direction: 'ltr', 
+                      textAlign: 'left' 
+                    }}
+                    placeholder="06 / 07 / 05 *"
                     value={phone}
                     onChange={e => { setPhone(e.target.value); setFieldErrors(prev => ({...prev, phone: null})); }}
                     type="tel"
@@ -327,6 +365,7 @@ export default function CheckoutPage() {
                       flexDirection: 'column',
                       alignItems: 'center',
                       gap: 4,
+                      transition: 'all 0.2s'
                     }}
                   >
                     <Home size={18} style={{ color: shippingType === 'domicile' ? '#ff6600' : '#666' }} />
@@ -350,6 +389,7 @@ export default function CheckoutPage() {
                       flexDirection: 'column',
                       alignItems: 'center',
                       gap: 4,
+                      transition: 'all 0.2s'
                     }}
                   >
                     <Truck size={18} style={{ color: shippingType === 'stopdesk' ? '#ff6600' : '#666' }} />
@@ -391,6 +431,8 @@ export default function CheckoutPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 8,
+                boxShadow: submitting ? 'none' : '0 4px 12px rgba(255, 102, 0, 0.25)',
+                transition: 'all 0.2s ease-in-out'
               }}
             >
               {submitting ? <Loader2 size={18} className="spin" /> : <CheckCircle2 size={18} />}
