@@ -8,6 +8,8 @@ import productRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
 import adminRoutes from './routes/admin.js';
 import shippingRoutes from './routes/shipping.js';
+app.use('/api/requests', requestRoutes);
+import requestRoutes from './routes/requests.js';
 import inventoryRoutes from './routes/inventory.js';
 
 const app = express();
@@ -21,6 +23,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/shipping', shippingRoutes);
+app.use('/api/requests', requestRoutes);
+import requestRoutes from './routes/requests.js';
 app.use('/api/inventory', inventoryRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
