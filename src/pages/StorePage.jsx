@@ -23,6 +23,7 @@ export default function StorePage() {
     { key: 'alimentation', label: 'اليمونتاسيون', icon: Zap, color: '#f59e0b' },
     { key: 'main-board', label: 'مين بورد', icon: Cpu, color: '#6366f1' },
     { key: 'parts', label: 'قطع غيار', icon: Package, color: '#10b981' },
+{ key: 'special', label: 'طلب قطعة خاصة', icon: ShoppingBag, color: '#d97706' },
   ];
 
   const brands = [
