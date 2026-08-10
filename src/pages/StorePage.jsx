@@ -112,6 +112,7 @@ export default function StorePage() {
               <ChevronLeft size={18} /> الرئيسية
             </Link>
             <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#0f172a' }}>المتجر الإلكتروني</h1>
+<Link to="/request-part" style={{ background: '#d97706', color: '#fff', padding: '8px 14px', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 13, marginRight: 8 }}>طلب قطعة غير متوفرة</Link>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button

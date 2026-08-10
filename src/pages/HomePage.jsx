@@ -99,6 +99,7 @@ export default function HomePage() {
             <span style={{ color: '#3b82f6' }}>DZ</span><span style={{ color: '#f59e0b' }}>Board</span>
           </Link>
           <Link to="/store" style={{ background: '#3b82f6', color: '#fff', padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>المتجر الكامل</Link>
+<Link to="/request-part" style={{ background: '#d97706', color: '#fff', padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 14, marginRight: 8 }}>طلب قطعة خاصة</Link>
         </div>
       </nav>
 
