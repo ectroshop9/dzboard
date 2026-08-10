@@ -76,6 +76,7 @@ export default function HomePage() {
     { icon: TrendingUp, title: 'أسعار تنافسية', description: 'أفضل الأسعار في السوق.' },
   ];
 
+  // إضافة بطاقتين جديدتين (TCL و Toshiba)
   const brands = [
     { name: 'Samsung', code: 'samsung', image: '/brands/samsung.png' },
     { name: 'LG', code: 'lg', image: '/brands/lg.png' },
@@ -85,6 +86,8 @@ export default function HomePage() {
     { name: 'Stream', code: 'stream', image: '/brands/stream.png' },
     { name: 'Maxtor', code: 'maxtor', image: '/brands/maxtor.png' },
     { name: 'Kiowa', code: 'kiowa', image: '/brands/kiowa.png' },
+    { name: 'TCL', code: 'tcl', image: '/brands/tcl.png' },
+    { name: 'Toshiba', code: 'toshiba', image: '/brands/toshiba.png' },
   ];
 
   return (
@@ -200,6 +203,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* قسم الماركات أصبح بـ 10 ماركات الآن */}
       <section style={{ padding: '36px 16px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 20 }} className="reveal-item">قطع متوافقة مع جميع الماركات</h2>
