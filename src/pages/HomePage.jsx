@@ -71,7 +71,7 @@ export default function HomePage() {
     { icon: Shield, title: 'قطع أصلية', description: 'جميع القطع مجربة ومضمونة.' },
     { icon: Truck, title: 'توصيل 58 ولاية', description: 'توصيل سريع وموثوق.' },
     { icon: Wrench, title: 'دعم تقني', description: 'فريق متخصص لمساعدتك.' },
-    { icon: Star, title: 'الدفع عند الاستلام', description: 'ادفع عند معايتة واستلام طلبك.' },
+    { icon: Star, title: 'الدفع عند الاستلام', description: 'ادفع عند معاينة واستلام طلبك.' },
     { icon: Zap, title: 'سرعة التوصيل', description: 'توصيل خلال 24-72 ساعة.' }, 
     { icon: TrendingUp, title: 'أسعار تنافسية', description: 'أفضل الأسعار في السوق.' },
   ];
@@ -124,7 +124,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* قسم تصنيفات القطع (بدون خلفية بيضاء) */}
+      {/* تصنيفات القطع: إطار فقط وبدون خلفية (transparent) */}
       <section style={{ padding: '50px 16px 30px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 22, fontWeight: 900, textAlign: 'center', marginBottom: 28, color: '#0f172a' }} className="reveal-item">تصنيفات القطع</h2>
@@ -132,9 +132,9 @@ export default function HomePage() {
             {categories.map((cat) => {
               const Icon = cat.icon;
               return (
-                <button key={cat.key} data-reveal onClick={() => navigate(`/store?category=${cat.key}`)} className="reveal-item" style={{ padding: 16, textAlign: 'center', cursor: 'pointer', background: 'transparent', border: 'none', transition: 'all 0.2s ease' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}>
+                <button key={cat.key} data-reveal onClick={() => navigate(`/store?category=${cat.key}`)} className="reveal-item" style={{ padding: 18, textAlign: 'center', cursor: 'pointer', background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 12, transition: 'all 0.2s ease' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.borderColor = cat.color; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#e2e8f0'; }}>
                   <div style={{ background: `${cat.color}15`, color: cat.color, margin: '0 auto 12px', width: 54, height: 54, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={26} /></div>
                   <div style={{ fontSize: 15, fontWeight: 800, color: '#1e293b' }}>{cat.label}</div>
                 </button>
@@ -144,7 +144,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* قسم أحدث القطع المتوفرة مع أزرار "اشتري الآن" وتصميم دقيق بدون أيقونة السلة */}
+      {/* أحدث القطع المتوفرة مع أزرار "اشتري الآن" وبدون أيقونة السلة */}
       <section style={{ padding: '20px 16px 40px', background: '#f8fafc' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 20 }}>
@@ -182,7 +182,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* قسم لماذا يفضل التقنيون التعامل مع DZBoard (بدون خلفية بيضاء) */}
       <section style={{ padding: '40px 16px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 24 }} className="reveal-item">لماذا يفضل التقنيون التعامل مع DZBoard؟</h2>
@@ -190,7 +189,7 @@ export default function HomePage() {
             {features.map((f, i) => {
               const Icon = f.icon;
               return (
-                <div key={i} data-reveal className="reveal-item" style={{ padding: 16, textAlign: 'center', background: 'transparent', border: 'none' }}>
+                <div key={i} data-reveal className="reveal-item" style={{ padding: 16, textAlign: 'center', background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 12 }}>
                   <div style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1', width: 44, height: 44, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}><Icon size={22} /></div>
                   <h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 6, color: '#0f172a' }}>{f.title}</h3>
                   <p style={{ fontSize: 12, color: '#64748b', margin: 0, lineHeight: 1.4 }}>{f.description}</p>
