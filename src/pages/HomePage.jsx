@@ -104,7 +104,7 @@ export default function HomePage() {
       <header style={{ position: 'relative', height: '350px', overflow: 'hidden', background: '#0f172a' }}>
         {slides.map((slide, index) => (
           <div key={index} style={{ position: 'absolute', inset: 0, backgroundImage: `url(${slide.image})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: currentSlide === index ? 1 : 0, transition: 'opacity 1s ease-in-out' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(15,23,42,0.5) 0%, rgba(15,23,42,0.85) 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.15)' }} />
           </div>
         ))}
       </header>
