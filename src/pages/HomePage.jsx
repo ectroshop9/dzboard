@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Cpu, Zap, Monitor, Package, Wrench, ChevronLeft, Shield, Truck, Star, Search, ShoppingCart, X, ArrowRight } from 'lucide-react';
+import { Cpu, Zap, Monitor, Package, Wrench, ChevronLeft, Shield, Truck, Star, Search, ShoppingCart, X, ArrowRight, TrendingUp } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function HomePage() {
@@ -60,6 +60,7 @@ export default function HomePage() {
     { icon: Truck, title: 'توصيل 58 ولاية', description: 'توصيل سريع وموثوق.' },
     { icon: Wrench, title: 'دعم تقني', description: 'فريق متخصص لمساعدتك.' },
     { icon: Star, title: 'الدفع عند الاستلام', description: 'ادفع عند معايتة واستلام طلبك.' },
+{ icon: Zap, title: 'سرعة التوصيل', description: 'توصيل خلال 24-72 ساعة.' }, { icon: TrendingUp, title: 'أسعار تنافسية', description: 'أفضل الأسعار في السوق.' },
   ];
 
   const brands = [
@@ -113,7 +114,7 @@ export default function HomePage() {
       <section style={{ padding: '50px 16px 30px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 22, fontWeight: 900, textAlign: 'center', marginBottom: 28, color: '#0f172a' }} className="reveal-item">تصنيفات القطع</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, maxWidth: 500, margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 700, margin: '0 auto' }}>
             {categories.map((cat) => {
               const Icon = cat.icon;
               return (
@@ -167,7 +168,7 @@ export default function HomePage() {
       <section style={{ padding: '40px 16px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 24 }} className="reveal-item">لماذا يفضل التقنيون التعامل مع DZBoard؟</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, maxWidth: 500, margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 700, margin: '0 auto' }}>
             {features.map((f, i) => {
               const Icon = f.icon;
               return (
