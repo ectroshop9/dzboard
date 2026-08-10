@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Cpu, Zap, Monitor, Package, Wrench, ChevronLeft, Shield, Truck, Star, Search, ShoppingCart, X, ArrowRight, TrendingUp } from 'lucide-react';
+import { Cpu, Zap, Monitor, Package, Wrench, Shield, Truck, Star, Search, ShoppingCart, X, TrendingUp } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function HomePage() {
@@ -10,6 +10,7 @@ export default function HomePage() {
   const [searchBrand, setSearchBrand] = useState('ALL');
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [brokenBrands, setBrokenBrands] = useState({});
 
   const slides = [
     { image: '/hero/tcon.jpg' },
@@ -28,17 +29,28 @@ export default function HomePage() {
   useEffect(() => {
     const interval = setInterval(() => setCurrentSlide((prev) => (prev + 1) % slides.length), 4500);
     return () => clearInterval(interval);
-  }, []);
+  }, [slides.length]);
 
   useEffect(() => {
     const elements = Array.from(document.querySelectorAll('[data-reveal]'));
     if (!elements.length) return;
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); } });
+      entries.forEach(entry => { 
+        if (entry.isIntersecting) { 
+          entry.target.classList.add('is-visible'); 
+          observer.unobserve(entry.target); 
+        } 
+      });
     }, { threshold: 0.1 });
-    elements.forEach(el => { if (el.getBoundingClientRect().top < window.innerHeight * 0.9) el.classList.add('is-visible'); else observer.observe(el); });
+    elements.forEach(el => { 
+      if (el.getBoundingClientRect().top < window.innerHeight * 0.9) {
+        el.classList.add('is-visible');
+      } else {
+        observer.observe(el);
+      }
+    });
     return () => observer.disconnect();
-  }, []);
+  }, [featuredProducts, loadingProducts]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -60,7 +72,8 @@ export default function HomePage() {
     { icon: Truck, title: 'توصيل 58 ولاية', description: 'توصيل سريع وموثوق.' },
     { icon: Wrench, title: 'دعم تقني', description: 'فريق متخصص لمساعدتك.' },
     { icon: Star, title: 'الدفع عند الاستلام', description: 'ادفع عند معايتة واستلام طلبك.' },
-{ icon: Zap, title: 'سرعة التوصيل', description: 'توصيل خلال 24-72 ساعة.' }, { icon: TrendingUp, title: 'أسعار تنافسية', description: 'أفضل الأسعار في السوق.' },
+    { icon: Zap, title: 'سرعة التوصيل', description: 'توصيل خلال 24-72 ساعة.' }, 
+    { icon: TrendingUp, title: 'أسعار تنافسية', description: 'أفضل الأسعار في السوق.' },
   ];
 
   const brands = [
@@ -94,7 +107,7 @@ export default function HomePage() {
         ))}
       </header>
 
-      <section style={{ maxWidth: 850, margin: '20px auto 0', padding: '0 16px', position: 'relative', zIndex: 20 }}>
+      <section style={{ maxWidth: 850, margin: '-50px auto 0', padding: '0 16px', position: 'relative', zIndex: 20 }}>
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 18, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)' }}>
           <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <select value={searchBrand} onChange={e => setSearchBrand(e.target.value)} style={{ padding: '12px 14px', border: '1px solid #e2e8f0', borderRadius: 10, background: '#f8fafc', minWidth: 130, flex: '1 1 130px', outline: 'none', fontSize: 13, color: '#334155', cursor: 'pointer' }}>
@@ -114,7 +127,7 @@ export default function HomePage() {
       <section style={{ padding: '50px 16px 30px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 22, fontWeight: 900, textAlign: 'center', marginBottom: 28, color: '#0f172a' }} className="reveal-item">تصنيفات القطع</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 700, margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 16, maxWidth: 700, margin: '0 auto' }}>
             {categories.map((cat) => {
               const Icon = cat.icon;
               return (
@@ -139,22 +152,22 @@ export default function HomePage() {
             </div>
           </div>
           {loadingProducts ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 14 }}>
               {[1, 2, 3, 4].map(n => <div key={n} style={{ background: '#fff', height: 220, borderRadius: 12, border: '1px solid #e2e8f0', animation: 'pulse 1.5s infinite ease-in-out' }} />)}
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 14 }}>
               {featuredProducts.map(product => (
                 <div key={product.id} onClick={() => navigate(`/product/${product.id}`)} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 12, cursor: 'pointer', transition: 'all 0.2s ease', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
                   onMouseEnter={e => e.currentTarget.style.borderColor = '#3b82f6'} onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
                   <div style={{ height: 120, background: '#fafafa', borderRadius: 8, overflow: 'hidden', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <img src={product.image || 'https://via.placeholder.com/150'} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    <img src={product.image || 'https://via.placeholder.com/150'} alt={product.name || product.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                   </div>
                   <div>
                     <h3 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name || product.title}</h3>
-                    <div style={{ textAlign: 'center', marginTop: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
                       <span style={{ fontSize: 14, fontWeight: 800, color: '#d97706' }}>{(parseFloat(product.price) || 0).toLocaleString('en-US')} <span style={{ fontSize: 10 }}>دج</span></span>
-                      <span style={{ color: '#3b82f6', background: '#eff6ff', padding: 6, borderRadius: 6 }}><ShoppingCart size={14} /></span>
+                      <span style={{ color: '#3b82f6', background: '#eff6ff', padding: 6, borderRadius: 6, display: 'flex', alignItems: 'center' }}><ShoppingCart size={14} /></span>
                     </div>
                   </div>
                 </div>
@@ -167,7 +180,7 @@ export default function HomePage() {
       <section style={{ padding: '40px 16px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 24 }} className="reveal-item">لماذا يفضل التقنيون التعامل مع DZBoard؟</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 700, margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, maxWidth: 700, margin: '0 auto' }}>
             {features.map((f, i) => {
               const Icon = f.icon;
               return (
@@ -185,12 +198,16 @@ export default function HomePage() {
       <section style={{ padding: '36px 16px', background: '#f8fafc' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 20 }} className="reveal-item">قطع متوافقة مع جميع الماركات</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 }}>
             {brands.map((brand, i) => (
-              <button key={i} data-reveal onClick={() => navigate(`/store?brand=${brand.code}`)} className="reveal-item" style={{ padding: '12px 8px', textAlign: 'center', cursor: 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 60, transition: 'all 0.2s' }}
+              <button key={i} data-reveal onClick={() => navigate(`/store?brand=${brand.code}`)} className="reveal-item" style={{ padding: '12px 8px', textAlign: 'center', cursor: 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 60, transition: 'all 0.2s', fontWeight: 700, color: '#334155' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-                <img src={brand.image} alt={brand.name} style={{ maxWidth: 70, maxHeight: 35, objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; e.target.parentNode.innerText = brand.name; e.target.parentNode.style.fontWeight = '700'; e.target.parentNode.style.color = '#334155'; }} />
+                {brokenBrands[brand.code] ? (
+                  brand.name
+                ) : (
+                  <img src={brand.image} alt={brand.name} style={{ maxWidth: 70, maxHeight: 35, objectFit: 'contain' }} onError={() => setBrokenBrands(prev => ({ ...prev, [brand.code]: true }))} />
+                )}
               </button>
             ))}
           </div>
