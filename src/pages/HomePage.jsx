@@ -118,7 +118,7 @@ export default function HomePage() {
             {categories.map((cat) => {
               const Icon = cat.icon;
               return (
-                <button key={cat.key} data-reveal onClick={() => navigate(`/store?category=${cat.key}`)} className="reveal-item" style={{ padding: 22, textAlign: 'center', cursor: 'pointer', background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 14, transition: 'all 0.2s ease' }}
+                <button key={cat.key} data-reveal onClick={() => navigate(`/store?category=${cat.key}`)} className="reveal-item" style={{ padding: 22, textAlign: 'center', cursor: 'pointer', background: 'transparent', borderRadius: 14, transition: 'all 0.2s ease' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = cat.color; e.currentTarget.style.transform = 'translateY(-4px)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                   <div style={{ background: `${cat.color}15`, color: cat.color, margin: '0 auto 12px', width: 54, height: 54, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={26} /></div>
@@ -171,7 +171,7 @@ export default function HomePage() {
             {features.map((f, i) => {
               const Icon = f.icon;
               return (
-                <div key={i} data-reveal className="reveal-item" style={{ padding: 20, textAlign: 'center', background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 12 }}>
+                <div key={i} data-reveal className="reveal-item" style={{ padding: 20, textAlign: 'center', background: 'transparent', borderRadius: 12 }}>
                   <div style={{ background: 'rgba(99,102,241,0.1)', border: 'none', boxShadow: 'none', color: '#6366f1', width: 44, height: 44, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}><Icon size={22} /></div>
                   <h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 6, color: '#0f172a' }}>{f.title}</h3>
                   <p style={{ fontSize: 12, color: '#64748b', margin: 0, lineHeight: 1.4 }}>{f.description}</p>
