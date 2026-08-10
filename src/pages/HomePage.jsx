@@ -153,7 +153,7 @@ export default function HomePage() {
                   <div>
                     <h3 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name || product.title}</h3>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: '#d97706' }}>{(parseFloat(product.price) || 0).toLocaleString()} <span style={{ fontSize: 10 }}>دج</span></span>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: '#d97706' }}>{(parseFloat(product.price) || 0).toLocaleString('en-US')} <span style={{ fontSize: 10 }}>دج</span></span>
                       <span style={{ color: '#3b82f6', background: '#eff6ff', padding: 6, borderRadius: 6 }}><ShoppingCart size={14} /></span>
                     </div>
                   </div>
