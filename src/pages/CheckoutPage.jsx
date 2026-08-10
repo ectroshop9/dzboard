@@ -9,7 +9,6 @@ export default function CheckoutPage() {
 
   const cartItems = location.state?.items || JSON.parse(localStorage.getItem('cartItems') || '[]');
 
-  // استرجاع البيانات المحفوظة سابقاً إن وجدت
   const [fullName, setFullName] = useState(() => localStorage.getItem('checkout_name') || '');
   const [phone, setPhone] = useState(() => localStorage.getItem('checkout_phone') || '');
   const [wilayaId, setWilayaId] = useState(() => localStorage.getItem('checkout_wilaya') || '');
@@ -29,7 +28,6 @@ export default function CheckoutPage() {
 
   const formRef = useRef(null);
 
-  // حفظ التغييرات محلياً
   useEffect(() => { localStorage.setItem('checkout_name', fullName); }, [fullName]);
   useEffect(() => { localStorage.setItem('checkout_phone', phone); }, [phone]);
   useEffect(() => { localStorage.setItem('checkout_wilaya', wilayaId); }, [wilayaId]);
@@ -170,9 +168,9 @@ export default function CheckoutPage() {
 
   return (
     <div style={{ background: '#f8f9fa', minHeight: '100vh', fontFamily: 'system-ui', direction: 'rtl', paddingBottom: 40 }}>
-      {/* الشريط العلوي */}
+      {/* Header */}
       <div style={{ background: '#fff', padding: '12px 16px', borderBottom: '1px solid #eee', position: 'sticky', top: 0, zIndex: 30 }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#333', padding: 4 }}>
               <ChevronLeft size={22} />
@@ -185,38 +183,38 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px' }}>
+      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '16px' }}>
         {error && <div style={{ background: '#fff0f0', color: '#e44', padding: 12, borderRadius: 8, marginBottom: 16, fontSize: 13, border: '1px solid #fcc' }}>{error}</div>}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {/* تقسيم الشاشة: اليمين للصورة الكبيرة واليسار للنموذج */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, alignItems: 'start' }}>
           
-          {/* معرض الصور - أسلوب AliExpress كبير وبدون كتابة بجانبه */}
-          <div style={{ background: '#fff', borderRadius: 12, padding: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', border: '1px solid #f0f0f0' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* الجانب الأيمن: صورة كبيرة ونظيفة بدون نصوص جانبية */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ background: '#fff', borderRadius: 12, padding: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', border: '1px solid #f0f0f0' }}>
               {cartItems.map((item) => (
-                <div key={item.id} style={{ width: '100%', overflow: 'hidden', borderRadius: 8 }}>
+                <div key={item.id} style={{ width: '100%', borderRadius: 8, overflow: 'hidden' }}>
                   <img 
-                    src={item.image || 'https://via.placeholder.com/600x400'} 
+                    src={item.image || 'https://via.placeholder.com/500'} 
                     alt="صورة المنتج" 
                     style={{ 
                       width: '100%', 
-                      height: '220px', 
-                      objectFit: 'cover',
+                      maxHeight: '380px', 
+                      objectFit: 'cover', 
                       borderRadius: 8,
-                      display: 'block'
+                      display: 'block' 
                     }} 
                   />
                 </div>
               ))}
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, color: '#555', fontSize: 12 }}>
-              <Clock size={16} style={{ color: '#ff6600', flexShrink: 0 }} />
-              <span>مدة التوصيل المقدرة: من 24 إلى 72 ساعة حسب الولاية</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, color: '#555', fontSize: 12 }}>
+                <Clock size={16} style={{ color: '#ff6600', flexShrink: 0 }} />
+                <span>التوصيل السريع متوفر لـ 58 ولاية (24 - 72 ساعة)</span>
+              </div>
             </div>
           </div>
 
-          {/* نموذج البيانات */}
+          {/* الجانب الأيسر: نموذج معلومات الاستلام والدفع */}
           <form ref={formRef} onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ background: '#fff', borderRadius: 12, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', border: '1px solid #f0f0f0' }}>
               <h3 style={{ fontSize: 16, fontWeight: 700, color: '#222', marginBottom: 14 }}>معلومات الاستلام</h3>
