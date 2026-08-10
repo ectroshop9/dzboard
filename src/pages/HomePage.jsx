@@ -221,8 +221,52 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* قسم طلب قطعة خاصة */}
+      <section style={{ padding: '20px 16px 10px' }}>
+        <div data-reveal className="reveal-item" style={{ 
+          maxWidth: 850, 
+          margin: '0 auto', 
+          background: '#ffffff', 
+          border: '2px dashed #3b82f6', 
+          borderRadius: 16, 
+          padding: '24px 20px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          flexWrap: 'wrap', 
+          gap: 16 
+        }}>
+          <div style={{ flex: '1 1 300px' }}>
+            <h3 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: '0 0 6px 0' }}>
+              لم تجد القطعة التي تبحث عنها؟
+            </h3>
+            <p style={{ fontSize: 13, color: '#64748b', margin: 0, lineHeight: 1.5 }}>
+              أرسل لنا تفاصيل وموديل القطعة وسنقوم بالبحث عنها وتوفيرها لك في أقرب وقت.
+            </p>
+          </div>
+          
+          <Link to="/request-part" style={{ 
+            background: '#3b82f6', 
+            color: '#fff', 
+            padding: '12px 22px', 
+            borderRadius: 10, 
+            textDecoration: 'none', 
+            fontWeight: 800, 
+            fontSize: 14, 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: 8, 
+            whiteSpace: 'nowrap',
+            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
+          }}>
+            <span>اطلب قطعة خاصة</span>
+            <ArrowRight size={16} style={{ transform: 'rotate(180deg)' }} />
+          </Link>
+        </div>
+      </section>
+
       {/* القسم الأخير المنسق ككارت دعائي عالي التباين */}
-      <section style={{ padding: '40px 16px' }}>
+      <section style={{ padding: '30px 16px 40px' }}>
         <div data-reveal className="reveal-item" style={{ maxWidth: 850, margin: '0 auto', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: 20, padding: '36px 24px', textAlign: 'center', color: '#fff', boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.25)', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'relative', zIndex: 2 }}>
             <h2 style={{ fontSize: 22, fontWeight: 900, color: '#f59e0b', marginBottom: 10 }}>هل تبحث عن قطعة غيار نادرة؟</h2>
