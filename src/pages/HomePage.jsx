@@ -99,7 +99,6 @@ export default function HomePage() {
             <span style={{ color: '#3b82f6' }}>DZ</span><span style={{ color: '#f59e0b' }}>Board</span>
           </Link>
           <Link to="/store" style={{ background: '#3b82f6', color: '#fff', padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>المتجر الكامل</Link>
-<Link to="/request-part" style={{ background: '#d97706', color: '#fff', padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 14, marginRight: 8 }}>طلب قطعة خاصة</Link>
         </div>
       </nav>
 
@@ -230,6 +229,7 @@ export default function HomePage() {
         <Link to="/store" style={{ background: '#f59e0b', color: '#fff', padding: '14px 32px', borderRadius: 10, textDecoration: 'none', fontWeight: 800, display: 'inline-block', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)' }}>تصفح المتجر الآن</Link>
       </section>
 
+      <section style={{ padding: '40px 16px', background: '#fffbeb' }}><div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}><h2 data-reveal style={{ fontSize: 20, fontWeight: 900, color: '#d97706', marginBottom: 12 }} className="reveal-item">لم تجد القطعة اللي تبحث عنها؟</h2><p style={{ color: '#92400e', marginBottom: 20, fontSize: 14 }}>أرسل لنا اسم القطعة أو البوردة وصورتها ونجيبها لك خصيصاً</p><Link to="/request-part" className="reveal-item" style={{ background: '#d97706', color: '#fff', padding: '14px 32px', borderRadius: 10, textDecoration: 'none', fontWeight: 800, display: 'inline-block', fontSize: 15 }}>اطلب قطعتك الخاصة الآن ←</Link></div></section>
       <footer style={{ background: '#fff', borderTop: '1px solid #e2e8f0', padding: '32px 16px', textAlign: 'center' }}>
         <div style={{ fontSize: 18, fontWeight: 900, marginBottom: 6 }}>DZ<span style={{ color: '#f59e0b' }}>Board</span></div>
         <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>متجر قطع غيار الشاشات الأول في الجزائر</p>
