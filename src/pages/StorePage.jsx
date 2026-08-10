@@ -253,7 +253,7 @@ export default function StorePage() {
               return (
                 <div
                   key={product.id}
-                  onClick={() => navigate(`/product/${product.id}`)}
+                  onClick={() => navigate('/checkout', { state: { items: [{ id: product.id, name: product.name, price: product.price, quantity: 1, image: product.image }] } })}
                   style={{
                     background: '#fff',
                     border: '1px solid #e2e8f0',
