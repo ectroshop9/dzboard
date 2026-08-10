@@ -6,7 +6,9 @@ import { api } from '../services/api';
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const cartItems = location.state?.items || [];
+
+  // جلب العناصر (نأخذ فقط id والكميات للعرض، أما الحساب النهائي فيتم في السيرفر)
+  const cartItems = location.state?.items || JSON.parse(localStorage.getItem('cartItems') || '[]');
 
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -14,25 +16,25 @@ export default function CheckoutPage() {
   const [commune, setCommune] = useState('');
   const [address, setAddress] = useState('');
   const [shippingType, setShippingType] = useState('domicile');
+  
   const [wilayas, setWilayas] = useState([]);
   const [communes, setCommunes] = useState([]);
   const [fees, setFees] = useState(null);
+  
   const [loadingWilayas, setLoadingWilayas] = useState(true);
   const [loadingCommunes, setLoadingCommunes] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // جلب الولايات عند تحضير الصفحة
+  // 1. جلب الولايات
   useEffect(() => {
     let isMounted = true;
-    fetch('/api/shipping/wilayas')
-      .then(res => res.json())
-      .then(data => { 
+    
+    api.getWilayas?.() || fetch('/api/shipping/wilayas').then(r => r.json())
+      .then(data => {
         if (isMounted && data.success) setWilayas(data.wilayas);
       })
-      .catch(err => {
-        console.error('Error loading wilayas:', err);
-      })
+      .catch(err => console.error('Error loading wilayas:', err))
       .finally(() => {
         if (isMounted) setLoadingWilayas(false);
       });
@@ -40,44 +42,104 @@ export default function CheckoutPage() {
     return () => { isMounted = false; };
   }, []);
 
-  // جلب أسعار الشحن والبلديات بحسب الولاية (مع إلغاء الطلبات القديمة)
+  // 2. جلب الأسعار والبلديات بحسب الولاية
   useEffect(() => {
-    if (!wilayaId) { 
-      setCommunes([]); 
-      setCommune(''); 
-      setFees(null); 
-      return; 
+    if (!wilayaId) {
+      setCommunes([]);
+      setCommune('');
+      setFees(null);
+      return;
     }
 
     const controller = new AbortController();
-    const { signal } = controller;
-
     setLoadingCommunes(true);
     setCommune('');
 
     Promise.all([
-      fetch(`/api/shipping/fee?wilaya_id=${wilayaId}`, { signal }).then(r => r.json()),
-      fetch(`/api/shipping/communes?wilaya_id=${wilayaId}`, { signal }).then(r => r.json()),
-    ]).then(([feeData, communesData]) => {
-      if (feeData.success) setFees(feeData.fees);
-      if (communesData.success) setCommunes(communesData.communes);
-    }).catch(err => {
-      if (err.name !== 'AbortError') {
-        console.error('Error loading communes/fees:', err);
-      }
-    }).finally(() => {
-      if (!signal.aborted) setLoadingCommunes(false);
-    });
+      fetch(`/api/shipping/fee?wilaya_id=${wilayaId}`, { signal: controller.signal }).then(r => r.json()),
+      fetch(`/api/shipping/communes?wilaya_id=${wilayaId}`, { signal: controller.signal }).then(r => r.json())
+    ])
+      .then(([feeData, communesData]) => {
+        if (feeData?.success) setFees(feeData.fees);
+        if (communesData?.success) setCommunes(communesData.communes);
+      })
+      .catch(err => {
+        if (err.name !== 'AbortError') {
+          console.error('Error loading communes/fees:', err);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadingCommunes(false);
+      });
 
     return () => controller.abort();
   }, [wilayaId]);
 
-  // تحويل خيار الشحن التلقائي لـ domicile إذا كان stopdesk غير متاح
+  // 3. تعديل خيار التوصيل تلقائيًا إذا كان Stopdesk غير متاح
   useEffect(() => {
-    if (fees && (fees.stopdesk === undefined || parseFloat(fees.stopdesk) === 0) && shippingType === 'stopdesk') {
+    const hasStopdesk = fees?.stopdesk && parseFloat(fees.stopdesk) > 0;
+    if (fees && !hasStopdesk && shippingType === 'stopdesk') {
       setShippingType('domicile');
     }
   }, [fees, shippingType]);
+
+  // حساب المجموع للعرض فقط في الواجهة (Display Only)
+  const subtotal = cartItems.reduce((sum, item) => sum + (parseFloat(item.price || 0) * item.quantity), 0);
+  const shippingCost = fees ? (parseFloat(fees[shippingType]) || 0) : 0;
+  const total = subtotal + shippingCost;
+
+  // معالجة إرسال النموذج بشكل آمن
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // تنظيف المدخلات
+    const cleanPhone = phone.replace(/\s+/g, '').trim();
+    const cleanName = fullName.trim();
+    const cleanAddress = address.trim();
+
+    if (!cleanName || !cleanPhone || !cleanAddress || !wilayaId || !commune) {
+      setError('جميع الحقول مطلوبة');
+      return;
+    }
+
+    // التحقق من رقم الهاتف الجزائر (05 / 06 / 07)
+    if (!/^0[5-7]\d{8}$/.test(cleanPhone)) {
+      setError('يرجى إدخال رقم هاتف جزائري صالح (مثال: 0661234567)');
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+
+    try {
+      // إرسال البيانات الآمنة فقط (بدون أسعار!)
+      const res = await api.createOrder({
+        full_name: cleanName,
+        phone: cleanPhone,
+        wilaya_id: parseInt(wilayaId, 10),
+        commune,
+        address: cleanAddress,
+        shipping_type: shippingType,
+        // نرسل فقط ID والكمية - السيرفر يحسب السعر بنفسه من قاعدة البيانات
+        items: cartItems.map(i => ({ 
+          id: i.id, 
+          quantity: parseInt(i.quantity, 10) 
+        }))
+      });
+
+      if (res.success) {
+        localStorage.removeItem('cartItems');
+        navigate('/thank-you', { state: { trackingNumber: res.trackingNumber, orderId: res.orderId } });
+      } else {
+        setError(res.message || 'فشل إنشاء الطلب');
+      }
+    } catch (err) {
+      console.error('Order creation error:', err);
+      setError('خطأ في الاتصال بالسيرفر');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (cartItems.length === 0) {
     return (
@@ -90,51 +152,6 @@ export default function CheckoutPage() {
       </div>
     );
   }
-
-  const subtotal = cartItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
-  const shippingCost = fees ? (parseFloat(fees[shippingType]) || 0) : 0;
-  const total = subtotal + shippingCost;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!fullName || !phone || !address || !wilayaId || !commune) { 
-      setError('جميع الحقول مطلوبة'); 
-      return; 
-    }
-    
-    // التحقق من صيغة الأرقام الجزائرية (05 / 06 / 07)
-    if (!/^0[5-7]\d{8}$/.test(phone.trim())) {
-      setError('يرجى إدخال رقم هاتف جزائري صالح (مثال: 0661234567)');
-      return;
-    }
-    
-    setSubmitting(true);
-    setError('');
-    try {
-      const res = await api.createOrder({
-        full_name: fullName.trim(),
-        phone: phone.trim(),
-        wilaya_id: parseInt(wilayaId),
-        commune,
-        address: address.trim(),
-        shipping_type: shippingType,
-        items: cartItems.map(i => ({ id: i.id, name: i.name, quantity: i.quantity })),
-        total_price: subtotal,
-        shipping_cost: shippingCost,
-      });
-      
-      if (res.success) {
-        navigate('/thank-you', { state: { trackingNumber: res.trackingNumber, orderId: res.orderId } });
-      } else {
-        setError(res.message || 'فشل إنشاء الطلب');
-      }
-    } catch (err) {
-      console.error('Order creation error:', err);
-      setError('خطأ في الاتصال بالسيرفر');
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   return (
     <div style={{ background: '#f5f5f5', minHeight: '100vh', fontFamily: 'system-ui', direction: 'rtl' }}>
@@ -155,21 +172,21 @@ export default function CheckoutPage() {
           {/* العمود الأول - قائمة المنتجات */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#444' }}>ملخص السلة ({cartItems.length})</h3>
-            {cartItems.map((item, index) => (
-              <div key={index} style={{ background: '#fff', borderRadius: 12, padding: 12, display: 'flex', gap: 12, alignItems: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+            {cartItems.map((item) => (
+              <div key={item.id} style={{ background: '#fff', borderRadius: 12, padding: 12, display: 'flex', gap: 12, alignItems: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
                 <img src={item.image || 'https://via.placeholder.com/80'} alt={item.name} style={{ width: 70, height: 70, borderRadius: 8, objectFit: 'cover' }} />
                 <div style={{ flex: 1 }}>
                   <h4 style={{ fontSize: 14, fontWeight: 600, color: '#222', marginBottom: 4 }}>{item.name}</h4>
                   <p style={{ fontSize: 12, color: '#888' }}>الكمية: {item.quantity}</p>
                   <div style={{ fontSize: 15, fontWeight: 700, color: '#ff6600', marginTop: 4 }}>
-                    {(parseFloat(item.price) * item.quantity).toLocaleString('en-US')} دج
+                    {(parseFloat(item.price || 0) * item.quantity).toLocaleString('en-US')} دج
                   </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* العمود الثاني - نموذج إدخال البيانات والتأكيد */}
+          {/* العمود الثاني - النموذج */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ background: '#fff', borderRadius: 12, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               <h3 style={{ fontSize: 16, fontWeight: 700, color: '#222', marginBottom: 14 }}>معلومات التوصيل</h3>
@@ -213,8 +230,8 @@ export default function CheckoutPage() {
                       : 'اختر البلدية *'}
                   </option>
                   {communes.map(c => (
-                    <option key={c.id || c.name_fr || c.name_ar} value={c.name_ar || c.name_fr}>
-                      {c.name_ar}
+                    <option key={c.id || c.name_ar || c.name_fr} value={c.name_ar || c.name_fr}>
+                      {c.name_ar || c.name_fr}
                     </option>
                   ))}
                 </select>
@@ -280,7 +297,6 @@ export default function CheckoutPage() {
                   </button>
                 </div>
 
-                {/* ملخص الحساب */}
                 <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #eee' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#666', marginBottom: 6 }}>
                     <span>المجموع الفرعي</span><span>{subtotal.toLocaleString('en-US')} دج</span>
@@ -289,7 +305,7 @@ export default function CheckoutPage() {
                     <span>تكلفة الشحن</span><span>{shippingCost.toLocaleString('en-US')} دج</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#222', marginTop: 8 }}>
-                    <span>المجموع الإجمالي</span><span style={{ color: '#ff6600' }}>{total.toLocaleString('en-US')} دج</span>
+                    <span>المجموع الإجمالي المقدر</span><span style={{ color: '#ff6600' }}>{total.toLocaleString('en-US')} دج</span>
                   </div>
                 </div>
               </div>
@@ -310,7 +326,7 @@ export default function CheckoutPage() {
                 cursor: (submitting || !wilayaId || !commune) ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                justify: 'center',
+                justifyContent: 'center',
                 gap: 8,
               }}
             >
