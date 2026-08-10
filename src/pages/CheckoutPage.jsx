@@ -7,7 +7,6 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // جلب العناصر (نأخذ فقط id والكميات للعرض، أما الحساب النهائي فيتم في السيرفر)
   const cartItems = location.state?.items || JSON.parse(localStorage.getItem('cartItems') || '[]');
 
   const [fullName, setFullName] = useState('');
@@ -26,10 +25,8 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // 1. جلب الولايات
   useEffect(() => {
     let isMounted = true;
-    
     api.getWilayas?.() || fetch('/api/shipping/wilayas').then(r => r.json())
       .then(data => {
         if (isMounted && data.success) setWilayas(data.wilayas);
@@ -42,7 +39,6 @@ export default function CheckoutPage() {
     return () => { isMounted = false; };
   }, []);
 
-  // 2. جلب الأسعار والبلديات بحسب الولاية
   useEffect(() => {
     if (!wilayaId) {
       setCommunes([]);
@@ -75,7 +71,6 @@ export default function CheckoutPage() {
     return () => controller.abort();
   }, [wilayaId]);
 
-  // 3. تعديل خيار التوصيل تلقائيًا إذا كان Stopdesk غير متاح
   useEffect(() => {
     const hasStopdesk = fees?.stopdesk && parseFloat(fees.stopdesk) > 0;
     if (fees && !hasStopdesk && shippingType === 'stopdesk') {
@@ -83,16 +78,13 @@ export default function CheckoutPage() {
     }
   }, [fees, shippingType]);
 
-  // حساب المجموع للعرض فقط في الواجهة (Display Only)
   const subtotal = cartItems.reduce((sum, item) => sum + (parseFloat(item.price || 0) * item.quantity), 0);
   const shippingCost = fees ? (parseFloat(fees[shippingType]) || 0) : 0;
   const total = subtotal + shippingCost;
 
-  // معالجة إرسال النموذج بشكل آمن
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // تنظيف المدخلات
     const cleanPhone = phone.replace(/\s+/g, '').trim();
     const cleanName = fullName.trim();
     const cleanAddress = address.trim();
@@ -102,7 +94,6 @@ export default function CheckoutPage() {
       return;
     }
 
-    // التحقق من رقم الهاتف الجزائر (05 / 06 / 07)
     if (!/^0[5-7]\d{8}$/.test(cleanPhone)) {
       setError('يرجى إدخال رقم هاتف جزائري صالح (مثال: 0661234567)');
       return;
@@ -112,7 +103,6 @@ export default function CheckoutPage() {
     setError('');
 
     try {
-      // إرسال البيانات الآمنة فقط (بدون أسعار!)
       const res = await api.createOrder({
         full_name: cleanName,
         phone: cleanPhone,
@@ -120,7 +110,6 @@ export default function CheckoutPage() {
         commune,
         address: cleanAddress,
         shipping_type: shippingType,
-        // نرسل فقط ID والكمية - السيرفر يحسب السعر بنفسه من قاعدة البيانات
         items: cartItems.map(i => ({ 
           id: i.id, 
           quantity: parseInt(i.quantity, 10) 
@@ -169,16 +158,43 @@ export default function CheckoutPage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16, alignItems: 'start' }}>
           
-          {/* العمود الأول - قائمة المنتجات */}
+          {/* العمود الأول - قائمة المنتجات مع صور مكبّرة */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#444' }}>ملخص السلة ({cartItems.length})</h3>
             {cartItems.map((item) => (
-              <div key={item.id} style={{ background: '#fff', borderRadius: 12, padding: 12, display: 'flex', gap: 12, alignItems: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                <img src={item.image || 'https://via.placeholder.com/80'} alt={item.name} style={{ width: 70, height: 70, borderRadius: 8, objectFit: 'cover' }} />
-                <div style={{ flex: 1 }}>
-                  <h4 style={{ fontSize: 14, fontWeight: 600, color: '#222', marginBottom: 4 }}>{item.name}</h4>
-                  <p style={{ fontSize: 12, color: '#888' }}>الكمية: {item.quantity}</p>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#ff6600', marginTop: 4 }}>
+              <div 
+                key={item.id} 
+                style={{ 
+                  background: '#fff', 
+                  borderRadius: 12, 
+                  padding: 14, 
+                  display: 'flex', 
+                  gap: 16, 
+                  alignItems: 'center', 
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.06)' 
+                }}
+              >
+                {/* تم تكبير حجم الصورة هنا من 70px إلى 110px مع إطار خفيف */}
+                <img 
+                  src={item.image || 'https://via.placeholder.com/150'} 
+                  alt={item.name} 
+                  style={{ 
+                    width: 110, 
+                    height: 110, 
+                    borderRadius: 10, 
+                    objectFit: 'cover',
+                    border: '1px solid #f0f0f0',
+                    flexShrink: 0
+                  }} 
+                />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <h4 style={{ fontSize: 15, fontWeight: 600, color: '#222', margin: 0, lineHeight: 1.3 }}>
+                    {item.name}
+                  </h4>
+                  <p style={{ fontSize: 13, color: '#777', margin: 0 }}>
+                    الكمية: <span style={{ fontWeight: 600, color: '#333' }}>{item.quantity}</span>
+                  </p>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: '#ff6600', marginTop: 4 }}>
                     {(parseFloat(item.price || 0) * item.quantity).toLocaleString('en-US')} دج
                   </div>
                 </div>
