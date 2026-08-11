@@ -7,7 +7,7 @@ import {
 
 const MENU = [
   { path: '/admin/dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
-  { path: '/admin/products', label: 'المنتجات والمخزون', icon: Package },
+  { path: '/admin/products', label: 'المنتجات', icon: Package },
   { path: '/admin/orders', label: 'الطلبات', icon: ShoppingBag },
   { path: '/admin/scan', label: 'مسح QR', icon: QrCode },
   { path: '/admin/settings', label: 'الإعدادات', icon: Settings },
@@ -100,15 +100,15 @@ export default function AdminSettingsPage() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc', fontFamily: 'system-ui, -apple-system, sans-serif', direction: 'rtl' }}>
       
-      {/* Sidebar Desktop */}
-      <aside style={{ 
+      {/* Sidebar Desktop - يختفي في أجهزة الموبايل */}
+      <aside className="admin-sidebar" style={{ 
         width: sidebarOpen ? 240 : 72, 
         background: '#fff', 
         borderLeft: '1px solid #e2e8f0',
         transition: 'all 0.25s ease',
         display: 'flex',
         flexDirection: 'column',
-        justify: 'space-between',
+        justifyContent: 'space-between',
         padding: '16px 0',
         flexShrink: 0,
         position: 'sticky',
@@ -179,33 +179,36 @@ export default function AdminSettingsPage() {
       </aside>
 
       {/* Main Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, paddingBottom: 60 }}>
         
         {/* Header */}
-        <header style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 20 }}>
+        <header style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Settings size={22} style={{ color: '#2563eb' }} />
-            <h1 style={{ fontSize: 18, fontWeight: 900, margin: 0, color: '#0f172a' }}>إعدادات الحساب والأمان</h1>
+            <h1 style={{ fontSize: 'clamp(15px, 4vw, 18px)', fontWeight: 900, margin: 0, color: '#0f172a' }}>إعدادات الحساب والأمان</h1>
           </div>
+          <button onClick={handleLogout} className="mobile-logout-btn" style={{ background: '#fef2f2', border: 'none', color: '#ef4444', padding: '6px 10px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 700, display: 'none', alignItems: 'center', gap: 4 }}>
+            <LogOut size={16} /> خروج
+          </button>
         </header>
 
         {/* Content */}
-        <main style={{ padding: 24, flex: 1, maxWidth: 800 }}>
+        <main style={{ padding: '16px 12px', flex: 1, maxWidth: 800, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
           
           {/* Card: Change Password */}
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.02)', marginBottom: 24 }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 10, background: '#fafafa' }}>
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.02)', marginBottom: 20 }}>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 10, background: '#fafafa' }}>
               <Shield size={20} style={{ color: '#2563eb' }} />
-              <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: '#0f172a' }}>الأمان وحماية الحساب</h2>
+              <h2 style={{ fontSize: 15, fontWeight: 800, margin: 0, color: '#0f172a' }}>الأمان وحماية الحساب</h2>
             </div>
 
-            <form onSubmit={handleChangePassword} style={{ padding: 24 }}>
+            <form onSubmit={handleChangePassword} style={{ padding: '16px' }}>
               
               {feedback.text && (
                 <div style={{
-                  padding: '12px 16px',
+                  padding: '12px 14px',
                   borderRadius: 10,
-                  marginBottom: 20,
+                  marginBottom: 16,
                   fontSize: 13,
                   fontWeight: 700,
                   display: 'flex',
@@ -220,11 +223,11 @@ export default function AdminSettingsPage() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 
                 {/* Current Password */}
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 8 }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>
                     كلمة المرور الحالية
                   </label>
                   <div style={{ position: 'relative' }}>
@@ -255,7 +258,7 @@ export default function AdminSettingsPage() {
 
                 {/* New Password */}
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 8 }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>
                     كلمة المرور الجديدة
                   </label>
                   <div style={{ position: 'relative' }}>
@@ -286,7 +289,7 @@ export default function AdminSettingsPage() {
 
                 {/* Confirm New Password */}
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 8 }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>
                     تأكيد كلمة المرور الجديدة
                   </label>
                   <input 
@@ -307,21 +310,23 @@ export default function AdminSettingsPage() {
                 </div>
 
                 {/* Submit Button */}
-                <div style={{ marginTop: 10 }}>
+                <div style={{ marginTop: 6 }}>
                   <button 
                     type="submit" 
                     disabled={submitting}
                     style={{
+                      width: '100%',
                       background: '#2563eb',
                       color: '#fff',
                       border: 'none',
                       borderRadius: 10,
-                      padding: '12px 24px',
+                      padding: '12px 20px',
                       fontSize: 14,
                       fontWeight: 800,
                       cursor: submitting ? 'not-allowed' : 'pointer',
                       display: 'flex',
                       alignItems: 'center',
+                      justifyContent: 'center',
                       gap: 8,
                       opacity: submitting ? 0.7 : 1,
                       transition: 'background 0.2s'
@@ -347,11 +352,11 @@ export default function AdminSettingsPage() {
           </div>
 
           {/* Info Box */}
-          <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 14, padding: 20, display: 'flex', gap: 14 }}>
-            <User size={24} style={{ color: '#2563eb', flexShrink: 0, marginTop: 2 }} />
+          <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 14, padding: 16, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <User size={22} style={{ color: '#2563eb', flexShrink: 0, marginTop: 2 }} />
             <div>
-              <h3 style={{ fontSize: 14, fontWeight: 800, color: '#1e40af', margin: '0 0 4px 0' }}>ملاحظات الأمان</h3>
-              <p style={{ fontSize: 13, color: '#1e3a8a', margin: 0, lineHeight: 1.6 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 800, color: '#1e40af', margin: '0 0 4px 0' }}>ملاحظات الأمان</h3>
+              <p style={{ fontSize: 12, color: '#1e3a8a', margin: 0, lineHeight: 1.6 }}>
                 يُوصى باستخدام كلمة مرور قوية تحتوي على أرقام وحروف لتأمين لوحة التحكم بشكل كامل. عند تغيير كلمة المرور سيُمكنك الاستمرار بالعمل بنفس الجلسة الحالية.
               </p>
             </div>
@@ -360,10 +365,57 @@ export default function AdminSettingsPage() {
         </main>
       </div>
 
+      {/* Bottom Mobile Navigation Bar - للشاشات الصغيرة فقط */}
+      <nav className="mobile-nav" style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: '#fff',
+        borderTop: '1px solid #e2e8f0',
+        display: 'none',
+        justifyContent: 'space-around',
+        padding: '6px 0',
+        zIndex: 50,
+        boxShadow: '0 -2px 10px rgba(0,0,0,0.05)'
+      }}>
+        {MENU.map(item => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+          return (
+            <Link key={item.path} to={item.path} style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 2,
+              textDecoration: 'none',
+              color: isActive ? '#2563eb' : '#64748b',
+              fontSize: 10,
+              fontWeight: isActive ? 800 : 600,
+              padding: '4px 8px'
+            }}>
+              <Icon size={18} />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
       <style>{`
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+          .admin-sidebar {
+            display: none !important;
+          }
+          .mobile-nav {
+            display: flex !important;
+          }
+          .mobile-logout-btn {
+            display: inline-flex !important;
+          }
         }
       `}</style>
     </div>

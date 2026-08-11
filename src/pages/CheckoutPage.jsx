@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Truck, Home, Loader2, Package, ChevronLeft, Shield, CheckCircle2, Clock, Check, RefreshCw } from 'lucide-react';
+import { Truck, Home, Loader2, Package, ChevronLeft, Shield, Check, RefreshCw, ZoomIn } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function CheckoutPage() {
@@ -26,6 +26,7 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
+  const [zoomedImage, setZoomedImage] = useState(null);
 
   const formRef = useRef(null);
 
@@ -147,11 +148,11 @@ export default function CheckoutPage() {
 
   if (cartItems.length === 0) {
     return (
-      <div style={{ background: '#f5f5f5', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui' }}>
-        <div style={{ textAlign: 'center', padding: 40, background: '#fff', borderRadius: 12, maxWidth: 400, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+      <div style={{ background: '#f5f5f5', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui', padding: 16 }}>
+        <div style={{ textAlign: 'center', padding: '32px 20px', background: '#fff', borderRadius: 12, maxWidth: 400, width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', boxSizing: 'border-box' }}>
           <Package size={48} style={{ color: '#999', marginBottom: 16 }} />
-          <h2 style={{ marginBottom: 12 }}>لا توجد منتجات في السلة</h2>
-          <Link to="/store" style={{ color: '#ff6600', textDecoration: 'none', fontWeight: 600 }}>تصفح المتجر</Link>
+          <h2 style={{ marginBottom: 12, fontSize: 18, color: '#333' }}>لا توجد منتجات في السلة</h2>
+          <Link to="/store" style={{ display: 'inline-block', background: '#ff6600', color: '#fff', padding: '10px 20px', borderRadius: 8, textDecoration: 'none', fontWeight: 600, fontSize: 14 }}>تصفح المتجر</Link>
         </div>
       </div>
     );
@@ -162,7 +163,7 @@ export default function CheckoutPage() {
     padding: '12px',
     border: fieldErrors[errorKey] ? '1.5px solid #e44' : '1px solid #ddd',
     borderRadius: 8,
-    fontSize: 15,
+    fontSize: 14,
     outline: 'none',
     boxSizing: 'border-box',
     background: fieldErrors[errorKey] ? '#fff8f8' : '#fff',
@@ -170,26 +171,27 @@ export default function CheckoutPage() {
   });
 
   return (
-    <div style={{ background: '#f8f9fa', minHeight: '100vh', fontFamily: 'system-ui', direction: 'rtl', paddingBottom: 40 }}>
+    <div style={{ background: '#f8f9fa', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', direction: 'rtl', paddingBottom: 40 }}>
+      
       {/* الشريط العلوي */}
       <div style={{ background: '#fff', padding: '12px 16px', borderBottom: '1px solid #eee', position: 'sticky', top: 0, zIndex: 30 }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#333', padding: 4 }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#333', padding: 4, display: 'flex', alignItems: 'center' }}>
               <ChevronLeft size={22} />
             </button>
-            <h1 style={{ fontSize: 18, fontWeight: 700, marginRight: 8, color: '#222' }}>تأكيد الطلب</h1>
+            <h1 style={{ fontSize: 'clamp(15px, 4vw, 18px)', fontWeight: 700, margin: 0, color: '#222' }}>تأكيد الطلب</h1>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#2e7d32', fontSize: 12, fontWeight: 600, background: '#e8f5e9', padding: '4px 8px', borderRadius: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#2e7d32', fontSize: 11, fontWeight: 700, background: '#e8f5e9', padding: '4px 8px', borderRadius: 20, flexShrink: 0 }}>
             <Shield size={14} /> دفع عند الاستلام
           </div>
         </div>
       </div>
 
-      {/* تحسين 1: مؤشر خطوات الشراء المتبقية */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #f0f0f0', padding: '10px 0' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, fontSize: 12, color: '#888' }}>
-          <span style={{ color: '#2e7d32', display: 'flex', alignItems: 'center', gap: 4 }}><Check size={14} /> السلة</span>
+      {/* مؤشر خطوات الشراء */}
+      <div style={{ background: '#fff', borderBottom: '1px solid #f0f0f0', padding: '10px 12px' }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'clamp(6px, 2vw, 16px)', fontSize: 11, color: '#888' }}>
+          <span style={{ color: '#2e7d32', display: 'flex', alignItems: 'center', gap: 2 }}><Check size={12} /> السلة</span>
           <span>←</span>
           <span style={{ color: '#ff6600', fontWeight: 700 }}>معلومات الشحن</span>
           <span>←</span>
@@ -197,76 +199,80 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '16px' }}>
+      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '16px 12px' }}>
         {error && <div style={{ background: '#fff0f0', color: '#e44', padding: 12, borderRadius: 8, marginBottom: 16, fontSize: 13, border: '1px solid #fcc' }}>{error}</div>}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, alignItems: 'start' }}>
+        <div className="checkout-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16, alignItems: 'start' }}>
           
-          {/* الجانب الأيمن: الصورة مع خاصية التكبير وتفاصيل المنتجات */}
+          {/* الجانب الأول: تفاصيل وصور المنتجات */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ background: '#fff', borderRadius: 12, padding: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', border: '1px solid #f0f0f0' }}>
               {cartItems.map((item) => (
-                <div key={item.id}>
+                <div key={item.id} style={{ marginBottom: 12 }}>
                   <div 
+                    onClick={() => setZoomedImage(item.image || 'https://via.placeholder.com/500')}
                     style={{ 
                       width: '100%', 
                       borderRadius: 8, 
                       overflow: 'hidden', 
                       position: 'relative',
-                      cursor: 'zoom-in'
+                      cursor: 'pointer',
+                      background: '#fafafa'
                     }}
                   >
                     <img 
                       src={item.image || 'https://via.placeholder.com/500'} 
                       alt="صورة المنتج" 
+                      className="product-zoom-img"
                       style={{ 
                         width: '100%', 
-                        maxHeight: '380px', 
+                        maxHeight: '320px', 
                         objectFit: 'cover', 
                         borderRadius: 8,
                         display: 'block',
                         transition: 'transform 0.35s ease-in-out'
                       }} 
-                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.35)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
                     />
+                    <div style={{ position: 'absolute', bottom: 8, left: 8, background: 'rgba(0,0,0,0.6)', color: '#fff', padding: '4px 8px', borderRadius: 6, fontSize: 10, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <ZoomIn size={12} /> اضغط التكبير
+                    </div>
                   </div>
 
-                  {/* تحسين 2: تفاصيل المنتج المختصرة وتحت الصورة مباشرة */}
+                  {/* تفاصيل المنتج */}
                   <div style={{ padding: '10px 4px 0 4px', borderBottom: cartItems.length > 1 ? '1px solid #eee' : 'none' }}>
-                    <div style={{ fontWeight: 700, fontSize: 15, color: '#333' }}>{item.title || item.name || 'منتج متميز'}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-                      <span style={{ fontSize: 13, color: '#666' }}>الكمية: {item.quantity}</span>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: '#333', lineHeight: 1.4 }}>{item.title || item.name || 'منتج متميز'}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+                      <span style={{ fontSize: 12, color: '#666' }}>الكمية: {item.quantity}</span>
                       <span style={{ fontWeight: 700, color: '#ff6600', fontSize: 15 }}>{(parseFloat(item.price || 0) * item.quantity).toLocaleString('en-US')} دج</span>
                     </div>
                   </div>
                 </div>
               ))}
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, color: '#555', fontSize: 12 }}>
-                <Clock size={16} style={{ color: '#ff6600', flexShrink: 0 }} />
-                <span>مرر الفأرة فوق الصورة لتكبير التفاصيل • التوصيل متوفر لجميع الولايات</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, color: '#666', fontSize: 11, background: '#f8f9fa', padding: 8, borderRadius: 6 }}>
+                <RefreshCw size={14} style={{ color: '#ff6600', flexShrink: 0 }} />
+                <span>التوصيل متوفر لكافة الولايات المعنية مع إمكانية المعاينة قبل الدفع</span>
               </div>
             </div>
 
-            {/* تحسين 3: شارات الضمان لرفع نسبة المبيعات */}
+            {/* شارات الضمان */}
             <div style={{ background: '#fff', borderRadius: 12, padding: 12, border: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
-              <div>
-                <Shield size={20} style={{ color: '#ff6600', marginBottom: 2 }} />
+              <div style={{ flex: 1 }}>
+                <Shield size={18} style={{ color: '#ff6600', marginBottom: 2 }} />
                 <div style={{ fontSize: 11, fontWeight: 600, color: '#444' }}>ضمان الجودة</div>
               </div>
-              <div style={{ borderRight: '1px solid #eee' }}></div>
-              <div>
-                <RefreshCw size={20} style={{ color: '#ff6600', marginBottom: 2 }} />
+              <div style={{ width: 1, background: '#eee', margin: '0 4px' }}></div>
+              <div style={{ flex: 1 }}>
+                <RefreshCw size={18} style={{ color: '#ff6600', marginBottom: 2 }} />
                 <div style={{ fontSize: 11, fontWeight: 600, color: '#444' }}>المعاينة عند الاستلام</div>
               </div>
             </div>
           </div>
 
-          {/* الجانب الأيسر: نموذج البيانات */}
+          {/* الجانب الثاني: نموذج البيانات الشحن */}
           <form ref={formRef} onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ background: '#fff', borderRadius: 12, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', border: '1px solid #f0f0f0' }}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#222', marginBottom: 14 }}>معلومات الاستلام</h3>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#222', marginBottom: 14 }}>معلومات الاستلام</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 
                 <div>
@@ -348,6 +354,7 @@ export default function CheckoutPage() {
               </div>
             </div>
 
+            {/* تفاصيل الشحن والمجموع */}
             {fees && (
               <div style={{ background: '#fff', borderRadius: 12, padding: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', border: '1px solid #f0f0f0' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -355,7 +362,7 @@ export default function CheckoutPage() {
                     type="button"
                     onClick={() => setShippingType('domicile')}
                     style={{
-                      padding: 10,
+                      padding: '10px 6px',
                       textAlign: 'center',
                       cursor: 'pointer',
                       borderRadius: 8,
@@ -369,8 +376,8 @@ export default function CheckoutPage() {
                     }}
                   >
                     <Home size={18} style={{ color: shippingType === 'domicile' ? '#ff6600' : '#666' }} />
-                    <div style={{ fontWeight: 600, fontSize: 12 }}>توصيل للمنزل</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#ff6600' }}>{parseFloat(fees.domicile).toLocaleString('en-US')} دج</div>
+                    <div style={{ fontWeight: 600, fontSize: 11 }}>توصيل للمنزل</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#ff6600' }}>{parseFloat(fees.domicile).toLocaleString('en-US')} دج</div>
                   </button>
 
                   <button
@@ -378,7 +385,7 @@ export default function CheckoutPage() {
                     onClick={() => setShippingType('stopdesk')}
                     disabled={!fees.stopdesk || parseFloat(fees.stopdesk) === 0}
                     style={{
-                      padding: 10,
+                      padding: '10px 6px',
                       textAlign: 'center',
                       cursor: (fees.stopdesk && parseFloat(fees.stopdesk) > 0) ? 'pointer' : 'not-allowed',
                       borderRadius: 8,
@@ -393,8 +400,8 @@ export default function CheckoutPage() {
                     }}
                   >
                     <Truck size={18} style={{ color: shippingType === 'stopdesk' ? '#ff6600' : '#666' }} />
-                    <div style={{ fontWeight: 600, fontSize: 12 }}>توصيل للمكتب</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#ff6600' }}>
+                    <div style={{ fontWeight: 600, fontSize: 11 }}>توصيل للمكتب</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#ff6600' }}>
                       {fees.stopdesk && parseFloat(fees.stopdesk) > 0 ? `${parseFloat(fees.stopdesk).toLocaleString('en-US')} دج` : 'غير متاح'}
                     </div>
                   </button>
@@ -407,7 +414,7 @@ export default function CheckoutPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#666', marginBottom: 6 }}>
                     <span>تكلفة الشحن</span><span>{shippingCost.toLocaleString('en-US')} دج</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#222', marginTop: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 700, color: '#222', marginTop: 8 }}>
                     <span>المجموع الإجمالي</span><span style={{ color: '#ff6600' }}>{total.toLocaleString('en-US')} دج</span>
                   </div>
                 </div>
@@ -435,12 +442,40 @@ export default function CheckoutPage() {
                 transition: 'all 0.2s ease-in-out'
               }}
             >
-              {submitting ? <Loader2 size={18} className="spin" /> : <CheckCircle2 size={18} />}
+              {submitting ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : null}
               {submitting ? 'جاري التأكيد...' : 'تأكيد الطلب الآن'}
             </button>
           </form>
         </div>
       </div>
+
+      {/* نافذة المنبثقة للتكبير عند الضغط على الصورة في الهواتف والحواسيب */}
+      {zoomedImage && (
+        <div 
+          onClick={() => setZoomedImage(null)}
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+        >
+          <img src={zoomedImage} alt="تكبير المنتج" style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 8, objectFit: 'contain' }} />
+        </div>
+      )}
+
+      {/* أنماط الحركة والتجاوب الخاصة */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @media (min-width: 768px) {
+          .product-zoom-img:hover {
+            transform: scale(1.35) !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .checkout-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

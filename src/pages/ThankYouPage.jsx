@@ -41,11 +41,11 @@ export default function ThankYouPage() {
 
   if (!location.state) {
     return (
-      <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, textAlign: 'center', padding: '40px 24px', maxWidth: 450, width: '100%', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-          <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 8, color: '#0f172a' }}>لا توجد تفاصيل طلب حالية</h2>
-          <p style={{ color: '#64748b', fontSize: 14, marginBottom: 20 }}>سيتم إعادة توجيهك إلى الرئيسية تلقائياً خلال لحظات...</p>
-          <Link to="/" style={{ background: '#2563eb', color: '#fff', textDecoration: 'none', padding: '10px 20px', borderRadius: 10, fontWeight: 700, fontSize: 14, display: 'inline-block' }}>
+      <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px 12px', fontFamily: "'Cairo', system-ui, -apple-system, sans-serif" }}>
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, textAlign: 'center', padding: '32px 16px', maxWidth: 450, width: '100%', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', boxSizing: 'border-box' }}>
+          <h2 style={{ fontSize: 'clamp(16px, 4vw, 18px)', fontWeight: 800, marginBottom: 8, color: '#0f172a' }}>لا توجد تفاصيل طلب حالية</h2>
+          <p style={{ color: '#64748b', fontSize: 'clamp(12px, 3.5vw, 14px)', marginBottom: 20 }}>سيتم إعادة توجيهك إلى الرئيسية تلقائياً خلال لحظات...</p>
+          <Link to="/" style={{ background: '#2563eb', color: '#fff', textDecoration: 'none', padding: '12px 24px', borderRadius: 10, fontWeight: 700, fontSize: 14, display: 'inline-block', width: '100%', boxSizing: 'border-box' }}>
             الذهاب للرئيسية الآن
           </Link>
         </div>
@@ -54,16 +54,16 @@ export default function ThankYouPage() {
   }
 
   return (
-    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 20, textAlign: 'center', padding: '40px 24px', maxWidth: 480, width: '100%', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)' }}>
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px 12px', fontFamily: "'Cairo', system-ui, -apple-system, sans-serif" }}>
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 20, textAlign: 'center', padding: 'clamp(24px, 5vw, 40px) clamp(16px, 4vw, 24px)', maxWidth: 480, width: '100%', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)', boxSizing: 'border-box' }}>
         
         {/* Success Icon */}
-        <div style={{ background: '#dcfce7', color: '#16a34a', margin: '0 auto 20px auto', width: 72, height: 72, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <CheckCircle size={44} />
+        <div style={{ background: '#dcfce7', color: '#16a34a', margin: '0 auto 20px auto', width: 'clamp(56px, 12vw, 72px)', height: 'clamp(56px, 12vw, 72px)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <CheckCircle size={36} />
         </div>
         
-        <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 8, color: '#0f172a' }}>تم تأكيد طلبك بنجاح!</h1>
-        <p style={{ color: '#64748b', marginBottom: 24, fontSize: 14, lineHeight: 1.6 }}>
+        <h1 style={{ fontSize: 'clamp(18px, 5vw, 22px)', fontWeight: 900, marginBottom: 8, color: '#0f172a' }}>تم تأكيد طلبك بنجاح!</h1>
+        <p style={{ color: '#64748b', marginBottom: 24, fontSize: 'clamp(12px, 3.5vw, 14px)', lineHeight: 1.6 }}>
           شكراً لثقتك في DZBoard. سيتم تجهيز طلبك والتواصل معك قريباً لتأكيد التوصيل.
         </p>
 
@@ -77,13 +77,13 @@ export default function ThankYouPage() {
 
         {/* Tracking Number */}
         {trackingNumber && (
-          <div style={{ background: '#eff6ff', padding: 16, borderRadius: 12, marginBottom: 24, border: '1px solid #bfdbfe' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
-              <Truck size={18} style={{ color: '#2563eb' }} />
+          <div style={{ background: '#eff6ff', padding: '14px 12px', borderRadius: 12, marginBottom: 24, border: '1px solid #bfdbfe' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 8 }}>
+              <Truck size={18} style={{ color: '#2563eb', flexShrink: 0 }} />
               <p style={{ fontWeight: 700, fontSize: 13, color: '#1e40af', margin: 0 }}>رقم تتبع الشحنة:</p>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <p style={{ fontSize: 20, color: '#1d4ed8', fontWeight: 900, margin: 0, letterSpacing: 1 }}>{trackingNumber}</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <p style={{ fontSize: 'clamp(16px, 4.5vw, 20px)', color: '#1d4ed8', fontWeight: 900, margin: 0, letterSpacing: 1, wordBreak: 'break-all' }}>{trackingNumber}</p>
               <button
                 onClick={handleCopyTracking}
                 style={{ background: '#fff', border: '1px solid #93c5fd', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
@@ -97,32 +97,32 @@ export default function ThankYouPage() {
         )}
 
         {/* Delivery Timeline Status */}
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 28, background: '#f8fafc', padding: 12, borderRadius: 10, border: '1px solid #f1f5f9', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'space-around', alignItems: 'center', marginBottom: 28, background: '#f8fafc', padding: 12, borderRadius: 10, border: '1px solid #f1f5f9', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#d97706', fontWeight: 700 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b' }} />
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', flexShrink: 0 }} />
             <span>قيد المعالجة</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#94a3b8' }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#cbd5e1' }} />
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#cbd5e1', flexShrink: 0 }} />
             <span>جاري التوصيل</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#94a3b8' }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#cbd5e1' }} />
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#cbd5e1', flexShrink: 0 }} />
             <span>تم التسليم</span>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, justifyContent: 'center' }}>
           <button
             onClick={() => navigate('/')}
-            style={{ padding: '12px 18px', background: '#f1f5f9', color: '#334155', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+            style={{ padding: '12px 16px', background: '#f1f5f9', color: '#334155', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%' }}
           >
             <Home size={16} /> الرئيسية
           </button>
           <Link
             to="/"
-            style={{ padding: '12px 18px', background: '#2563eb', color: '#fff', textDecoration: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}
+            style={{ padding: '12px 16px', background: '#2563eb', color: '#fff', textDecoration: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', boxSizing: 'border-box' }}
           >
             <ShoppingBag size={16} /> متابعة التسوق
           </Link>

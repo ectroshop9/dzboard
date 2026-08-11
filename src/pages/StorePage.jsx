@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, ChevronLeft, ShoppingCart, Package, Loader2, Monitor, Zap, Cpu, Grid, List, X, Eye, CheckCircle2 } from 'lucide-react';
+import { Search, ChevronLeft, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function StorePage() {
@@ -102,37 +102,36 @@ export default function StorePage() {
   };
 
   return (
-    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: 'system-ui', paddingBottom: 40 }}>
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', system-ui, sans-serif", paddingBottom: 40 }}>
       
-      {/* الهيدر العلوي المثبت بشكل صحيح */}
+      {/* الهيدر العلوي */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Link to="/" style={{ textDecoration: 'none', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, fontSize: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Link to="/" style={{ textDecoration: 'none', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 2, fontWeight: 700, fontSize: 13 }}>
               <ChevronLeft size={18} /> الرئيسية
             </Link>
-            <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#0f172a' }}>المتجر الإلكتروني</h1>
+            <h1 style={{ fontSize: 'clamp(15px, 4vw, 18px)', fontWeight: 800, margin: 0, color: '#0f172a' }}>المتجر الإلكتروني</h1>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button
-              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-              style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}
-              title="تغيير طريقة العرض"
-            >
-              {viewMode === 'grid' ? <List size={16} /> : <Grid size={16} />}
-              <span style={{ display: 'none', smDisplay: 'inline' }}>{viewMode === 'grid' ? 'قائمة' : 'شبكة'}</span>
-            </button>
-          </div>
+
+          <button
+            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+            style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700 }}
+            title="تغيير طريقة العرض"
+          >
+            {viewMode === 'grid' ? <List size={16} /> : <Grid size={16} />}
+            <span style={{ display: 'inline-block' }}>{viewMode === 'grid' ? 'قائمة' : 'شبكة'}</span>
+          </button>
         </div>
       </div>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: 16 }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '12px 12px 24px' }}>
         
         {/* شريط الفلاتر والبحث */}
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 12, marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
           
           {/* التصنيفات */}
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6, marginBottom: 14, scrollbarWidth: 'none' }}>
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: 12, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
             {categories.map(cat => {
               const Icon = cat.icon;
               const isActive = selectedCategory === cat.key;
@@ -141,22 +140,23 @@ export default function StorePage() {
                   key={cat.key}
                   onClick={() => setSelectedCategory(cat.key)}
                   style={{
-                    padding: '8px 14px',
+                    padding: '8px 12px',
                     borderRadius: 8,
                     border: isActive ? '2px solid #3b82f6' : '1px solid #e2e8f0',
                     background: isActive ? '#eff6ff' : '#fff',
                     color: isActive ? '#2563eb' : '#64748b',
                     cursor: 'pointer',
                     fontWeight: isActive ? 700 : 600,
-                    fontSize: 13,
+                    fontSize: 12,
                     display: 'flex',
                     alignItems: 'center',
                     gap: 6,
                     whiteSpace: 'nowrap',
+                    flexShrink: 0,
                     transition: 'all 0.15s ease'
                   }}
                 >
-                  <Icon size={15} style={{ color: isActive ? '#2563eb' : cat.color }} />
+                  <Icon size={14} style={{ color: isActive ? '#2563eb' : cat.color }} />
                   {cat.label}
                 </button>
               );
@@ -164,22 +164,13 @@ export default function StorePage() {
           </div>
 
           {/* أدوات البحث والتصفية */}
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8, alignItems: 'center' }}>
             
-            {/* القائمة المنسدلة للماركات */}
-            <select
-              value={selectedBrand}
-              onChange={e => setSelectedBrand(e.target.value)}
-              style={{ padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', minWidth: 130, outline: 'none', cursor: 'pointer', fontSize: 13, color: '#334155' }}
-            >
-              {brands.map(b => <option key={b.code} value={b.code}>{b.name}</option>)}
-            </select>
-
-            {/* حقل البحث ومسح النص */}
-            <div style={{ flex: 1, position: 'relative', minWidth: 220 }}>
+            {/* حقل البحث */}
+            <div style={{ position: 'relative', gridColumn: '1 / -1' }}>
               <input
                 type="text"
-                placeholder="ابحث برقم الكارت، اسم الموديل أو القطعة..."
+                placeholder="ابحث برقم الكارت، اسم الموديل..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 style={{ width: '100%', padding: '10px 36px 10px 36px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none', boxSizing: 'border-box', fontSize: 13, color: '#1e293b' }}
@@ -195,11 +186,20 @@ export default function StorePage() {
               )}
             </div>
 
+            {/* القائمة المنسدلة للماركات */}
+            <select
+              value={selectedBrand}
+              onChange={e => setSelectedBrand(e.target.value)}
+              style={{ width: '100%', padding: '9px 10px', border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', outline: 'none', cursor: 'pointer', fontSize: 12, color: '#334155' }}
+            >
+              {brands.map(b => <option key={b.code} value={b.code}>{b.name}</option>)}
+            </select>
+
             {/* ترتيب النتائج */}
             <select
               value={sortBy}
               onChange={e => setSortBy(e.target.value)}
-              style={{ padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', minWidth: 150, outline: 'none', cursor: 'pointer', fontSize: 13, color: '#334155' }}
+              style={{ width: '100%', padding: '9px 10px', border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', outline: 'none', cursor: 'pointer', fontSize: 12, color: '#334155' }}
             >
               <option value="newest">الأحدث أولاً</option>
               <option value="price-low">السعر: من الأدنى للأعلى</option>
@@ -209,43 +209,47 @@ export default function StorePage() {
         </div>
 
         {/* معلومات النتائج وزر إعادة الضبط */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ color: '#64748b', fontSize: 13, fontWeight: 600 }}>
-            {loading ? 'جاري البحث في المخزون...' : `تم العثور على ${products.length} قطعة`}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ color: '#64748b', fontSize: 12, fontWeight: 700 }}>
+            {loading ? 'جاري البحث...' : `${products.length} قطعة متوفرة`}
           </div>
 
           {(selectedCategory !== 'all' || selectedBrand !== 'all' || searchQuery) && (
             <button
               onClick={handleClearFilters}
-              style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+              style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
             >
-              <X size={14} /> إعادة ضبط الفلاتر
+              <X size={14} /> مسح الفلاتر
             </button>
           )}
         </div>
 
         {/* عرض المنتجات / حالة التحميل */}
         {loading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(240px, 1fr))' : '1fr', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 }}>
             {[1, 2, 3, 4, 5, 6].map(n => (
-              <div key={n} style={{ background: '#fff', borderRadius: 14, height: 260, border: '1px solid #e2e8f0', animation: 'pulse 1.5s infinite ease-in-out' }} />
+              <div key={n} style={{ background: '#fff', borderRadius: 12, height: 220, border: '1px solid #e2e8f0', animation: 'pulse 1.5s infinite ease-in-out' }} />
             ))}
             <style>{`@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }`}</style>
           </div>
         ) : products.length === 0 ? (
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, textAlign: 'center', padding: '60px 20px' }}>
-            <Package size={48} style={{ color: '#cbd5e1', marginBottom: 12 }} />
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#334155', margin: 0 }}>لم يتم العثور على قطع متطابقة</h3>
-            <p style={{ color: '#94a3b8', fontSize: 13, marginTop: 6, marginBottom: 16 }}>جرب تغيير عبارات البحث أو اختيار ماركة أخرى</p>
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, textAlign: 'center', padding: '48px 16px' }}>
+            <Package size={44} style={{ color: '#cbd5e1', marginBottom: 12 }} />
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#334155', margin: 0 }}>لم يتم العثور على قطع متطابقة</h3>
+            <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 4, marginBottom: 16 }}>جرب تغيير عبارات البحث أو اختيار ماركة أخرى</p>
             <button
               onClick={handleClearFilters}
-              style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+              style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
             >
               عرض جميع القطع
             </button>
           </div>
         ) : (
-          <div style={viewMode === 'grid' ? { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 } : { display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(150px, 1fr))' : '1fr', 
+            gap: 12 
+          }}>
             {products.map(product => {
               const numericPrice = parseFloat(product.price) || 0;
               const isAvailable = product.stock !== false && product.stock !== 0;
@@ -257,36 +261,26 @@ export default function StorePage() {
                   style={{
                     background: '#fff',
                     border: '1px solid #e2e8f0',
-                    borderRadius: 14,
+                    borderRadius: 12,
                     overflow: 'hidden',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    display: viewMode === 'list' ? 'flex' : 'flex',
+                    display: 'flex',
                     flexDirection: viewMode === 'list' ? 'row' : 'column',
                     alignItems: viewMode === 'list' ? 'center' : 'stretch',
                     position: 'relative'
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = '#3b82f6';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = '#e2e8f0';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
                   }}
                 >
                   {/* شارة توفر المنتج */}
                   <span style={{
                     position: 'absolute',
-                    top: 10,
-                    right: 10,
+                    top: 8,
+                    right: 8,
                     zIndex: 2,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    padding: '3px 8px',
-                    borderRadius: 12,
+                    fontSize: 9,
+                    fontWeight: 800,
+                    padding: '2px 6px',
+                    borderRadius: 10,
                     background: isAvailable ? '#dcfce7' : '#fee2e2',
                     color: isAvailable ? '#166534' : '#991b1b',
                   }}>
@@ -296,8 +290,8 @@ export default function StorePage() {
                   {/* صورة المنتج */}
                   <div style={{ 
                     background: '#fafafa', 
-                    height: viewMode === 'list' ? 120 : 180, 
-                    width: viewMode === 'list' ? 130 : '100%', 
+                    height: viewMode === 'list' ? 95 : 140, 
+                    width: viewMode === 'list' ? 100 : '100%', 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center', 
@@ -308,46 +302,45 @@ export default function StorePage() {
                     <img
                       src={product.image || 'https://via.placeholder.com/200?text=لا+توجد+صورة'}
                       alt={product.name || product.title}
-                      style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8 }}
+                      style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 6 }}
                       onError={(e) => { e.target.src = 'https://via.placeholder.com/200?text=صورة+غير+متاحة'; }}
                     />
                   </div>
 
                   {/* التفاصيل والأسعار */}
-                  <div style={{ padding: 14, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div style={{ padding: 10, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 6 }}>
                     <div>
-                      <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: '#0f172a', lineHeight: 1.4 }}>
+                      <h2 style={{ fontSize: 13, fontWeight: 700, margin: '0 0 4px 0', color: '#0f172a', lineHeight: 1.3 }}>
                         {product.name || product.title}
-                      </h3>
-                      <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {product.description || 'قطعة غيار إلكترونية ذات جودة عالية متوافقة ومعاينة.'}
+                      </h2>
+                      <p style={{ fontSize: 11, color: '#64748b', margin: 0, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {product.description || 'قطعة غيار إلكترونية ذات جودة عالية'}
                       </p>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: 8, borderTop: '1px dashed #f1f5f9' }}>
-                      <span style={{ fontSize: 15, fontWeight: 800, color: '#d97706' }}>
-                        {numericPrice.toLocaleString('en-US')} <span style={{ fontSize: 11 }}>دج</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: 6, borderTop: '1px dashed #f1f5f9' }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: '#d97706' }}>
+                        {numericPrice.toLocaleString('en-US')} <span style={{ fontSize: 10 }}>دج</span>
                       </span>
 
                       <button
                         onClick={(e) => handleBuyNow(e, product)}
                         disabled={!isAvailable}
                         style={{
-                          padding: '8px 14px',
+                          padding: '6px 10px',
                           background: isAvailable ? '#f59e0b' : '#cbd5e1',
                           color: '#fff',
                           border: 'none',
-                          borderRadius: 8,
+                          borderRadius: 6,
                           fontWeight: 700,
-                          fontSize: 12,
+                          fontSize: 11,
                           cursor: isAvailable ? 'pointer' : 'not-allowed',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 6,
-                          transition: 'background 0.2s'
+                          gap: 4
                         }}
                       >
-                        <ShoppingCart size={14} /> {isAvailable ? 'شراء الآن' : 'نفد'}
+                        <ShoppingCart size={13} /> {isAvailable ? 'شراء' : 'نفد'}
                       </button>
                     </div>
                   </div>
