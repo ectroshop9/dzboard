@@ -247,11 +247,13 @@ export default function AdminProductsPage() {
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '16px' }}>
         
+<button onClick={() => window.open(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${barcode || product.id}`, '_blank')} className="btn btn-ghost btn-sm" title="طباعة باركود" style={{ fontSize: 16 }}>🖨️</button>
         {/* نموذج الإضافة / التعديل */}
         {showForm && (
           <div style={{ background: '#fff', border: '1px solid #3b82f6', borderRadius: 14, padding: 20, marginBottom: 20, boxShadow: '0 4px 20px rgba(59, 130, 246, 0.08)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#1e293b' }}>
+<button onClick={() => window.open(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${barcode || product.id}`, '_blank')} className="btn btn-ghost btn-sm" title="طباعة باركود" style={{ fontSize: 16 }}>🖨️</button>
                 {editingProduct ? 'تعديل بيانات المنتج' : 'إضافة منتج جديد لمخزن DZBoard'}
               </h3>
               <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>
@@ -356,6 +358,7 @@ export default function AdminProductsPage() {
                 إلغاء
               </button>
               <button onClick={handleSave} style={{ padding: '10px 22px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+<button onClick={() => window.open(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${barcode || product.id}`, '_blank')} className="btn btn-ghost btn-sm" title="طباعة باركود" style={{ fontSize: 16 }}>🖨️</button>
                 <Save size={16} /> {editingProduct ? 'تحديث التعديلات' : 'حفظ وإضافة'}
               </button>
             </div>
@@ -487,8 +490,10 @@ const barcode = items.find(i => i.product_id === product.id)?.barcode;
                       <button 
                         onClick={() => handleOpenEdit(product)} 
                         style={{ padding: '6px 10px', background: '#eff6ff', border: 'none', borderRadius: 6, color: '#2563eb', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700 }}
+<button onClick={() => window.open(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${barcode || product.id}`, '_blank')} className="btn btn-ghost btn-sm" title="طباعة باركود" style={{ fontSize: 16 }}>🖨️</button>
                         title="تعديل"
                       >
+<button onClick={() => window.open(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${barcode || product.id}`, '_blank')} className="btn btn-ghost btn-sm" title="طباعة باركود" style={{ fontSize: 16 }}>🖨️</button>
                         <Edit3 size={14} /> تعديل
                       </button>
 
