@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Package, ShoppingBag, 
-  QrCode, Settings, TrendingUp, Clock, Loader2, Plus, AlertCircle, RefreshCw,
-  Sun, Moon, LogOut
+  QrCode, Settings, TrendingUp, Clock, Loader2, Plus, AlertCircle, RefreshCw, LogOut
 } from 'lucide-react';
 
 const MENU = [
@@ -29,263 +28,100 @@ export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const token = localStorage.getItem('dzboard_admin_token');
-  
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // وضع Dark Mode يعمل على جميع الشاشات
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem('dzboard_theme') === 'dark';
-  });
-
-  const toggleDarkMode = () => {
-    setDarkMode(prev => {
-      const next = !prev;
-      localStorage.setItem('dzboard_theme', next ? 'dark' : 'light');
-      return next;
-    });
-  };
-
-  useEffect(() => {
-    if (!token) { 
-      navigate('/admin'); 
-      return; 
-    }
-    loadDashboardData();
-  }, [token, navigate]);
+  useEffect(() => { if (!token) { navigate('/admin'); return; } loadDashboardData(); }, []);
 
   const loadDashboardData = () => {
     setLoading(true);
     Promise.all([
-      fetch(`${API}/products`).then(r => r.json()).catch(() => ({ success: false, products: [] })),
-      fetch(`${API}/orders`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => ({ success: false, orders: [] })),
+      fetch(`${API}/products`).then(r => r.json()).catch(() => ({ products: [] })),
+      fetch(`${API}/orders`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => ({ orders: [] })),
     ]).then(([p, o]) => {
-      const products = p.products || p.data || [];
-      const orders = o.orders || o.data || [];
-      
-      const pendingCount = orders.filter(x => x.status === 'pending' || x.status === 'قيد الانتظار').length;
-      const totalRevenue = orders.reduce((sum, item) => {
-        const amt = parseFloat(item.amount || item.total_price || item.total || 0);
-        const shp = parseFloat(item.shipping || item.shipping_fee || 0);
-        return sum + (isNaN(amt) ? 0 : amt) + (isNaN(shp) ? 0 : shp);
-      }, 0);
-
+      const products = p.products || []; const orders = o.orders || [];
       setStats({
         totalOrders: orders.length,
-        pendingOrders: pendingCount,
+        pendingOrders: orders.filter(x => x.status === 'pending').length,
         totalProducts: products.length,
-        totalRevenue: totalRevenue,
+        totalRevenue: orders.reduce((s, x) => s + (parseFloat(x.amount)||0) + (parseFloat(x.shipping)||0), 0),
         recentOrders: orders.slice(0, 6),
       });
-      setLoading(false);
-    }).catch(err => {
-      console.error('Error fetching dashboard stats:', err);
-      setLoading(false);
-    });
+    }).finally(() => setLoading(false));
   };
 
-  const handleLogout = () => {
-    if (window.confirm('هل تريد تسجيل الخروج من لوحة التحكم؟')) {
-      localStorage.removeItem('dzboard_admin_token');
-      navigate('/admin');
-    }
-  };
+  const handleLogout = () => { localStorage.removeItem('dzboard_admin_token'); navigate('/admin'); };
 
-  const theme = {
-    bg: darkMode ? '#0f172a' : '#f8fafc',
-    cardBg: darkMode ? '#1e293b' : '#ffffff',
-    textMain: darkMode ? '#f8fafc' : '#0f172a',
-    textSub: darkMode ? '#94a3b8' : '#64748b',
-    border: darkMode ? '#334155' : '#e2e8f0',
-    tableHeaderBg: darkMode ? '#0f172a' : '#f8fafc',
-    rowBorder: darkMode ? '#334155' : '#f1f5f9',
-    headerBg: darkMode ? '#1e293b' : '#ffffff',
-  };
-
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: theme.bg, color: theme.textSub }}>
-        <Loader2 size={36} style={{ animation: 'spin 1s linear infinite', marginBottom: 12, color: '#d97706' }} />
-        <span style={{ fontSize: 14, fontWeight: 700 }}>جاري إعداد لوحة التحكم...</span>
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-      </div>
-    );
-  }
+  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}><Loader2 size={36} className="spin" /></div>;
 
   return (
-    <div style={{ minHeight: '100vh', background: theme.bg, color: theme.textMain, fontFamily: 'system-ui, -apple-system, sans-serif', direction: 'rtl', transition: 'background 0.25s, color 0.25s' }}>
+    <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'system-ui', direction: 'rtl' }}>
       
-      {/* Top Universal Navbar */}
-      <header style={{ background: theme.headerBg, borderBottom: `1px solid ${theme.border}`, position: 'sticky', top: 0, zIndex: 50, transition: 'background 0.25s, border 0.25s' }}>
-        <div style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-          
-          {/* Logo & Main Nav Links */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
-            <Link to="/admin/dashboard" style={{ textDecoration: 'none' }}>
-              <span style={{ fontWeight: 900, fontSize: 22, color: '#2563eb' }}>DZ<span style={{ color: '#d97706' }}>Board</span></span>
-            </Link>
-
-            <nav style={{ display: 'flex', alignItems: 'center', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
+      {/* Top Navbar */}
+      <header style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Link to="/admin/dashboard" style={{ textDecoration: 'none', fontWeight: 900, fontSize: 20, color: '#2563eb' }}>DZ<span style={{ color: '#d97706' }}>Board</span></Link>
+            <nav style={{ display: 'flex', gap: 4, overflowX: 'auto' }}>
               {MENU.map(item => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.path;
-                return (
-                  <Link key={item.path} to={item.path}
-                    style={{
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 8, 
-                      padding: '8px 14px',
-                      borderRadius: 10, 
-                      textDecoration: 'none',
-                      background: isActive ? (darkMode ? '#3b82f620' : '#eff6ff') : 'transparent',
-                      color: isActive ? '#3b82f6' : theme.textSub,
-                      fontWeight: isActive ? 800 : 600, 
-                      fontSize: 13,
-                      whiteSpace: 'nowrap',
-                      transition: 'all 0.2s'
-                    }}>
-                    <Icon size={16} />
-                    <span>{item.label}</span>
-                  </Link>
-                );
+                const Icon = item.icon; const isActive = location.pathname === item.path;
+                return <Link key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, textDecoration: 'none', background: isActive ? '#eff6ff' : 'transparent', color: isActive ? '#2563eb' : '#64748b', fontWeight: isActive ? 800 : 600, fontSize: 13, whiteSpace: 'nowrap' }}><Icon size={15} /><span className="nav-label">{item.label}</span></Link>;
               })}
             </nav>
           </div>
-
-          {/* Action Controls & Dark Mode Toggle */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <button 
-              onClick={toggleDarkMode}
-              style={{
-                background: darkMode ? '#0f172a' : '#f1f5f9',
-                border: `1px solid ${theme.border}`,
-                color: darkMode ? '#fef08a' : '#d97706',
-                borderRadius: 10,
-                padding: '8px 14px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                fontSize: 13,
-                fontWeight: 700,
-                transition: 'all 0.2s'
-              }}
-            >
-              {darkMode ? <Sun size={16} /> : <Moon size={16} />}
-              <span>{darkMode ? 'نهاري' : 'داكن'}</span>
-            </button>
-
-            <button onClick={loadDashboardData} style={{ background: darkMode ? '#0f172a' : '#f1f5f9', border: `1px solid ${theme.border}`, color: theme.textSub, borderRadius: 10, padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
-              <RefreshCw size={14} /> <span>تحديث</span>
-            </button>
-
-            <Link to="/admin/products" style={{ background: '#2563eb', color: '#fff', textDecoration: 'none', borderRadius: 10, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
-              <Plus size={16} /> <span>منتج جديد</span>
-            </Link>
-
-            <button onClick={handleLogout} style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', borderRadius: 10, padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
-              <LogOut size={16} />
-            </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={loadDashboardData} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#475569' }}><RefreshCw size={14} /></button>
+            <Link to="/admin/products" style={{ background: '#2563eb', color: '#fff', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>+ منتج</Link>
+            <button onClick={handleLogout} style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 13 }}><LogOut size={16} /></button>
           </div>
-
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main style={{ padding: 24, maxWidth: 1400, margin: '0 auto' }}>
-        
-        {/* Stats Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 24 }}>
+      {/* Main Content */}
+      <main style={{ padding: 16, maxWidth: 1200, margin: '0 auto', paddingBottom: 80 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
           {[
-            { icon: ShoppingBag, label: 'إجمالي الطلبات', value: stats?.totalOrders || 0, color: '#d97706', bg: darkMode ? 'rgba(217, 119, 6, 0.15)' : '#fffbe3' },
-            { icon: Clock, label: 'طلبات قيد الانتظار', value: stats?.pendingOrders || 0, color: '#f59e0b', bg: darkMode ? 'rgba(245, 158, 11, 0.15)' : '#fef3c7' },
-            { icon: Package, label: 'المنتجات بالمخزن', value: stats?.totalProducts || 0, color: '#10b981', bg: darkMode ? 'rgba(16, 185, 129, 0.15)' : '#ecfdf5' },
-            { icon: TrendingUp, label: 'مجموع الإيرادات', value: `${(stats?.totalRevenue || 0).toLocaleString('en-US')} دج`, color: '#059669', bg: darkMode ? 'rgba(5, 150, 105, 0.15)' : '#e6fffa' },
+            { icon: ShoppingBag, label: 'الطلبات', value: stats?.totalOrders || 0, color: '#d97706', bg: '#fffbeb' },
+            { icon: Clock, label: 'معلقة', value: stats?.pendingOrders || 0, color: '#f59e0b', bg: '#fef3c7' },
+            { icon: Package, label: 'المنتجات', value: stats?.totalProducts || 0, color: '#10b981', bg: '#ecfdf5' },
+            { icon: TrendingUp, label: 'الإيرادات', value: `${(stats?.totalRevenue || 0).toLocaleString('en-US')} دج`, color: '#059669', bg: '#e6fffa' },
           ].map((s, i) => {
             const Icon = s.icon;
-            return (
-              <div key={i} style={{ 
-                background: theme.cardBg, 
-                border: `1px solid ${theme.border}`, 
-                borderRadius: 16, 
-                padding: 18, 
-                boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-                borderRight: `4px solid ${s.color}`,
-                transition: 'background 0.25s, border 0.25s'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <span style={{ fontSize: 13, color: theme.textSub, fontWeight: 700 }}>{s.label}</span>
-                  <div style={{ background: s.bg, color: s.color, width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon size={20} />
-                  </div>
-                </div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: theme.textMain }}>{s.value}</div>
-              </div>
-            );
+            return <div key={i} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, borderRight: `4px solid ${s.color}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}><span style={{ fontSize: 12, color: '#64748b', fontWeight: 700 }}>{s.label}</span><div style={{ background: s.bg, color: s.color, width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={18} /></div></div>
+              <div style={{ fontSize: 20, fontWeight: 900 }}>{s.value}</div>
+            </div>;
           })}
         </div>
 
-        {/* Table Recent Orders */}
-        <div style={{ background: theme.cardBg, border: `1px solid ${theme.border}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.02)', transition: 'background 0.25s, border 0.25s' }}>
-          <div style={{ padding: '16px 20px', borderBottom: `1px solid ${theme.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Clock size={18} style={{ color: '#d97706' }} />
-              <h3 style={{ fontSize: 15, fontWeight: 800, margin: 0, color: theme.textMain }}>آخر الطلبات الواردة</h3>
-            </div>
-            <Link to="/admin/orders" style={{ fontSize: 13, color: '#d97706', fontWeight: 700, textDecoration: 'none' }}>عرض الكل ←</Link>
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 16px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between' }}>
+            <h3 style={{ fontSize: 15, fontWeight: 800 }}>آخر الطلبات</h3>
+            <Link to="/admin/orders" style={{ fontSize: 13, color: '#2563eb', fontWeight: 700, textDecoration: 'none' }}>عرض الكل</Link>
           </div>
-
-          {(!stats?.recentOrders || stats.recentOrders.length === 0) ? (
-            <div style={{ padding: 40, textAlign: 'center', color: theme.textSub }}>
-              <AlertCircle size={32} style={{ marginBottom: 8 }} />
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>لا توجد طلبات سابقة حتى الآن</p>
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, textAlign: 'right', minWidth: 500 }}>
-                <thead>
-                  <tr style={{ background: theme.tableHeaderBg, color: theme.textSub, borderBottom: `1px solid ${theme.border}` }}>
-                    <th style={{ padding: '12px 16px', fontWeight: 700 }}>رقم الطلب</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 700 }}>العميل</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 700 }}>الهاتف</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 700 }}>المبلغ الكلي</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 700 }}>الحالة</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.recentOrders.map(order => {
-                    const st = STATUS_MAP[order.status] || { label: order.status || 'معلق', bg: '#f1f5f9', color: '#475569' };
-                    const total = (parseFloat(order.amount || order.total || 0) + parseFloat(order.shipping || 0)).toLocaleString('en-US');
-
-                    return (
-                      <tr key={order.id} style={{ borderBottom: `1px solid ${theme.rowBorder}` }}>
-                        <td style={{ padding: '12px 16px', fontWeight: 800, color: theme.textMain }}>#{order.id}</td>
-                        <td style={{ padding: '12px 16px', fontWeight: 600, color: theme.textMain }}>{order.customer || order.name || 'عميل'}</td>
-                        <td style={{ padding: '12px 16px', color: theme.textSub, direction: 'ltr', textAlign: 'right' }}>{order.phone || '—'}</td>
-                        <td style={{ padding: '12px 16px', fontWeight: 800, color: '#10b981' }}>{total} دج</td>
-                        <td style={{ padding: '12px 16px' }}>
-                          <span style={{ padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 800, background: st.bg, color: st.color, display: 'inline-block', whiteSpace: 'nowrap' }}>
-                            {st.label}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 500 }}>
+              <thead><tr style={{ background: '#f8fafc', color: '#64748b' }}><th style={{ padding: '10px 14px' }}>#</th><th style={{ padding: '10px 14px' }}>العميل</th><th style={{ padding: '10px 14px' }}>الهاتف</th><th style={{ padding: '10px 14px' }}>المبلغ</th><th style={{ padding: '10px 14px' }}>الحالة</th></tr></thead>
+              <tbody>
+                {stats?.recentOrders?.map(o => {
+                  const st = STATUS_MAP[o.status] || { label: o.status || 'معلق', bg: '#f1f5f9', color: '#475569' };
+                  return <tr key={o.id} style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '10px 14px', fontWeight: 800 }}>#{o.id}</td><td style={{ padding: '10px 14px' }}>{o.customer}</td><td style={{ padding: '10px 14px', direction: 'ltr', textAlign: 'right' }}>{o.phone}</td><td style={{ padding: '10px 14px', fontWeight: 800, color: '#10b981' }}>{(parseFloat(o.amount||0)+parseFloat(o.shipping||0)).toLocaleString('en-US')} دج</td><td style={{ padding: '10px 14px' }}><span style={{ padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 800, background: st.bg, color: st.color }}>{st.label}</span></td></tr>;
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-
       </main>
 
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+      {/* Bottom Mobile Navigation */}
+      <nav style={{ display: 'flex', position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e2e8f0', justifyContent: 'space-around', padding: '8px 0', zIndex: 40 }}>
+        {MENU.map(item => {
+          const Icon = item.icon; const isActive = location.pathname === item.path;
+          return <Link key={item.path} to={item.path} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, textDecoration: 'none', color: isActive ? '#2563eb' : '#64748b', fontWeight: isActive ? 800 : 600, fontSize: 10 }}><Icon size={20} /><span>{item.label}</span></Link>;
+        })}
+      </nav>
+
+      <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}.spin{animation:spin 1s linear infinite}@media(min-width:769px){.bottom-nav{display:none}.nav-label{display:inline}}@media(max-width:768px){.nav-label{display:none}}`}</style>
     </div>
   );
 }
