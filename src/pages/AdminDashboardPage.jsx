@@ -99,7 +99,7 @@ export default function AdminDashboardPage() {
         transition: 'all 0.25s ease',
         display: 'flex',
         flexDirection: 'column',
-        justify: 'space-between',
+        justifyContent: 'space-between',
         padding: '16px 0',
         flexShrink: 0,
         position: 'sticky',
@@ -177,8 +177,8 @@ export default function AdminDashboardPage() {
       {/* Main Area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, paddingBottom: 60 }}>
         
-        {/* Header */}
-        <header style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 20, flexWrap: 'wrap', gap: 10 }}>
+        {/* Header (مخفي في الهاتف) */}
+        <header className="admin-header" style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 20, flexWrap: 'wrap', gap: 10 }}>
           <h1 style={{ fontSize: 18, fontWeight: 900, margin: 0, color: '#0f172a' }}>لوحة التحكم الرئيسية</h1>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -275,28 +275,10 @@ export default function AdminDashboardPage() {
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <nav className="mobile-bottom-nav">
-        {MENU.map(item => {
-          const Icon = item.icon;
-          const isActive = location.pathname === item.path;
-          return (
-            <Link key={item.path} to={item.path} className={`bottom-nav-item ${isActive ? 'active' : ''}`}>
-              <Icon size={20} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
       <style>{`
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
-        }
-
-        .mobile-bottom-nav {
-          display: none;
         }
 
         @media (max-width: 768px) {
@@ -304,46 +286,12 @@ export default function AdminDashboardPage() {
             display: none !important;
           }
 
+          .admin-header {
+            display: none !important;
+          }
+
           .dashboard-main {
             padding: 16px !important;
-          }
-
-          .btn-text {
-            display: none;
-          }
-
-          .mobile-bottom-nav {
-            display: flex;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #ffffff;
-            border-top: 1px solid #e2e8f0;
-            justify-content: space-around;
-            align-items: center;
-            padding: 8px 4px;
-            z-index: 100;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-          }
-
-          .bottom-nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
-            text-decoration: none;
-            color: #64748b;
-            font-size: 10px;
-            font-weight: 600;
-            padding: 4px 8px;
-            border-radius: 8px;
-            flex: 1;
-          }
-
-          .bottom-nav-item.active {
-            color: #2563eb;
-            font-weight: 800;
           }
         }
       `}</style>
