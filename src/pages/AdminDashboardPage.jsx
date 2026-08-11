@@ -114,7 +114,7 @@ export default function AdminDashboardPage() {
       </main>
 
       {/* Bottom Mobile Navigation */}
-      <nav style={{ display: 'flex', position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e2e8f0', justifyContent: 'space-around', padding: '8px 0', zIndex: 40 }}>
+      <nav className="bottom-nav" style={{ display: window.innerWidth < 769 ? 'flex' : 'none', position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e2e8f0', justifyContent: 'space-around', padding: '8px 0', zIndex: 40 }}>
         {MENU.map(item => {
           const Icon = item.icon; const isActive = location.pathname === item.path;
           return <Link key={item.path} to={item.path} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, textDecoration: 'none', color: isActive ? '#2563eb' : '#64748b', fontWeight: isActive ? 800 : 600, fontSize: 10 }}><Icon size={20} /><span>{item.label}</span></Link>;
