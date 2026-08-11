@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Package, ShoppingBag, LogOut, ChevronRight, 
-  QrCode, Settings, Search, Truck, Eye, Check, X, Loader2, AlertCircle, RefreshCw, Filter, Phone, MapPin
+  QrCode, Settings, Search, Truck, Eye, Check, X, Loader2, AlertCircle, RefreshCw, Filter, Phone, MapPin, Menu
 } from 'lucide-react';
 
 const MENU = [
@@ -32,6 +32,7 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -105,8 +106,16 @@ export default function AdminOrdersPage() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc', fontFamily: 'system-ui, -apple-system, sans-serif', direction: 'rtl' }}>
       
-      {/* Sidebar Desktop */}
-      <aside style={{ 
+      {/* Mobile Drawer Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          onClick={() => setMobileMenuOpen(false)} 
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 40 }} 
+        />
+      )}
+
+      {/* Sidebar (Desktop & Mobile Drawer) */}
+      <aside className={`admin-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ 
         width: sidebarOpen ? 240 : 72, 
         background: '#fff', 
         borderLeft: '1px solid #e2e8f0',
@@ -119,17 +128,33 @@ export default function AdminOrdersPage() {
         position: 'sticky',
         top: 0,
         height: '100vh',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        zIndex: 50
       }}>
         <div>
-          <div style={{ padding: '0 16px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: sidebarOpen ? 'space-between' : 'center' }}>
-            {sidebarOpen && (
+          <div style={{ padding: '0 16px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: (sidebarOpen || mobileMenuOpen) ? 'space-between' : 'center' }}>
+            {(sidebarOpen || mobileMenuOpen) && (
               <Link to="/admin/dashboard" style={{ textDecoration: 'none' }}>
                 <span style={{ fontWeight: 900, fontSize: 20, color: '#2563eb' }}>DZ<span style={{ color: '#d97706' }}>Board</span></span>
               </Link>
             )}
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, cursor: 'pointer', color: '#64748b', padding: 6, display: 'flex', alignItems: 'center' }}>
+            
+            {/* Desktop Toggle Button */}
+            <button 
+              onClick={() => setSidebarOpen(!sidebarOpen)} 
+              className="desktop-toggle-btn"
+              style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, cursor: 'pointer', color: '#64748b', padding: 6, display: 'flex', alignItems: 'center' }}
+            >
               <ChevronRight size={18} style={{ transform: sidebarOpen ? 'rotate(0deg)' : 'rotate(180deg)', transition: '0.2s' }} />
+            </button>
+
+            {/* Mobile Close Button */}
+            <button 
+              onClick={() => setMobileMenuOpen(false)} 
+              className="mobile-close-btn"
+              style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, cursor: 'pointer', color: '#64748b', padding: 6 }}
+            >
+              <X size={18} />
             </button>
           </div>
 
@@ -139,6 +164,7 @@ export default function AdminOrdersPage() {
               const isActive = location.pathname === item.path;
               return (
                 <Link key={item.path} to={item.path}
+                  onClick={() => setMobileMenuOpen(false)}
                   style={{
                     display: 'flex', 
                     alignItems: 'center', 
@@ -151,11 +177,11 @@ export default function AdminOrdersPage() {
                     color: isActive ? '#2563eb' : '#64748b',
                     fontWeight: isActive ? 800 : 600, 
                     fontSize: 14,
-                    justifyContent: sidebarOpen ? 'flex-start' : 'center',
+                    justifyContent: (sidebarOpen || mobileMenuOpen) ? 'flex-start' : 'center',
                     transition: 'background 0.2s'
                   }}>
                   <Icon size={20} />
-                  {sidebarOpen && <span>{item.label}</span>}
+                  {(sidebarOpen || mobileMenuOpen) && <span>{item.label}</span>}
                 </Link>
               );
             })}
@@ -176,10 +202,10 @@ export default function AdminOrdersPage() {
             color: '#ef4444', 
             fontWeight: 700, 
             fontSize: 14,
-            justifyContent: sidebarOpen ? 'flex-start' : 'center',
+            justifyContent: (sidebarOpen || mobileMenuOpen) ? 'flex-start' : 'center',
           }}>
           <LogOut size={20} />
-          {sidebarOpen && <span>تسجيل خروج</span>}
+          {(sidebarOpen || mobileMenuOpen) && <span>تسجيل خروج</span>}
         </button>
       </aside>
 
@@ -187,8 +213,16 @@ export default function AdminOrdersPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         
         {/* Header */}
-        <header style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 20 }}>
+        <header style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 20, flexWrap: 'wrap', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* Hamburger Button for Mobile */}
+            <button 
+              onClick={() => setMobileMenuOpen(true)} 
+              className="mobile-hamburger-btn"
+              style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, padding: 8, cursor: 'pointer', color: '#334155' }}
+            >
+              <Menu size={20} />
+            </button>
             <ShoppingBag size={22} style={{ color: '#2563eb' }} />
             <h1 style={{ fontSize: 18, fontWeight: 900, margin: 0, color: '#0f172a' }}>إدارة الطلبات</h1>
             <span style={{ background: '#f1f5f9', color: '#475569', fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 12 }}>
@@ -197,18 +231,18 @@ export default function AdminOrdersPage() {
           </div>
 
           <button onClick={fetchOrders} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
-            <RefreshCw size={14} className={loading ? 'spin' : ''} /> تحديث Data
+            <RefreshCw size={14} className={loading ? 'spin' : ''} /> <span className="btn-text">تحديث Data</span>
           </button>
         </header>
 
         {/* Main Content */}
-        <main style={{ padding: 24, flex: 1 }}>
+        <main className="orders-main" style={{ padding: 24, flex: 1 }}>
           
           {/* Controls Bar: Search + Filters */}
           <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, marginBottom: 20, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
             
             {/* Search Input */}
-            <div style={{ position: 'relative', minWidth: 260, flex: 1 }}>
+            <div style={{ position: 'relative', minWidth: 240, flex: 1 }}>
               <input 
                 type="text" 
                 placeholder="بحث باسم العميل، الرقم، أو رفرنس الطلب..." 
@@ -228,8 +262,8 @@ export default function AdminOrdersPage() {
             </div>
 
             {/* Status Tabs / Filter */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
-              <Filter size={16} style={{ color: '#64748b', marginLeft: 4 }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflowX: 'auto', paddingBottom: 4, width: '100%', maxWidth: '100%' }}>
+              <Filter size={16} style={{ color: '#64748b', marginLeft: 4, flexShrink: 0 }} />
               {[
                 { key: 'all', label: 'الكل' },
                 { key: 'pending', label: 'قيد الانتظار' },
@@ -275,8 +309,8 @@ export default function AdminOrdersPage() {
                 <p style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>لا توجد طلبات تطابق خيارات البحث الحالية</p>
               </div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, textAlign: 'right' }}>
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, textAlign: 'right', minWidth: 650 }}>
                   <thead>
                     <tr style={{ background: '#f8fafc', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>
                       <th style={{ padding: '14px 16px', fontWeight: 700 }}>رقم الطلب</th>
@@ -310,7 +344,7 @@ export default function AdminOrdersPage() {
                             {totalAmount} دج
                           </td>
                           <td style={{ padding: '14px 16px' }}>
-                            <span style={{ padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 800, background: st.bg, color: st.color, display: 'inline-block' }}>
+                            <span style={{ padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 800, background: st.bg, color: st.color, display: 'inline-block', whiteSpace: 'nowrap' }}>
                               {st.label}
                             </span>
                           </td>
@@ -321,9 +355,9 @@ export default function AdminOrdersPage() {
                               <button 
                                 onClick={() => setSelectedOrder(o)}
                                 title="معاينة التفاصيل"
-                                style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700 }}
+                                style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}
                               >
-                                <Eye size={14} /> التفاصيل
+                                <Eye size={14} /> <span className="action-label">التفاصيل</span>
                               </button>
 
                               {/* Action status buttons */}
@@ -332,17 +366,17 @@ export default function AdminOrdersPage() {
                               ) : (
                                 <>
                                   {o.status === 'pending' && (
-                                    <button onClick={() => handleStatus(o.id, 'confirmed')} style={{ background: '#dbeafe', border: 'none', color: '#1d4ed8', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700 }}>
+                                    <button onClick={() => handleStatus(o.id, 'confirmed')} style={{ background: '#dbeafe', border: 'none', color: '#1d4ed8', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>
                                       <Check size={14} /> تأكيد
                                     </button>
                                   )}
                                   {o.status === 'confirmed' && (
-                                    <button onClick={() => handleStatus(o.id, 'shipped')} style={{ background: '#e0e7ff', border: 'none', color: '#4338ca', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700 }}>
+                                    <button onClick={() => handleStatus(o.id, 'shipped')} style={{ background: '#e0e7ff', border: 'none', color: '#4338ca', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>
                                       <Truck size={14} /> شحن
                                     </button>
                                   )}
                                   {o.status === 'shipped' && (
-                                    <button onClick={() => handleStatus(o.id, 'delivered')} style={{ background: '#d1fae5', border: 'none', color: '#047857', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700 }}>
+                                    <button onClick={() => handleStatus(o.id, 'delivered')} style={{ background: '#d1fae5', border: 'none', color: '#047857', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>
                                       <Check size={14} /> تم التسليم
                                     </button>
                                   )}
@@ -414,7 +448,7 @@ export default function AdminOrdersPage() {
               </div>
 
               {/* Financial summary */}
-              <div style={{ borderTop: '1px solid #e2e8f0', pt: 12, paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
+              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b' }}>
                   <span>سعر المنتجات:</span>
                   <span>{parseFloat(selectedOrder.amount || selectedOrder.total || 0).toLocaleString('en-US')} دج</span>
@@ -448,6 +482,39 @@ export default function AdminOrdersPage() {
         }
         .spin {
           animation: spin 1s linear infinite;
+        }
+
+        .mobile-hamburger-btn { display: none; }
+        .mobile-close-btn { display: none; }
+        .desktop-toggle-btn { display: flex; }
+
+        @media (max-width: 768px) {
+          .mobile-hamburger-btn { display: flex; }
+          .mobile-close-btn { display: flex; }
+          .desktop-toggle-btn { display: none; }
+          
+          .admin-sidebar {
+            position: fixed !important;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            height: 100vh !important;
+            width: 260px !important;
+            transform: translateX(100%);
+            box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+          }
+
+          .admin-sidebar.open {
+            transform: translateX(0);
+          }
+
+          .orders-main {
+            padding: 16px !important;
+          }
+
+          .btn-text {
+            display: none;
+          }
         }
       `}</style>
     </div>
