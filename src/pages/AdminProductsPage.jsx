@@ -122,7 +122,7 @@ export default function AdminProductsPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
                     <span style={{ fontSize: 12, color: '#64748b' }}>المخزون: <strong>{product.stock || 0}</strong></span>
                     <div style={{ display: 'flex', gap: 6 }}>
-                      <button onClick={() => window.open(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${barcode || product.id}`, '_blank')} className="btn btn-ghost btn-sm" title="طباعة">🖨️</button>
+                      <button onClick={() => window.open(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(product.name + ' - ' + (barcode || product.id))}`, '_blank')} className="btn btn-ghost btn-sm" title="طباعة">🖨️</button>
                       <button onClick={() => handleOpenEdit(product)} className="btn btn-ghost btn-sm" style={{ color: '#2563eb' }}><Edit3 size={14} /></button>
                       <button onClick={() => handleDelete(product.id)} className="btn btn-ghost btn-sm" style={{ color: '#ef4444' }}><Trash2 size={14} /></button>
                     </div>
