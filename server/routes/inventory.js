@@ -5,7 +5,7 @@ import { supabase } from '../supabase.js';
 router.get('/items', async (req, res) => {
   const { search } = req.query;
   let query = supabase.from('inventory_items').select('*').order('id', { ascending: false });
-  if (search) query = query.or(`sku.ilike.%${search}%,name.ilike.%${search}%`);
+  if (search) query = query.or(`sku.ilike.%${search}%,name.ilike.%${search}%,barcode.ilike.%${search}%`);
   const { data: items } = await query;
   
   for (let item of (items || [])) {
