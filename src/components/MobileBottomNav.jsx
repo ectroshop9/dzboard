@@ -7,7 +7,6 @@ export default function MobileBottomNav({ onAddClick }) {
   const location = useLocation();
 
   const navItems = [
-    { label: 'دخول', path: '/admin/login', icon: Lock },
     { label: 'الرئيسية', path: '/admin/dashboard', icon: LayoutDashboard },
     { label: 'المنتجات', path: '/admin/products', icon: Package },
     { label: 'الطلبات', path: '/admin/orders', icon: ClipboardList },
