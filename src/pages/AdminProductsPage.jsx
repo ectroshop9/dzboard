@@ -3,7 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   Plus, Trash2, Save, Package, ChevronLeft, Monitor, Zap, Cpu, 
   Search, Loader2, Upload, Edit3, X, RefreshCw, CheckCircle, AlertCircle, Printer,
-  LayoutDashboard, Boxes, Barcode
+  Lock, LayoutDashboard, ClipboardList, ScanLine, FileText, Settings
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -273,8 +273,19 @@ export default function AdminProductsPage() {
     });
   }, [products, selectedCategory, searchQuery, itemBarcodeMap]);
 
+  // عناصر القائمة السفلية المعتمدة حرفياً
+  const navItems = [
+    { label: 'تسجيل الدخول', path: '/admin/login', icon: Lock },
+    { label: 'لوحة التحكم', path: '/admin/dashboard', icon: LayoutDashboard },
+    { label: 'المنتجات والمخزون', path: '/admin/products', icon: Package },
+    { label: 'إدارة الطلبات', path: '/admin/orders', icon: ClipboardList },
+    { label: 'مسح الباركود', path: '/admin/scan', icon: ScanLine },
+    { label: 'طلبات الزبائن', path: '/admin/requests', icon: FileText },
+    { label: 'الإعدادات', path: '/admin/settings', icon: Settings },
+  ];
+
   return (
-    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 75, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 80, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
       {/* Notification Toast */}
       {notification && (
@@ -295,7 +306,7 @@ export default function AdminProductsPage() {
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={loadAll} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
-              <RefreshCw size={14} /> <span className="hide-mobile">تحديث</span>
+              <RefreshCw size={14} /> تحديث
             </button>
             <button onClick={handleOpenAdd} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
               <Plus size={16} /> إضافة منتج
@@ -408,103 +419,45 @@ export default function AdminProductsPage() {
         )}
       </div>
 
-      {/* Mobile Bottom Navigation Bar */}
+      {/* الشريط السفلي المعتمد بالكامل (Mobile Bottom Navigation) */}
       <nav style={{
         position: 'fixed',
         bottom: 0,
         left: 0,
         right: 0,
-        height: 62,
+        height: 65,
         background: '#ffffff',
         borderTop: '1px solid #e2e8f0',
         display: 'flex',
         alignItems: 'center',
-        justify: 'space-around',
+        overflowX: 'auto',
         zIndex: 50,
         boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.05)',
         paddingBottom: 'env(safe-area-inset-bottom)'
       }}>
-        <Link to="/admin/dashboard" style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 3,
-          textDecoration: 'none',
-          color: location.pathname === '/admin/dashboard' ? '#2563eb' : '#64748b',
-          fontSize: 11,
-          fontWeight: location.pathname === '/admin/dashboard' ? 700 : 500,
-          flex: 1
-        }}>
-          <LayoutDashboard size={20} />
-          <span>الرئيسية</span>
-        </Link>
-
-        <Link to="/admin/products" style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 3,
-          textDecoration: 'none',
-          color: location.pathname === '/admin/products' ? '#2563eb' : '#64748b',
-          fontSize: 11,
-          fontWeight: location.pathname === '/admin/products' ? 700 : 500,
-          flex: 1
-        }}>
-          <Package size={20} />
-          <span>المنتجات</span>
-        </Link>
-
-        {/* Floating Add Button in the center */}
-        <button onClick={handleOpenAdd} style={{
-          width: 46,
-          height: 46,
-          borderRadius: '50%',
-          background: '#2563eb',
-          color: '#fff',
-          border: 'none',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 10px rgba(37, 99, 235, 0.35)',
-          cursor: 'pointer',
-          marginTop: -18
-        }} title="إضافة جديد">
-          <Plus size={24} />
-        </button>
-
-        <Link to="/admin/inventory" style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 3,
-          textDecoration: 'none',
-          color: location.pathname === '/admin/inventory' ? '#2563eb' : '#64748b',
-          fontSize: 11,
-          fontWeight: location.pathname === '/admin/inventory' ? 700 : 500,
-          flex: 1
-        }}>
-          <Boxes size={20} />
-          <span>المخزون</span>
-        </Link>
-
-        <Link to="/admin/scanner" style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 3,
-          textDecoration: 'none',
-          color: location.pathname === '/admin/scanner' ? '#2563eb' : '#64748b',
-          fontSize: 11,
-          fontWeight: location.pathname === '/admin/scanner' ? 700 : 500,
-          flex: 1
-        }}>
-          <Barcode size={20} />
-          <span>الماسح</span>
-        </Link>
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+          return (
+            <Link key={item.path} to={item.path} style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 3,
+              textDecoration: 'none',
+              color: isActive ? '#2563eb' : '#64748b',
+              fontSize: 10,
+              fontWeight: isActive ? 800 : 500,
+              minWidth: 72,
+              flex: 1,
+              padding: '4px 0'
+            }}>
+              <Icon size={18} color={isActive ? '#2563eb' : '#64748b'} />
+              <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
+            </Link>
+          );
+        })}
       </nav>
 
     </div>
