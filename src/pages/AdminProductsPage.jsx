@@ -432,6 +432,7 @@ export default function AdminProductsPage() {
             {filteredProducts.map(product => {
               const catObj = getCategoryObj(product.category);
               const Icon = catObj.icon || Package;
+const barcode = items.find(i => i.product_id === product.id)?.barcode;
               const productItems = items.filter(i => i.product_id === product.id);
 
               return (
@@ -479,7 +480,7 @@ export default function AdminProductsPage() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px dashed #f1f5f9' }}>
                     <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>
                       المخزون: <strong style={{ color: '#0f172a' }}>{productItems.length || product.stock || 0}</strong> قطعة
-<div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>🏷️ الباركود: <span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{product.barcode || '-'}</span></div>
+<div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>🏷️ الباركود: <span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{barcode || '-'}</span></div>
                     </span>
 
                     <div style={{ display: 'flex', gap: 6 }}>
