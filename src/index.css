@@ -83,3 +83,22 @@ textarea.field-input { resize: vertical; }
 
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+  .main-content {
+    padding: 10px;
+  }
+  .card {
+    padding: 12px;
+  }
+  table {
+    font-size: 11px;
+  }
+  h1 {
+    font-size: 16px;
+  }
+}
