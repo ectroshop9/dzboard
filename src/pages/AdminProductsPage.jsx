@@ -193,6 +193,7 @@ export default function AdminProductsPage() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, borderTop: '1px solid #f1f5f9', fontSize: 12 }}>
                     <span>المخزون: <strong>{productItems.length || product.stock || 0}</strong> قطعة</span>
+<div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>🏷️ الباركود: <span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{barcode || '-'}</span> <button onClick={() => window.open('https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + (barcode || product.id), '_blank')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>🖨️</button></div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => handleOpenEdit(product)} style={{ padding: '6px 10px', background: '#eff6ff', border: 'none', borderRadius: 6, color: '#2563eb', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700 }}><Edit3 size={14} /> تعديل</button>
                       <button onClick={() => handleDelete(product.id)} style={{ padding: '6px 10px', background: '#fef2f2', border: 'none', borderRadius: 6, color: '#ef4444', cursor: 'pointer', fontSize: 12 }}><Trash2 size={14} /></button>
