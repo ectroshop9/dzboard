@@ -35,12 +35,17 @@ export default function AdminProductsPage() {
     } else {
       loadAll(); 
     }
-  }, []);
+  }, [navigate]);
 
   const showToast = (m, t = 'success') => { 
     setNotification({ message: m, type: t }); 
     setTimeout(() => setNotification(null), 3000); 
   };
+
+  const getAuthHeader = () => ({
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${localStorage.getItem('dzboard_admin_token')}`
+  });
 
   const loadAll = () => {
     setLoading(true);
@@ -65,7 +70,7 @@ export default function AdminProductsPage() {
       try {
         const res = await fetch(`${API}/products/upload`, { 
           method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
+          headers: getAuthHeader(), 
           body: JSON.stringify({ image: reader.result }) 
         });
         const data = await res.json();
@@ -80,6 +85,10 @@ export default function AdminProductsPage() {
       } finally {
         setUploading(false);
       }
+    };
+    reader.onerror = () => {
+      showToast('خطأ في قراءة الملف', 'error');
+      setUploading(false);
     };
   };
 
@@ -100,18 +109,19 @@ export default function AdminProductsPage() {
 
   const handleSave = async () => {
     if (!formData.name || !formData.price) { showToast('الاسم والسعر مطلوبان', 'error'); return; }
-    const h = { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('dzboard_admin_token')}` };
     try {
       if (editingProduct) {
-        await fetch(`${API}/products/${editingProduct.id}`, { method: 'PUT', headers: h, body: JSON.stringify(formData) });
+        await fetch(`${API}/products/${editingProduct.id}`, { method: 'PUT', headers: getAuthHeader(), body: JSON.stringify(formData) });
       } else {
-        const res = await fetch(`${API}/products`, { method: 'POST', headers: h, body: JSON.stringify(formData) });
+        const res = await fetch(`${API}/products`, { method: 'POST', headers: getAuthHeader(), body: JSON.stringify(formData) });
         const prod = await res.json();
-        if (prod.success && parseInt(formData.stock) > 0) {
-          for (let i = 0; i < parseInt(formData.stock); i++) {
-            await fetch(`${API}/inventory/items`, { 
+        const stockCount = parseInt(formData.stock, 10);
+        
+        if (prod.success && stockCount > 0) {
+          const inventoryPromises = Array.from({ length: stockCount }, (_, i) => 
+            fetch(`${API}/inventory/items`, { 
               method: 'POST', 
-              headers: { 'Content-Type': 'application/json' }, 
+              headers: getAuthHeader(), 
               body: JSON.stringify({ 
                 name: formData.name, 
                 shelf: formData.shelf, 
@@ -120,8 +130,9 @@ export default function AdminProductsPage() {
                 image: formData.image, 
                 product_id: prod.product?.id 
               }) 
-            });
-          }
+            })
+          );
+          await Promise.all(inventoryPromises);
         }
       }
       showToast('تم الحفظ بنجاح'); 
@@ -138,7 +149,7 @@ export default function AdminProductsPage() {
     try {
       await fetch(`${API}/products/${id}`, { 
         method: 'DELETE', 
-        headers: { Authorization: `Bearer ${localStorage.getItem('dzboard_admin_token')}` } 
+        headers: getAuthHeader()
       }); 
       showToast('تم الحذف بنجاح');
       loadAll();
@@ -147,7 +158,6 @@ export default function AdminProductsPage() {
     }
   };
 
-  // دالة مخصصة لطباعة الباركود والعنوان بشكل أنيق ومناسب للملصقات
   const handlePrintBarcode = (product, barcodeCode) => {
     const code = barcodeCode || product.id;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(product.name + ' - ' + code)}`;
@@ -231,7 +241,20 @@ export default function AdminProductsPage() {
   };
 
   const getCat = (k) => CATEGORIES.find(c => c.key === k) || { label: k, color: '#64748b' };
-  const filtered = products.filter(p => (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) && (selectedCategory === 'all' || p.category === selectedCategory));
+
+  // Search matches product name or associated item barcode
+  const filtered = products.filter(p => {
+    const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return matchesCategory;
+
+    const matchesName = (p.name || '').toLowerCase().includes(query);
+    const hasMatchingBarcode = items.some(
+      item => item.product_id === p.id && item.barcode?.toLowerCase().includes(query)
+    );
+
+    return matchesCategory && (matchesName || hasMatchingBarcode);
+  });
 
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
