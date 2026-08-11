@@ -287,7 +287,7 @@ export default function AdminProductsPage() {
   ];
 
   return (
-    <div style={{ background: '#0f172a', color: '#f8fafc', direction: 'rtl', minHeight: '100vh', paddingBottom: 85, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div className="admin-container" style={{ background: '#0f172a', color: '#f8fafc', direction: 'rtl', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
       <style>{`
         @keyframes spin {
@@ -300,6 +300,25 @@ export default function AdminProductsPage() {
         input::placeholder {
           color: #64748b;
         }
+
+        /* Responsive Layout Behavior */
+        .admin-container {
+          padding-bottom: 85px;
+        }
+
+        .mobile-bottom-nav {
+          display: flex !important;
+        }
+
+        /* Hide Bottom Nav & Reset Padding on PC (Screens > 768px) */
+        @media (min-width: 769px) {
+          .admin-container {
+            padding-bottom: 0px !important;
+          }
+          .mobile-bottom-nav {
+            display: none !important;
+          }
+        }
       `}</style>
 
       {/* Toast Notification */}
@@ -310,7 +329,7 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* Universal Dark Header */}
+      {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -437,8 +456,8 @@ export default function AdminProductsPage() {
         )}
       </div>
 
-      {/* Navigation Bar Dark Mode */}
-      <nav style={{
+      {/* Mobile Only Bottom Navigation Bar */}
+      <nav className="mobile-bottom-nav" style={{
         position: 'fixed',
         bottom: 0,
         left: 0,
@@ -446,7 +465,6 @@ export default function AdminProductsPage() {
         height: 65,
         background: '#1e293b',
         borderTop: '1px solid #334155',
-        display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         zIndex: 50,
