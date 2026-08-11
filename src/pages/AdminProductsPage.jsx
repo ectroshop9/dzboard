@@ -479,6 +479,7 @@ export default function AdminProductsPage() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px dashed #f1f5f9' }}>
                     <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>
                       المخزون: <strong style={{ color: '#0f172a' }}>{productItems.length || product.stock || 0}</strong> قطعة
+<div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>🏷️ الباركود: <span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{product.barcode || '-'}</span></div>
                     </span>
 
                     <div style={{ display: 'flex', gap: 6 }}>
