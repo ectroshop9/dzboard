@@ -160,7 +160,7 @@ export default function AdminProductsPage() {
 
   const handlePrintBarcode = (product, barcodeCode) => {
     const code = barcodeCode || product.id;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(product.name + ' - ' + code)}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${code}`;
     
     const printWindow = window.open('', '_blank', 'width=500,height=500');
     if (!printWindow) return alert('يرجى السماح بفتح النوافذ المنبثقة للطباعة');
