@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   Plus, Trash2, Save, Package, ChevronLeft, Monitor, Zap, Cpu, 
-  Search, Loader2, Upload, Edit3, X, RefreshCw, CheckCircle, AlertCircle, Printer 
+  Search, Loader2, Upload, Edit3, X, RefreshCw, CheckCircle, AlertCircle, Printer,
+  LayoutDashboard, Boxes, Barcode
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -16,6 +17,8 @@ const API = 'https://dzboard.onrender.com/api';
 
 export default function AdminProductsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  
   const [products, setProducts] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -120,7 +123,6 @@ export default function AdminProductsPage() {
         const stockCount = parseInt(formData.stock, 10);
         
         if (prod.success && stockCount > 0) {
-          // إنشاء طلبات الإضافة بالتتابع لتجنب إغراق السيرفر
           for (let i = 0; i < stockCount; i++) {
             await fetch(`${API}/inventory/items`, { 
               method: 'POST', 
@@ -246,7 +248,6 @@ export default function AdminProductsPage() {
 
   const getCat = (k) => CATEGORIES.find(c => c.key === k) || { label: k, color: '#64748b' };
 
-  // خريطة لتحديد الباركود الخاص بكل منتج بسرعة لتسريع البحث
   const itemBarcodeMap = useMemo(() => {
     const map = new Map();
     items.forEach(item => {
@@ -258,7 +259,6 @@ export default function AdminProductsPage() {
     return map;
   }, [items]);
 
-  // تصفية المنتجات باستخدام useMemo لزيادة الأداء
   const filtered = useMemo(() => {
     return products.filter(p => {
       const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
@@ -274,9 +274,9 @@ export default function AdminProductsPage() {
   }, [products, selectedCategory, searchQuery, itemBarcodeMap]);
 
   return (
-    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 75, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
-      {/* Toast Notification */}
+      {/* Notification Toast */}
       {notification && (
         <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100, background: notification.type === 'error' ? '#ef4444' : '#10b981', color: '#fff', padding: '12px 20px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)', fontSize: 14, fontWeight: 700 }}>
           {notification.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
@@ -295,7 +295,7 @@ export default function AdminProductsPage() {
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={loadAll} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
-              <RefreshCw size={14} /> تحديث
+              <RefreshCw size={14} /> <span className="hide-mobile">تحديث</span>
             </button>
             <button onClick={handleOpenAdd} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
               <Plus size={16} /> إضافة منتج
@@ -306,7 +306,7 @@ export default function AdminProductsPage() {
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: 16 }}>
         
-        {/* Form Overlay / Section */}
+        {/* Form Modal / Overlay */}
         {showForm && (
           <div style={{ background: '#fff', border: '1px solid #3b82f6', borderRadius: 14, padding: 20, marginBottom: 20, boxShadow: '0 4px 12px rgba(59, 130, 246, 0.08)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, alignItems: 'center' }}>
@@ -315,14 +315,14 @@ export default function AdminProductsPage() {
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-              <input className="field-input" style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} placeholder="اسم المنتج *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-              <select className="field-input" style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+              <input style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} placeholder="اسم المنتج *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+              <select style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
                 {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
               </select>
-              <input className="field-input" style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} type="number" placeholder="السعر *" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
-              <input className="field-input" style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} type="number" placeholder="الكمية" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} disabled={!!editingProduct} />
-              <input className="field-input" style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} placeholder="الرف" value={formData.shelf} onChange={e => setFormData({...formData, shelf: e.target.value})} />
-              <input className="field-input" style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
+              <input style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} type="number" placeholder="السعر *" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
+              <input style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} type="number" placeholder="الكمية" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} disabled={!!editingProduct} />
+              <input style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} placeholder="الرف" value={formData.shelf} onChange={e => setFormData({...formData, shelf: e.target.value})} />
+              <input style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
               
               <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', background: '#f1f5f9', border: '1px dashed #94a3b8', borderRadius: 8, fontWeight: 600, fontSize: 13, height: '38px' }}>
                 <Upload size={14} /> {uploading ? 'جاري الرفع...' : 'رفع صورة من الجهاز'}
@@ -341,7 +341,7 @@ export default function AdminProductsPage() {
 
         {/* Filter and Search controls */}
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14, marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
+          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, maxWidth: '100%' }}>
             <button onClick={() => setSelectedCategory('all')} style={{ background: selectedCategory === 'all' ? '#2563eb' : '#f1f5f9', color: selectedCategory === 'all' ? '#fff' : '#475569', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
               الكل ({products.length})
             </button>
@@ -407,6 +407,106 @@ export default function AdminProductsPage() {
           </div>
         )}
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 62,
+        background: '#ffffff',
+        borderTop: '1px solid #e2e8f0',
+        display: 'flex',
+        alignItems: 'center',
+        justify: 'space-around',
+        zIndex: 50,
+        boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.05)',
+        paddingBottom: 'env(safe-area-inset-bottom)'
+      }}>
+        <Link to="/admin/dashboard" style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 3,
+          textDecoration: 'none',
+          color: location.pathname === '/admin/dashboard' ? '#2563eb' : '#64748b',
+          fontSize: 11,
+          fontWeight: location.pathname === '/admin/dashboard' ? 700 : 500,
+          flex: 1
+        }}>
+          <LayoutDashboard size={20} />
+          <span>الرئيسية</span>
+        </Link>
+
+        <Link to="/admin/products" style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 3,
+          textDecoration: 'none',
+          color: location.pathname === '/admin/products' ? '#2563eb' : '#64748b',
+          fontSize: 11,
+          fontWeight: location.pathname === '/admin/products' ? 700 : 500,
+          flex: 1
+        }}>
+          <Package size={20} />
+          <span>المنتجات</span>
+        </Link>
+
+        {/* Floating Add Button in the center */}
+        <button onClick={handleOpenAdd} style={{
+          width: 46,
+          height: 46,
+          borderRadius: '50%',
+          background: '#2563eb',
+          color: '#fff',
+          border: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 10px rgba(37, 99, 235, 0.35)',
+          cursor: 'pointer',
+          marginTop: -18
+        }} title="إضافة جديد">
+          <Plus size={24} />
+        </button>
+
+        <Link to="/admin/inventory" style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 3,
+          textDecoration: 'none',
+          color: location.pathname === '/admin/inventory' ? '#2563eb' : '#64748b',
+          fontSize: 11,
+          fontWeight: location.pathname === '/admin/inventory' ? 700 : 500,
+          flex: 1
+        }}>
+          <Boxes size={20} />
+          <span>المخزون</span>
+        </Link>
+
+        <Link to="/admin/scanner" style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 3,
+          textDecoration: 'none',
+          color: location.pathname === '/admin/scanner' ? '#2563eb' : '#64748b',
+          fontSize: 11,
+          fontWeight: location.pathname === '/admin/scanner' ? 700 : 500,
+          flex: 1
+        }}>
+          <Barcode size={20} />
+          <span>الماسح</span>
+        </Link>
+      </nav>
+
     </div>
   );
 }
