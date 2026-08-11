@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   Plus, Trash2, Save, Package, ChevronLeft, Monitor, Zap, Cpu, 
@@ -19,6 +19,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -109,6 +110,7 @@ export default function AdminProductsPage() {
 
   const handleSave = async () => {
     if (!formData.name || !formData.price) { showToast('الاسم والسعر مطلوبان', 'error'); return; }
+    setSaving(true);
     try {
       if (editingProduct) {
         await fetch(`${API}/products/${editingProduct.id}`, { method: 'PUT', headers: getAuthHeader(), body: JSON.stringify(formData) });
@@ -118,8 +120,9 @@ export default function AdminProductsPage() {
         const stockCount = parseInt(formData.stock, 10);
         
         if (prod.success && stockCount > 0) {
-          const inventoryPromises = Array.from({ length: stockCount }, (_, i) => 
-            fetch(`${API}/inventory/items`, { 
+          // إنشاء طلبات الإضافة بالتتابع لتجنب إغراق السيرفر
+          for (let i = 0; i < stockCount; i++) {
+            await fetch(`${API}/inventory/items`, { 
               method: 'POST', 
               headers: getAuthHeader(), 
               body: JSON.stringify({ 
@@ -130,9 +133,8 @@ export default function AdminProductsPage() {
                 image: formData.image, 
                 product_id: prod.product?.id 
               }) 
-            })
-          );
-          await Promise.all(inventoryPromises);
+            });
+          }
         }
       }
       showToast('تم الحفظ بنجاح'); 
@@ -141,11 +143,13 @@ export default function AdminProductsPage() {
       loadAll();
     } catch { 
       showToast('خطأ أثناء عملية الحفظ', 'error'); 
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDelete = async (id) => { 
-    if (!confirm('هل أنت تأكد من إتمام عملية الحذف؟')) return; 
+    if (!window.confirm('هل أنت تأكد من إتمام عملية الحذف؟')) return; 
     try {
       await fetch(`${API}/products/${id}`, { 
         method: 'DELETE', 
@@ -242,19 +246,32 @@ export default function AdminProductsPage() {
 
   const getCat = (k) => CATEGORIES.find(c => c.key === k) || { label: k, color: '#64748b' };
 
-  // Search matches product name or associated item barcode
-  const filtered = products.filter(p => {
-    const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
-    const query = searchQuery.toLowerCase().trim();
-    if (!query) return matchesCategory;
+  // خريطة لتحديد الباركود الخاص بكل منتج بسرعة لتسريع البحث
+  const itemBarcodeMap = useMemo(() => {
+    const map = new Map();
+    items.forEach(item => {
+      if (item.product_id && item.barcode) {
+        if (!map.has(item.product_id)) map.set(item.product_id, []);
+        map.get(item.product_id).push(item.barcode.toLowerCase());
+      }
+    });
+    return map;
+  }, [items]);
 
-    const matchesName = (p.name || '').toLowerCase().includes(query);
-    const hasMatchingBarcode = items.some(
-      item => item.product_id === p.id && item.barcode?.toLowerCase().includes(query)
-    );
+  // تصفية المنتجات باستخدام useMemo لزيادة الأداء
+  const filtered = useMemo(() => {
+    return products.filter(p => {
+      const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
+      const query = searchQuery.toLowerCase().trim();
+      if (!query) return matchesCategory;
 
-    return matchesCategory && (matchesName || hasMatchingBarcode);
-  });
+      const matchesName = (p.name || '').toLowerCase().includes(query);
+      const barcodes = itemBarcodeMap.get(p.id) || [];
+      const hasMatchingBarcode = barcodes.some(b => b.includes(query));
+
+      return matchesCategory && (matchesName || hasMatchingBarcode);
+    });
+  }, [products, selectedCategory, searchQuery, itemBarcodeMap]);
 
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -303,7 +320,7 @@ export default function AdminProductsPage() {
                 {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
               </select>
               <input className="field-input" style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} type="number" placeholder="السعر *" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
-              <input className="field-input" style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} type="number" placeholder="الكمية" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
+              <input className="field-input" style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} type="number" placeholder="الكمية" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} disabled={!!editingProduct} />
               <input className="field-input" style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} placeholder="الرف" value={formData.shelf} onChange={e => setFormData({...formData, shelf: e.target.value})} />
               <input className="field-input" style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
               
@@ -315,8 +332,8 @@ export default function AdminProductsPage() {
 
             <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               <button onClick={() => setShowForm(false)} style={{ background: '#f1f5f9', border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, color: '#475569' }}>إلغاء</button>
-              <button onClick={handleSave} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Save size={14} /> حفظ البيانات
+              <button onClick={handleSave} disabled={saving} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, opacity: saving ? 0.7 : 1 }}>
+                {saving ? <Loader2 size={14} className="spin" /> : <Save size={14} />} حفظ البيانات
               </button>
             </div>
           </div>
@@ -325,11 +342,11 @@ export default function AdminProductsPage() {
         {/* Filter and Search controls */}
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14, marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
-            <button onClick={() => setSelectedCategory('all')} style={{ background: selectedCategory === 'all' ? '#2563eb' : '#f1f5f9', color: selectedCategory === 'all' ? '#fff' : '#475569', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, whitespace: 'nowrap' }}>
+            <button onClick={() => setSelectedCategory('all')} style={{ background: selectedCategory === 'all' ? '#2563eb' : '#f1f5f9', color: selectedCategory === 'all' ? '#fff' : '#475569', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
               الكل ({products.length})
             </button>
             {CATEGORIES.map(c => (
-              <button key={c.key} onClick={() => setSelectedCategory(c.key)} style={{ background: selectedCategory === c.key ? '#2563eb' : '#f1f5f9', color: selectedCategory === c.key ? '#fff' : '#475569', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, whitespace: 'nowrap' }}>
+              <button key={c.key} onClick={() => setSelectedCategory(c.key)} style={{ background: selectedCategory === c.key ? '#2563eb' : '#f1f5f9', color: selectedCategory === c.key ? '#fff' : '#475569', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
                 {c.label}
               </button>
             ))}
