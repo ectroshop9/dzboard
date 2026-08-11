@@ -69,7 +69,7 @@ export default function RequestPartPage() {
 
   if (success) {
     return (
-      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: "'Cairo', sans-serif", direction: 'rtl' }}>
+      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: "'Cairo', system-ui, -apple-system, sans-serif", direction: 'rtl' }}>
         <div style={{ maxWidth: 480, width: '100%', background: '#fff', borderRadius: 20, padding: '32px 20px', border: '1px solid #a7f3d0', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05)', textAlign: 'center' }}>
           <div style={{ width: 72, height: 72, background: '#ecfdf5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
             <CheckCircle2 size={44} style={{ color: '#10b981' }} />
@@ -85,7 +85,7 @@ export default function RequestPartPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: "'Cairo', sans-serif", direction: 'rtl', padding: '16px 12px 36px' }}>
+    <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: "'Cairo', system-ui, -apple-system, sans-serif", direction: 'rtl', padding: '16px 12px 36px' }}>
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
         
         {/* زر الرجوع */}
@@ -189,7 +189,7 @@ export default function RequestPartPage() {
           outline: none;
           font-size: 13px;
           font-family: inherit;
-          color: '#0f172a';
+          color: #0f172a;
           box-sizing: border-box;
           transition: all 0.2s ease;
         }
