@@ -290,11 +290,6 @@ export default function AdminProductsPage() {
     <div style={{ background: '#0f172a', color: '#f8fafc', direction: 'rtl', minHeight: '100vh', paddingBottom: 85, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
       <style>{`
-        @media (max-width: 640px) {
-          .admin-header {
-            display: none !important;
-          }
-        }
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
@@ -307,7 +302,7 @@ export default function AdminProductsPage() {
         }
       `}</style>
 
-      {/* Notification Toast */}
+      {/* Toast Notification */}
       {notification && (
         <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100, background: notification.type === 'error' ? '#ef4444' : '#10b981', color: '#fff', padding: '12px 20px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)', fontSize: 14, fontWeight: 700 }}>
           {notification.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
@@ -315,8 +310,8 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="admin-header" style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
+      {/* Universal Dark Header */}
+      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Link to="/admin/dashboard" style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', borderRadius: 8, padding: '6px 10px', display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
@@ -442,7 +437,7 @@ export default function AdminProductsPage() {
         )}
       </div>
 
-      {/* Navigation Bar */}
+      {/* Navigation Bar Dark Mode */}
       <nav style={{
         position: 'fixed',
         bottom: 0,
@@ -453,34 +448,38 @@ export default function AdminProductsPage() {
         borderTop: '1px solid #334155',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-around',
+        justifyContent: 'space-between',
         zIndex: 50,
         boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.4)',
         paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 12,
+        paddingRight: 12,
         overflowX: 'auto'
       }}>
-        {leftNavItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = location.pathname === item.path;
-          return (
-            <Link key={item.path} to={item.path} style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 2,
-              textDecoration: 'none',
-              color: isActive ? '#60a5fa' : '#94a3b8',
-              fontSize: 10,
-              fontWeight: isActive ? 800 : 500,
-              minWidth: 48,
-              padding: '2px 0'
-            }}>
-              <Icon size={18} color={isActive ? '#60a5fa' : '#94a3b8'} />
-              <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
-            </Link>
-          );
-        })}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {leftNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            return (
+              <Link key={item.path} to={item.path} style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 2,
+                textDecoration: 'none',
+                color: isActive ? '#60a5fa' : '#94a3b8',
+                fontSize: 10,
+                fontWeight: isActive ? 800 : 500,
+                minWidth: 48,
+                padding: '2px 0'
+              }}>
+                <Icon size={18} color={isActive ? '#60a5fa' : '#94a3b8'} />
+                <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
 
         <button onClick={handleOpenAdd} style={{
           width: 48,
@@ -500,28 +499,30 @@ export default function AdminProductsPage() {
           <Plus size={24} />
         </button>
 
-        {rightNavItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = location.pathname === item.path;
-          return (
-            <Link key={item.path} to={item.path} style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 2,
-              textDecoration: 'none',
-              color: isActive ? '#60a5fa' : '#94a3b8',
-              fontSize: 10,
-              fontWeight: isActive ? 800 : 500,
-              minWidth: 48,
-              padding: '2px 0'
-            }}>
-              <Icon size={18} color={isActive ? '#60a5fa' : '#94a3b8'} />
-              <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
-            </Link>
-          );
-        })}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {rightNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            return (
+              <Link key={item.path} to={item.path} style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 2,
+                textDecoration: 'none',
+                color: isActive ? '#60a5fa' : '#94a3b8',
+                fontSize: 10,
+                fontWeight: isActive ? 800 : 500,
+                minWidth: 48,
+                padding: '2px 0'
+              }}>
+                <Icon size={18} color={isActive ? '#60a5fa' : '#94a3b8'} />
+                <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
     </div>
