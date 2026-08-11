@@ -57,7 +57,6 @@ export default function AdminDashboardPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'system-ui', direction: 'rtl' }}>
       
-      {/* Top Navbar */}
       <header style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -77,7 +76,6 @@ export default function AdminDashboardPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main style={{ padding: 16, maxWidth: 1200, margin: '0 auto', paddingBottom: 80 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
           {[
@@ -113,15 +111,20 @@ export default function AdminDashboardPage() {
         </div>
       </main>
 
-      {/* Bottom Mobile Navigation */}
-      <nav className="bottom-nav" style={{ display: window.innerWidth < 769 ? 'flex' : 'none', position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e2e8f0', justifyContent: 'space-around', padding: '8px 0', zIndex: 40 }}>
+      <nav className="bottom-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e2e8f0', justifyContent: 'space-around', padding: '8px 0', zIndex: 40 }}>
         {MENU.map(item => {
           const Icon = item.icon; const isActive = location.pathname === item.path;
           return <Link key={item.path} to={item.path} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, textDecoration: 'none', color: isActive ? '#2563eb' : '#64748b', fontWeight: isActive ? 800 : 600, fontSize: 10 }}><Icon size={20} /><span>{item.label}</span></Link>;
         })}
       </nav>
-
-      <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}.spin{animation:spin 1s linear infinite}@media(min-width:769px){.bottom-nav{display:none}.nav-label{display:inline}}@media(max-width:768px){.nav-label{display:none}}`}</style>
+      
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
+        .bottom-nav { display: flex; }
+        @media (min-width: 769px) { .bottom-nav { display: none; } .nav-label { display: inline; } }
+        @media (max-width: 768px) { .nav-label { display: none; } }
+      `}</style>
     </div>
   );
 }
