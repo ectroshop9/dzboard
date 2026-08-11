@@ -3,14 +3,14 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   Plus, Trash2, Save, Package, ChevronLeft, Monitor, Zap, Cpu, 
   Search, Loader2, Upload, Edit3, X, RefreshCw, CheckCircle, AlertCircle, Printer,
-  Lock, LayoutDashboard, ClipboardList, ScanLine, FileText, Settings
+  Lock, LayoutDashboard, ClipboardList, ScanLine, FileText, Settings, Camera
 } from 'lucide-react';
 
 const CATEGORIES = [
-  { key: 'tcon', label: 'كرت تيكون', icon: Monitor, color: '#3b82f6' },
-  { key: 'alimentation', label: 'اليمونتاسيون', icon: Zap, color: '#f59e0b' },
-  { key: 'main-board', label: 'مين بورد', icon: Cpu, color: '#6366f1' },
-  { key: 'parts', label: 'قطع غيار', icon: Package, color: '#10b981' },
+  { key: 'tcon', label: 'كرت تيكون', icon: Monitor, color: '#60a5fa' },
+  { key: 'alimentation', label: 'اليمونتاسيون', icon: Zap, color: '#fbbf24' },
+  { key: 'main-board', label: 'مين بورد', icon: Cpu, color: '#818cf8' },
+  { key: 'parts', label: 'قطع غيار', icon: Package, color: '#34d399' },
 ];
 
 const API = 'https://dzboard.onrender.com/api';
@@ -246,7 +246,7 @@ export default function AdminProductsPage() {
     printWindow.document.close();
   };
 
-  const getCat = (k) => CATEGORIES.find(c => c.key === k) || { label: k, color: '#64748b' };
+  const getCat = (k) => CATEGORIES.find(c => c.key === k) || { label: k, color: '#94a3b8' };
 
   const itemBarcodeMap = useMemo(() => {
     const map = new Map();
@@ -273,7 +273,6 @@ export default function AdminProductsPage() {
     });
   }, [products, selectedCategory, searchQuery, itemBarcodeMap]);
 
-  // عناصر الملاحة السفلية المطلوبة
   const leftNavItems = [
     { label: 'دخول', path: '/admin/login', icon: Lock },
     { label: 'الرئيسية', path: '/admin/dashboard', icon: LayoutDashboard },
@@ -288,36 +287,45 @@ export default function AdminProductsPage() {
   ];
 
   return (
-    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 85, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ background: '#0f172a', color: '#f8fafc', direction: 'rtl', minHeight: '100vh', paddingBottom: 85, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
-      {/* CSS الخاص بإخفاء الهيدر في الموبايل */}
       <style>{`
         @media (max-width: 640px) {
           .admin-header {
             display: none !important;
           }
         }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+        input::placeholder {
+          color: #64748b;
+        }
       `}</style>
 
       {/* Notification Toast */}
       {notification && (
-        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100, background: notification.type === 'error' ? '#ef4444' : '#10b981', color: '#fff', padding: '12px 20px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)', fontSize: 14, fontWeight: 700 }}>
+        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100, background: notification.type === 'error' ? '#ef4444' : '#10b981', color: '#fff', padding: '12px 20px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)', fontSize: 14, fontWeight: 700 }}>
           {notification.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
           {notification.message}
         </div>
       )}
 
-      {/* Header (مخفي على الموبايل) */}
-      <div className="admin-header" style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
+      {/* Header */}
+      <div className="admin-header" style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Link to="/admin/dashboard" style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569', borderRadius: 8, padding: '6px 10px', display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <Link to="/admin/dashboard" style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', borderRadius: 8, padding: '6px 10px', display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
               <ChevronLeft size={18} />
             </Link>
-            <h1 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: 0 }}>المنتجات والمخزون</h1>
+            <h1 style={{ fontSize: 18, fontWeight: 900, color: '#f8fafc', margin: 0 }}>المنتجات والمخزون</h1>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={loadAll} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
+            <button onClick={loadAll} style={{ background: '#334155', border: '1px solid #475569', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
               <RefreshCw size={14} /> تحديث
             </button>
             <button onClick={handleOpenAdd} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
@@ -329,32 +337,32 @@ export default function AdminProductsPage() {
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: 16 }}>
         
-        {/* Form Modal / Overlay */}
+        {/* Modal Form */}
         {showForm && (
-          <div style={{ background: '#fff', border: '1px solid #3b82f6', borderRadius: 14, padding: 20, marginBottom: 20, boxShadow: '0 4px 12px rgba(59, 130, 246, 0.08)' }}>
+          <div style={{ background: '#1e293b', border: '1px solid #3b82f6', borderRadius: 14, padding: 20, marginBottom: 20, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, alignItems: 'center' }}>
-              <h3 style={{ fontSize: 16, fontWeight: 800, margin: 0 }}>{editingProduct ? 'تعديل منتج' : 'إضافة منتج جديد'}</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: '#f8fafc' }}>{editingProduct ? 'تعديل منتج' : 'إضافة منتج جديد'}</h3>
               <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}><X size={20} /></button>
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-              <input style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} placeholder="اسم المنتج *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-              <select style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
-                {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+              <input style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc', outline: 'none' }} placeholder="اسم المنتج *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+              <select style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc', outline: 'none' }} value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                {CATEGORIES.map(c => <option key={c.key} value={c.key} style={{ background: '#1e293b' }}>{c.label}</option>)}
               </select>
-              <input style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} type="number" placeholder="السعر *" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
-              <input style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} type="number" placeholder="الكمية" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} disabled={!!editingProduct} />
-              <input style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} placeholder="الرف" value={formData.shelf} onChange={e => setFormData({...formData, shelf: e.target.value})} />
-              <input style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }} placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
+              <input style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc', outline: 'none' }} type="number" placeholder="السعر *" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
+              <input style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc', outline: 'none' }} type="number" placeholder="الكمية" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} disabled={!!editingProduct} />
+              <input style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc', outline: 'none' }} placeholder="الرف" value={formData.shelf} onChange={e => setFormData({...formData, shelf: e.target.value})} />
+              <input style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc', outline: 'none' }} placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
               
-              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', background: '#f1f5f9', border: '1px dashed #94a3b8', borderRadius: 8, fontWeight: 600, fontSize: 13, height: '38px' }}>
+              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', background: '#0f172a', border: '1px dashed #475569', borderRadius: 8, fontWeight: 600, fontSize: 13, height: '38px', color: '#94a3b8' }}>
                 <Upload size={14} /> {uploading ? 'جاري الرفع...' : 'رفع صورة من الجهاز'}
                 <input type="file" accept="image/*" hidden onChange={e => handleImageUpload(e.target.files[0])} />
               </label>
             </div>
 
             <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-              <button onClick={() => setShowForm(false)} style={{ background: '#f1f5f9', border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, color: '#475569' }}>إلغاء</button>
+              <button onClick={() => setShowForm(false)} style={{ background: '#334155', border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, color: '#cbd5e1' }}>إلغاء</button>
               <button onClick={handleSave} disabled={saving} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, opacity: saving ? 0.7 : 1 }}>
                 {saving ? <Loader2 size={14} className="spin" /> : <Save size={14} />} حفظ البيانات
               </button>
@@ -362,33 +370,36 @@ export default function AdminProductsPage() {
           </div>
         )}
 
-        {/* Filter and Search controls */}
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14, marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* Filter & Search */}
+        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 14, padding: 14, marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, maxWidth: '100%' }}>
-            <button onClick={() => setSelectedCategory('all')} style={{ background: selectedCategory === 'all' ? '#2563eb' : '#f1f5f9', color: selectedCategory === 'all' ? '#fff' : '#475569', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
+            <button onClick={() => setSelectedCategory('all')} style={{ background: selectedCategory === 'all' ? '#2563eb' : '#0f172a', color: selectedCategory === 'all' ? '#fff' : '#94a3b8', border: '1px solid #334155', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
               الكل ({products.length})
             </button>
             {CATEGORIES.map(c => (
-              <button key={c.key} onClick={() => setSelectedCategory(c.key)} style={{ background: selectedCategory === c.key ? '#2563eb' : '#f1f5f9', color: selectedCategory === c.key ? '#fff' : '#475569', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
+              <button key={c.key} onClick={() => setSelectedCategory(c.key)} style={{ background: selectedCategory === c.key ? '#2563eb' : '#0f172a', color: selectedCategory === c.key ? '#fff' : '#94a3b8', border: '1px solid #334155', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
                 {c.label}
               </button>
             ))}
           </div>
           
-          <div style={{ flex: 1, minWidth: 200, position: 'relative' }}>
-            <input style={{ width: '100%', padding: '8px 36px 8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', fontSize: 13 }} placeholder="البحث برقم الباركود أو اسم المنتج..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-            <Search size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+          <div style={{ flex: 1, minWidth: 200, position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <input style={{ width: '100%', padding: '8px 36px 8px 36px', borderRadius: 8, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc', outline: 'none', fontSize: 13 }} placeholder="البحث برقم الباركود أو اسم المنتج..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            <Search size={16} style={{ position: 'absolute', right: 10, color: '#64748b' }} />
+            <Link to="/admin/scan" style={{ position: 'absolute', left: 8, color: '#60a5fa', display: 'flex', alignItems: 'center' }} title="مسح ضوئي">
+              <Camera size={18} />
+            </Link>
           </div>
         </div>
 
-        {/* Grid display */}
+        {/* Product Cards */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 60, color: '#64748b' }}>
+          <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>
             <Loader2 size={32} className="spin" style={{ margin: '0 auto 10px' }} />
             <div>جاري تحميل المنتجات...</div>
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', color: '#64748b' }}>
+          <div style={{ textAlign: 'center', padding: 40, background: '#1e293b', borderRadius: 14, border: '1px solid #334155', color: '#94a3b8' }}>
             لا توجد منتجات تطابق البحث
           </div>
         ) : (
@@ -398,28 +409,28 @@ export default function AdminProductsPage() {
               const barcode = items.find(i => i.product_id === product.id)?.barcode;
 
               return (
-                <div key={product.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                <div key={product.id} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3)' }}>
                   <div>
                     <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                      <img src={product.image || 'https://via.placeholder.com/60?text=No+Image'} alt={product.name} style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover', background: '#f8fafc', border: '1px solid #f1f5f9' }} />
+                      <img src={product.image || 'https://via.placeholder.com/60/0f172a/94a3b8?text=No+Image'} alt={product.name} style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover', background: '#0f172a', border: '1px solid #334155' }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: `${catObj.color}15`, color: catObj.color, fontWeight: 800, display: 'inline-block' }}>{catObj.label}</span>
-                        <h4 style={{ fontSize: 14, fontWeight: 800, margin: '4px 0', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={product.name}>{product.name}</h4>
-                        <div style={{ fontSize: 15, fontWeight: 900, color: '#d97706' }}>{(parseFloat(product.price) || 0).toLocaleString('en-US')} دج</div>
+                        <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: `${catObj.color}20`, color: catObj.color, fontWeight: 800, display: 'inline-block' }}>{catObj.label}</span>
+                        <h4 style={{ fontSize: 14, fontWeight: 800, margin: '4px 0', color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={product.name}>{product.name}</h4>
+                        <div style={{ fontSize: 15, fontWeight: 900, color: '#fbbf24' }}>{(parseFloat(product.price) || 0).toLocaleString('en-US')} دج</div>
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 10, marginTop: 4 }}>
-                    <span style={{ fontSize: 12, color: '#64748b' }}>المخزون: <strong style={{ color: '#0f172a' }}>{product.stock || 0}</strong></span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #334155', paddingTop: 10, marginTop: 4 }}>
+                    <span style={{ fontSize: 12, color: '#94a3b8' }}>المخزون: <strong style={{ color: '#f8fafc' }}>{product.stock || 0}</strong></span>
                     <div style={{ display: 'flex', gap: 4 }}>
-                      <button onClick={() => handlePrintBarcode(product, barcode)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', color: '#334155' }} title="طباعة ملصق الباركود">
+                      <button onClick={() => handlePrintBarcode(product, barcode)} style={{ background: '#334155', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', color: '#cbd5e1' }} title="طباعة ملصق الباركود">
                         <Printer size={15} />
                       </button>
-                      <button onClick={() => handleOpenEdit(product)} style={{ background: '#eff6ff', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', color: '#2563eb' }} title="تعديل">
+                      <button onClick={() => handleOpenEdit(product)} style={{ background: '#1e3a8a', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', color: '#60a5fa' }} title="تعديل">
                         <Edit3 size={15} />
                       </button>
-                      <button onClick={() => handleDelete(product.id)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', color: '#ef4444' }} title="حذف">
+                      <button onClick={() => handleDelete(product.id)} style={{ background: '#451a1a', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', color: '#f87171' }} title="حذف">
                         <Trash2 size={15} />
                       </button>
                     </div>
@@ -431,20 +442,20 @@ export default function AdminProductsPage() {
         )}
       </div>
 
-      {/* Mobile Bottom Navigation Bar المعزز بزر الإضافة الدائري في المنتصف */}
+      {/* Navigation Bar */}
       <nav style={{
         position: 'fixed',
         bottom: 0,
         left: 0,
         right: 0,
         height: 65,
-        background: '#ffffff',
-        borderTop: '1px solid #e2e8f0',
+        background: '#1e293b',
+        borderTop: '1px solid #334155',
         display: 'flex',
         alignItems: 'center',
-        justify: 'space-around',
+        justifyContent: 'space-around',
         zIndex: 50,
-        boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.05)',
+        boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.4)',
         paddingBottom: 'env(safe-area-inset-bottom)',
         overflowX: 'auto'
       }}>
@@ -456,22 +467,21 @@ export default function AdminProductsPage() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              justify: 'center',
+              justifyContent: 'center',
               gap: 2,
               textDecoration: 'none',
-              color: isActive ? '#2563eb' : '#64748b',
+              color: isActive ? '#60a5fa' : '#94a3b8',
               fontSize: 10,
               fontWeight: isActive ? 800 : 500,
               minWidth: 48,
               padding: '2px 0'
             }}>
-              <Icon size={18} color={isActive ? '#2563eb' : '#64748b'} />
+              <Icon size={18} color={isActive ? '#60a5fa' : '#94a3b8'} />
               <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
             </Link>
           );
         })}
 
-        {/* زر الإضافة الدائري المخصص للمنتجات (+) في المنتصف */}
         <button onClick={handleOpenAdd} style={{
           width: 48,
           height: 48,
@@ -481,8 +491,8 @@ export default function AdminProductsPage() {
           border: 'none',
           display: 'flex',
           alignItems: 'center',
-          justify: 'center',
-          boxShadow: '0 4px 10px rgba(37, 99, 235, 0.35)',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(37, 99, 235, 0.5)',
           cursor: 'pointer',
           marginTop: -16,
           flexShrink: 0
@@ -498,16 +508,16 @@ export default function AdminProductsPage() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              justify: 'center',
+              justifyContent: 'center',
               gap: 2,
               textDecoration: 'none',
-              color: isActive ? '#2563eb' : '#64748b',
+              color: isActive ? '#60a5fa' : '#94a3b8',
               fontSize: 10,
               fontWeight: isActive ? 800 : 500,
               minWidth: 48,
               padding: '2px 0'
             }}>
-              <Icon size={18} color={isActive ? '#2563eb' : '#64748b'} />
+              <Icon size={18} color={isActive ? '#60a5fa' : '#94a3b8'} />
               <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
             </Link>
           );
