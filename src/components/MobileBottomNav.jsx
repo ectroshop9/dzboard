@@ -22,15 +22,13 @@ export default function MobileBottomNav() {
       left: 0,
       right: 0,
       height: 72,
-      background: 'rgba(255, 255, 255, 0.92)',
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
-      borderTop: '1px solid rgba(226, 232, 240, 0.8)',
+      background: '#d97706', // خلفية برتقالية دافئة وعصرية
+      borderTop: '1px solid rgba(255, 255, 255, 0.2)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-around',
       zIndex: 1000,
-      boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.06)',
+      boxShadow: '0 -4px 20px rgba(217, 119, 6, 0.3)',
       paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
       paddingTop: 6,
       paddingLeft: 8,
@@ -55,8 +53,8 @@ export default function MobileBottomNav() {
               height: '100%',
               borderRadius: 14,
               transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              background: isActive ? '#eff6ff' : 'transparent',
-              color: isActive ? '#2563eb' : '#64748b',
+              background: isActive ? 'rgba(255, 255, 255, 0.25)' : 'transparent',
+              color: '#ffffff',
               padding: '2px 0'
             }}
           >
@@ -70,14 +68,15 @@ export default function MobileBottomNav() {
             }}>
               <Icon 
                 size={22} 
-                strokeWidth={isActive ? 2.5 : 1.8} 
-                color={isActive ? '#2563eb' : '#64748b'} 
+                strokeWidth={isActive ? 2.8 : 1.8} 
+                color={isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.75)'} 
               />
             </div>
             <span style={{ 
               whiteSpace: 'nowrap',
               fontSize: 11,
-              fontWeight: isActive ? 800 : 600,
+              fontWeight: isActive ? 900 : 600,
+              color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.85)',
               letterSpacing: '-0.2px'
             }}>
               {item.label}
