@@ -273,20 +273,32 @@ export default function AdminProductsPage() {
     });
   }, [products, selectedCategory, searchQuery, itemBarcodeMap]);
 
-  // عناصر القائمة السفلية المعتمدة حرفياً
-  const navItems = [
-    { label: 'تسجيل الدخول', path: '/admin/login', icon: Lock },
-    { label: 'لوحة التحكم', path: '/admin/dashboard', icon: LayoutDashboard },
-    { label: 'المنتجات والمخزون', path: '/admin/products', icon: Package },
-    { label: 'إدارة الطلبات', path: '/admin/orders', icon: ClipboardList },
-    { label: 'مسح الباركود', path: '/admin/scan', icon: ScanLine },
-    { label: 'طلبات الزبائن', path: '/admin/requests', icon: FileText },
+  // عناصر الملاحة السفلية المطلوبة
+  const leftNavItems = [
+    { label: 'دخول', path: '/admin/login', icon: Lock },
+    { label: 'الرئيسية', path: '/admin/dashboard', icon: LayoutDashboard },
+    { label: 'المنتجات', path: '/admin/products', icon: Package },
+  ];
+
+  const rightNavItems = [
+    { label: 'الطلبات', path: '/admin/orders', icon: ClipboardList },
+    { label: 'الباركود', path: '/admin/scan', icon: ScanLine },
+    { label: 'الزبائن', path: '/admin/requests', icon: FileText },
     { label: 'الإعدادات', path: '/admin/settings', icon: Settings },
   ];
 
   return (
-    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 80, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 85, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
+      {/* CSS الخاص بإخفاء الهيدر في الموبايل */}
+      <style>{`
+        @media (max-width: 640px) {
+          .admin-header {
+            display: none !important;
+          }
+        }
+      `}</style>
+
       {/* Notification Toast */}
       {notification && (
         <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100, background: notification.type === 'error' ? '#ef4444' : '#10b981', color: '#fff', padding: '12px 20px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)', fontSize: 14, fontWeight: 700 }}>
@@ -295,8 +307,8 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
+      {/* Header (مخفي على الموبايل) */}
+      <div className="admin-header" style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Link to="/admin/dashboard" style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569', borderRadius: 8, padding: '6px 10px', display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
@@ -419,7 +431,7 @@ export default function AdminProductsPage() {
         )}
       </div>
 
-      {/* الشريط السفلي المعتمد بالكامل (Mobile Bottom Navigation) */}
+      {/* Mobile Bottom Navigation Bar المعزز بزر الإضافة الدائري في المنتصف */}
       <nav style={{
         position: 'fixed',
         bottom: 0,
@@ -430,12 +442,13 @@ export default function AdminProductsPage() {
         borderTop: '1px solid #e2e8f0',
         display: 'flex',
         alignItems: 'center',
-        overflowX: 'auto',
+        justify: 'space-around',
         zIndex: 50,
         boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.05)',
-        paddingBottom: 'env(safe-area-inset-bottom)'
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        overflowX: 'auto'
       }}>
-        {navItems.map((item) => {
+        {leftNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
           return (
@@ -443,15 +456,56 @@ export default function AdminProductsPage() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: 3,
+              justify: 'center',
+              gap: 2,
               textDecoration: 'none',
               color: isActive ? '#2563eb' : '#64748b',
               fontSize: 10,
               fontWeight: isActive ? 800 : 500,
-              minWidth: 72,
-              flex: 1,
-              padding: '4px 0'
+              minWidth: 48,
+              padding: '2px 0'
+            }}>
+              <Icon size={18} color={isActive ? '#2563eb' : '#64748b'} />
+              <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
+            </Link>
+          );
+        })}
+
+        {/* زر الإضافة الدائري المخصص للمنتجات (+) في المنتصف */}
+        <button onClick={handleOpenAdd} style={{
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
+          background: '#2563eb',
+          color: '#fff',
+          border: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          justify: 'center',
+          boxShadow: '0 4px 10px rgba(37, 99, 235, 0.35)',
+          cursor: 'pointer',
+          marginTop: -16,
+          flexShrink: 0
+        }} title="إضافة منتج جديد">
+          <Plus size={24} />
+        </button>
+
+        {rightNavItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+          return (
+            <Link key={item.path} to={item.path} style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justify: 'center',
+              gap: 2,
+              textDecoration: 'none',
+              color: isActive ? '#2563eb' : '#64748b',
+              fontSize: 10,
+              fontWeight: isActive ? 800 : 500,
+              minWidth: 48,
+              padding: '2px 0'
             }}>
               <Icon size={18} color={isActive ? '#2563eb' : '#64748b'} />
               <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
