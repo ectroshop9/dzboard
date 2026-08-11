@@ -25,6 +25,7 @@ export default function AdminScanPage() {
   const [scanning, setScanning] = useState(false);
   const [loading, setLoading] = useState(false);
   const [manualCode, setManualCode] = useState('');
+  const [scannedCode, setScannedCode] = useState(''); // حفظ الكود الممسوح بالكامل
   const [item, setItem] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -54,6 +55,7 @@ export default function AdminScanPage() {
   const startScan = async () => {
     setErrorMsg('');
     setItem(null);
+    setScannedCode('');
     setScanning(true);
 
     setTimeout(async () => {
@@ -66,6 +68,7 @@ export default function AdminScanPage() {
           { fps: 10, qrbox: { width: 250, height: 250 } },
           async (text) => {
             await stopScan();
+            setScannedCode(text); // حفظ النص الممسوح ضوئياً
             fetchItemDetails(text);
           },
           () => {}
@@ -106,6 +109,7 @@ export default function AdminScanPage() {
   const handleManualSearch = (e) => {
     e.preventDefault();
     if (manualCode.trim()) {
+      setScannedCode(manualCode.trim());
       fetchItemDetails(manualCode.trim());
     }
   };
@@ -156,7 +160,7 @@ export default function AdminScanPage() {
         transition: 'all 0.25s ease',
         display: 'flex',
         flexDirection: 'column',
-        justify: 'space-between',
+        justifyContent: 'space-between',
         padding: '16px 0',
         flexShrink: 0,
         position: 'sticky',
@@ -177,11 +181,11 @@ export default function AdminScanPage() {
           </div>
 
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {MENU.map(item => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
+            {MENU.map(menuItem => {
+              const Icon = menuItem.icon;
+              const isActive = location.pathname === menuItem.path;
               return (
-                <Link key={item.path} to={item.path}
+                <Link key={menuItem.path} to={menuItem.path}
                   style={{
                     display: 'flex', 
                     alignItems: 'center', 
@@ -198,7 +202,7 @@ export default function AdminScanPage() {
                     transition: 'background 0.2s'
                   }}>
                   <Icon size={20} />
-                  {sidebarOpen && <span>{item.label}</span>}
+                  {sidebarOpen && <span>{menuItem.label}</span>}
                 </Link>
               );
             })}
@@ -372,11 +376,12 @@ export default function AdminScanPage() {
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13, color: '#334155', marginBottom: 16 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: '#334155', marginBottom: 16 }}>
                   <div><strong>الاسم / المنتج:</strong> {item.name || item.title || 'غير مسمى'}</div>
-                  <div><strong>رمز SKU:</strong> <code style={{ background: '#e2e8f0', padding: '2px 6px', borderRadius: 4, fontWeight: 800 }}>{item.sku || '—'}</code></div>
+                  <div><strong>رمز SKU:</strong> <code style={{ background: '#e2e8f0', padding: '2px 6px', borderRadius: 4, fontWeight: 800 }}>{item.sku || item.id || '—'}</code></div>
                   <div><strong>الرف / الموضِع:</strong> {item.shelf || 'غير محدد'}</div>
-                  <div><strong>الباركود:</strong> {item.barcode || manualCode || '—'}</div>
+                  <div><strong>الباركود / QR القيمة:</strong> <code style={{ background: '#2563eb15', color: '#2563eb', padding: '2px 8px', borderRadius: 4, fontWeight: 800 }}>{scannedCode || item.barcode || manualCode || item.product_id || '—'}</code></div>
+                  {item.price && <div><strong>السعر:</strong> {parseFloat(item.price).toLocaleString('en-US')} دج</div>}
                 </div>
 
                 <div style={{ display: 'flex', gap: 10, borderTop: '1px solid #e2e8f0', paddingTop: 14 }}>
@@ -410,7 +415,7 @@ export default function AdminScanPage() {
                   </button>
 
                   <button 
-                    onClick={() => { setItem(null); setManualCode(''); }}
+                    onClick={() => { setItem(null); setManualCode(''); setScannedCode(''); }}
                     style={{
                       background: '#f1f5f9',
                       color: '#475569',
