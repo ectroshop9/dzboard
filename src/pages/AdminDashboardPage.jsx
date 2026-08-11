@@ -10,7 +10,7 @@ const MENU = [
   { path: '/admin/products', label: 'المنتجات والمخزون', icon: Package },
   { path: '/admin/orders', label: 'الطلبات', icon: ShoppingBag },
   { path: '/admin/scan', label: 'مسح QR', icon: QrCode },
-{ path: '/admin/requests', label: 'طلبات خاصة', icon: ShoppingBag },
+  { path: '/admin/requests', label: 'طلبات خاصة', icon: ShoppingBag },
   { path: '/admin/settings', label: 'الإعدادات', icon: Settings },
 ];
 
@@ -92,31 +92,56 @@ export default function AdminDashboardPage() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc', fontFamily: 'system-ui, -apple-system, sans-serif', direction: 'rtl' }}>
       
-      {/* Sidebar Desktop */}
-      <aside style={{ 
+      {/* Mobile Drawer Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          onClick={() => setMobileMenuOpen(false)} 
+          className="mobile-overlay"
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 40 }} 
+        />
+      )}
+
+      {/* Sidebar (Desktop & Mobile Drawer) */}
+      <aside className={`admin-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ 
         width: sidebarOpen ? 240 : 72, 
         background: '#fff', 
         borderLeft: '1px solid #e2e8f0',
         transition: 'all 0.25s ease',
         display: 'flex',
         flexDirection: 'column',
-        justify: 'space-between',
+        justifyContent: 'space-between',
         padding: '16px 0',
         flexShrink: 0,
         position: 'sticky',
         top: 0,
         height: '100vh',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        zIndex: 50
       }}>
         <div>
           <div style={{ padding: '0 16px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: sidebarOpen ? 'space-between' : 'center' }}>
-            {sidebarOpen && (
+            {(sidebarOpen || mobileMenuOpen) && (
               <Link to="/admin/dashboard" style={{ textDecoration: 'none' }}>
                 <span style={{ fontWeight: 900, fontSize: 20, color: '#2563eb' }}>DZ<span style={{ color: '#d97706' }}>Board</span></span>
               </Link>
             )}
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, cursor: 'pointer', color: '#64748b', padding: 6, display: 'flex', alignItems: 'center' }}>
-              {sidebarOpen ? <ChevronRight size={18} /> : <Menu size={18} />}
+            
+            {/* Desktop Toggle Button */}
+            <button 
+              onClick={() => setSidebarOpen(!sidebarOpen)} 
+              className="desktop-toggle-btn"
+              style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, cursor: 'pointer', color: '#64748b', padding: 6, display: 'flex', alignItems: 'center' }}
+            >
+              <ChevronRight size={18} style={{ transform: sidebarOpen ? 'rotate(0deg)' : 'rotate(180deg)', transition: '0.2s' }} />
+            </button>
+
+            {/* Mobile Close Button */}
+            <button 
+              onClick={() => setMobileMenuOpen(false)} 
+              className="mobile-close-btn"
+              style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, cursor: 'pointer', color: '#64748b', padding: 6 }}
+            >
+              <X size={18} />
             </button>
           </div>
 
@@ -126,6 +151,7 @@ export default function AdminDashboardPage() {
               const isActive = location.pathname === item.path;
               return (
                 <Link key={item.path} to={item.path}
+                  onClick={() => setMobileMenuOpen(false)}
                   style={{
                     display: 'flex', 
                     alignItems: 'center', 
@@ -138,11 +164,11 @@ export default function AdminDashboardPage() {
                     color: isActive ? '#2563eb' : '#64748b',
                     fontWeight: isActive ? 800 : 600, 
                     fontSize: 14,
-                    justifyContent: sidebarOpen ? 'flex-start' : 'center',
+                    justifyContent: (sidebarOpen || mobileMenuOpen) ? 'flex-start' : 'center',
                     transition: 'background 0.2s'
                   }}>
                   <Icon size={20} />
-                  {sidebarOpen && <span>{item.label}</span>}
+                  {(sidebarOpen || mobileMenuOpen) && <span>{item.label}</span>}
                 </Link>
               );
             })}
@@ -163,10 +189,10 @@ export default function AdminDashboardPage() {
             color: '#ef4444', 
             fontWeight: 700, 
             fontSize: 14,
-            justifyContent: sidebarOpen ? 'flex-start' : 'center',
+            justifyContent: (sidebarOpen || mobileMenuOpen) ? 'flex-start' : 'center',
           }}>
           <LogOut size={20} />
-          {sidebarOpen && <span>تسجيل خروج</span>}
+          {(sidebarOpen || mobileMenuOpen) && <span>تسجيل خروج</span>}
         </button>
       </aside>
 
@@ -174,27 +200,37 @@ export default function AdminDashboardPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         
         {/* Header */}
-        <header style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <header style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 20, flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* Hamburger Button for Mobile */}
+            <button 
+              onClick={() => setMobileMenuOpen(true)} 
+              className="mobile-hamburger-btn"
+              style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, padding: 8, cursor: 'pointer', color: '#334155' }}
+            >
+              <Menu size={20} />
+            </button>
             <h1 style={{ fontSize: 18, fontWeight: 900, margin: 0, color: '#0f172a' }}>لوحة التحكم الرئيسية</h1>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <button onClick={loadDashboardData} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
-              <RefreshCw size={14} /> تحديث
+              <RefreshCw size={14} /> <span className="btn-text">تحديث</span>
             </button>
-            <Link to="/admin/products" style={{ background: '#2563eb', color: '#fff', textDecoration: 'none', borderRadius: 8, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
-              <Plus size={16} /> إضافة منتج
-<Link to="/admin/requests" style={{ background: '#d97706', color: '#fff', textDecoration: 'none', borderRadius: 8, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, marginLeft: 8 }}><ShoppingBag size={16} /> طلبات خاصة</Link>
+            <Link to="/admin/products" style={{ background: '#2563eb', color: '#fff', textDecoration: 'none', borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+              <Plus size={16} /> <span className="btn-text">إضافة منتج</span>
+            </Link>
+            <Link to="/admin/requests" style={{ background: '#d97706', color: '#fff', textDecoration: 'none', borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+              <ShoppingBag size={16} /> <span className="btn-text">طلبات خاصة</span>
             </Link>
           </div>
         </header>
 
         {/* Dashboard Content */}
-        <main style={{ padding: 24, flex: 1 }}>
+        <main className="dashboard-main" style={{ padding: 24, flex: 1 }}>
           
           {/* Stats Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
             {[
               { icon: ShoppingBag, label: 'إجمالي الطلبات', value: stats?.totalOrders || 0, color: '#2563eb', bg: '#eff6ff' },
               { icon: Clock, label: 'طلبات قيد الانتظار', value: stats?.pendingOrders || 0, color: '#d97706', bg: '#fffbeb' },
@@ -203,14 +239,14 @@ export default function AdminDashboardPage() {
             ].map((s, i) => {
               const Icon = s.icon;
               return (
-                <div key={i} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 18, boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+                <div key={i} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                     <span style={{ fontSize: 13, color: '#64748b', fontWeight: 700 }}>{s.label}</span>
                     <div style={{ background: s.bg, color: s.color, width: 38, height: 38, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Icon size={18} />
                     </div>
                   </div>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: '#0f172a' }}>{s.value}</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: '#0f172a' }}>{s.value}</div>
                 </div>
               );
             })}
@@ -223,7 +259,7 @@ export default function AdminDashboardPage() {
                 <Clock size={18} style={{ color: '#2563eb' }} />
                 <h3 style={{ fontSize: 15, fontWeight: 800, margin: 0, color: '#0f172a' }}>آخر الطلبات الواردة</h3>
               </div>
-              <Link to="/admin/orders" style={{ fontSize: 13, color: '#2563eb', fontWeight: 700, textDecoration: 'none' }}>عرض جميع الطلبات ←</Link>
+              <Link to="/admin/orders" style={{ fontSize: 13, color: '#2563eb', fontWeight: 700, textDecoration: 'none' }}>عرض الكل ←</Link>
             </div>
 
             {(!stats?.recentOrders || stats.recentOrders.length === 0) ? (
@@ -232,8 +268,8 @@ export default function AdminDashboardPage() {
                 <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>لا توجد طلبات سابقة حتى الآن</p>
               </div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, textAlign: 'right' }}>
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, textAlign: 'right', minWidth: 500 }}>
                   <thead>
                     <tr style={{ background: '#f8fafc', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>
                       <th style={{ padding: '12px 16px', fontWeight: 700 }}>رقم الطلب</th>
@@ -255,7 +291,7 @@ export default function AdminDashboardPage() {
                           <td style={{ padding: '12px 16px', color: '#64748b', direction: 'ltr', textAlign: 'right' }}>{order.phone || '—'}</td>
                           <td style={{ padding: '12px 16px', fontWeight: 800, color: '#059669' }}>{total} دج</td>
                           <td style={{ padding: '12px 16px' }}>
-                            <span style={{ padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 800, background: st.bg, color: st.color }}>
+                            <span style={{ padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 800, background: st.bg, color: st.color, display: 'inline-block', whiteSpace: 'nowrap' }}>
                               {st.label}
                             </span>
                           </td>
@@ -275,6 +311,39 @@ export default function AdminDashboardPage() {
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+
+        .mobile-hamburger-btn { display: none; }
+        .mobile-close-btn { display: none; }
+        .desktop-toggle-btn { display: flex; }
+
+        @media (max-width: 768px) {
+          .mobile-hamburger-btn { display: flex; }
+          .mobile-close-btn { display: flex; }
+          .desktop-toggle-btn { display: none; }
+          
+          .admin-sidebar {
+            position: fixed !important;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            height: 100vh !important;
+            width: 260px !important;
+            transform: translateX(100%);
+            box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+          }
+
+          .admin-sidebar.open {
+            transform: translateX(0);
+          }
+
+          .dashboard-main {
+            padding: 16px !important;
+          }
+
+          .btn-text {
+            display: none;
+          }
         }
       `}</style>
     </div>
