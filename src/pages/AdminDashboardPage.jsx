@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Package, ShoppingBag, LogOut, ChevronRight, 
-  QrCode, Settings, TrendingUp, Clock, Loader2, Menu, X, Plus, AlertCircle, RefreshCw
+  QrCode, Settings, TrendingUp, Clock, Loader2, Plus, AlertCircle, RefreshCw
 } from 'lucide-react';
 
 const MENU = [
-  { path: '/admin/dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
-  { path: '/admin/products', label: 'المنتجات والمخزون', icon: Package },
+  { path: '/admin/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
+  { path: '/admin/products', label: 'المنتجات', icon: Package },
   { path: '/admin/orders', label: 'الطلبات', icon: ShoppingBag },
-  { path: '/admin/scan', label: 'مسح QR', icon: QrCode },
-  { path: '/admin/requests', label: 'طلبات خاصة', icon: ShoppingBag },
+  { path: '/admin/requests', label: 'خاصة', icon: ShoppingBag },
+  { path: '/admin/scan', label: 'QR', icon: QrCode },
   { path: '/admin/settings', label: 'الإعدادات', icon: Settings },
 ];
 
@@ -32,7 +32,6 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!token) { 
@@ -92,24 +91,15 @@ export default function AdminDashboardPage() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc', fontFamily: 'system-ui, -apple-system, sans-serif', direction: 'rtl' }}>
       
-      {/* Mobile Drawer Overlay */}
-      {mobileMenuOpen && (
-        <div 
-          onClick={() => setMobileMenuOpen(false)} 
-          className="mobile-overlay"
-          style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', zIndex: 40 }} 
-        />
-      )}
-
-      {/* Sidebar (Desktop & Mobile Drawer) */}
-      <aside className={`admin-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ 
+      {/* Sidebar (Desktop Only) */}
+      <aside className="admin-sidebar" style={{ 
         width: sidebarOpen ? 240 : 72, 
         background: '#fff', 
         borderLeft: '1px solid #e2e8f0',
         transition: 'all 0.25s ease',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'space-between',
+        justify: 'space-between',
         padding: '16px 0',
         flexShrink: 0,
         position: 'sticky',
@@ -120,28 +110,17 @@ export default function AdminDashboardPage() {
       }}>
         <div>
           <div style={{ padding: '0 16px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: sidebarOpen ? 'space-between' : 'center' }}>
-            {(sidebarOpen || mobileMenuOpen) && (
+            {sidebarOpen && (
               <Link to="/admin/dashboard" style={{ textDecoration: 'none' }}>
                 <span style={{ fontWeight: 900, fontSize: 20, color: '#2563eb' }}>DZ<span style={{ color: '#d97706' }}>Board</span></span>
               </Link>
             )}
             
-            {/* Desktop Toggle Button */}
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)} 
-              className="desktop-toggle-btn"
               style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, cursor: 'pointer', color: '#64748b', padding: 6, display: 'flex', alignItems: 'center' }}
             >
               <ChevronRight size={18} style={{ transform: sidebarOpen ? 'rotate(0deg)' : 'rotate(180deg)', transition: '0.2s' }} />
-            </button>
-
-            {/* Mobile Close Button */}
-            <button 
-              onClick={() => setMobileMenuOpen(false)} 
-              className="mobile-close-btn"
-              style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, cursor: 'pointer', color: '#64748b', padding: 6 }}
-            >
-              <X size={18} />
             </button>
           </div>
 
@@ -151,7 +130,6 @@ export default function AdminDashboardPage() {
               const isActive = location.pathname === item.path;
               return (
                 <Link key={item.path} to={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
                   style={{
                     display: 'flex', 
                     alignItems: 'center', 
@@ -164,11 +142,11 @@ export default function AdminDashboardPage() {
                     color: isActive ? '#2563eb' : '#64748b',
                     fontWeight: isActive ? 800 : 600, 
                     fontSize: 14,
-                    justifyContent: (sidebarOpen || mobileMenuOpen) ? 'flex-start' : 'center',
+                    justifyContent: sidebarOpen ? 'flex-start' : 'center',
                     transition: 'background 0.2s'
                   }}>
                   <Icon size={20} />
-                  {(sidebarOpen || mobileMenuOpen) && <span>{item.label}</span>}
+                  {sidebarOpen && <span>{item.label}</span>}
                 </Link>
               );
             })}
@@ -189,29 +167,19 @@ export default function AdminDashboardPage() {
             color: '#ef4444', 
             fontWeight: 700, 
             fontSize: 14,
-            justifyContent: (sidebarOpen || mobileMenuOpen) ? 'flex-start' : 'center',
+            justifyContent: sidebarOpen ? 'flex-start' : 'center',
           }}>
           <LogOut size={20} />
-          {(sidebarOpen || mobileMenuOpen) && <span>تسجيل خروج</span>}
+          {sidebarOpen && <span>تسجيل خروج</span>}
         </button>
       </aside>
 
       {/* Main Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, paddingBottom: 60 }}>
         
         {/* Header */}
         <header style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 20, flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* Hamburger Button for Mobile */}
-            <button 
-              onClick={() => setMobileMenuOpen(true)} 
-              className="mobile-hamburger-btn"
-              style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, padding: 8, cursor: 'pointer', color: '#334155' }}
-            >
-              <Menu size={20} />
-            </button>
-            <h1 style={{ fontSize: 18, fontWeight: 900, margin: 0, color: '#0f172a' }}>لوحة التحكم الرئيسية</h1>
-          </div>
+          <h1 style={{ fontSize: 18, fontWeight: 900, margin: 0, color: '#0f172a' }}>لوحة التحكم الرئيسية</h1>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <button onClick={loadDashboardData} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
@@ -307,34 +275,33 @@ export default function AdminDashboardPage() {
         </main>
       </div>
 
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="mobile-bottom-nav">
+        {MENU.map(item => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+          return (
+            <Link key={item.path} to={item.path} className={`bottom-nav-item ${isActive ? 'active' : ''}`}>
+              <Icon size={20} />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
       <style>{`
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
 
-        .mobile-hamburger-btn { display: none; }
-        .mobile-close-btn { display: none; }
-        .desktop-toggle-btn { display: flex; }
+        .mobile-bottom-nav {
+          display: none;
+        }
 
         @media (max-width: 768px) {
-          .mobile-hamburger-btn { display: flex; }
-          .mobile-close-btn { display: flex; }
-          .desktop-toggle-btn { display: none; }
-          
           .admin-sidebar {
-            position: fixed !important;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            height: 100vh !important;
-            width: 260px !important;
-            transform: translateX(100%);
-            box-shadow: -4px 0 20px rgba(0,0,0,0.1);
-          }
-
-          .admin-sidebar.open {
-            transform: translateX(0);
+            display: none !important;
           }
 
           .dashboard-main {
@@ -343,6 +310,40 @@ export default function AdminDashboardPage() {
 
           .btn-text {
             display: none;
+          }
+
+          .mobile-bottom-nav {
+            display: flex;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 4px;
+            z-index: 100;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+          }
+
+          .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            text-decoration: none;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 8px;
+            flex: 1;
+          }
+
+          .bottom-nav-item.active {
+            color: #2563eb;
+            font-weight: 800;
           }
         }
       `}</style>
