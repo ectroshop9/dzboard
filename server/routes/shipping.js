@@ -41,8 +41,8 @@ router.get('/fee', async (req, res) => {
       return res.status(400).json({ success: false, message: 'معرف الولاية مطلوب' });
     }
     
-    const wilayaIdNum = parseInt(wilaya_id);
-    if (wilayaIdNum < 1 || wilayaIdNum > 58) {
+    const wilayaIdNum = parseInt(wilaya_id, 10);
+    if (wilayaIdNum < 1) {
       return res.status(400).json({ success: false, message: 'معرف الولاية غير صالح' });
     }
     
@@ -67,16 +67,21 @@ router.get('/communes', async (req, res) => {
       return res.status(400).json({ success: false, message: 'معرف الولاية مطلوب' });
     }
     
-    const wilayaIdNum = parseInt(wilaya_id);
-    if (wilayaIdNum < 1 || wilayaIdNum > 58) {
+    const wilayaIdNum = parseInt(wilaya_id, 10);
+    if (wilayaIdNum < 1) {
       return res.status(400).json({ success: false, message: 'معرف الولاية غير صالح' });
     }
     
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('communes')
       .select('id, name_ar, name_fr')
       .eq('wilaya_id', wilayaIdNum)
       .order('name_ar');
+    
+    if (error) {
+      console.error('Database error fetching communes:', error);
+      return res.status(500).json({ success: false, message: 'خطأ في جلب البلديات' });
+    }
     
     res.json({ success: true, communes: data || [] });
   } catch (error) {
@@ -95,8 +100,8 @@ router.post('/sync-communes', verifyAdmin, async (req, res) => {
       return res.status(400).json({ success: false, message: 'معرف الولاية مطلوب' });
     }
     
-    const wilayaIdNum = parseInt(wilaya_id);
-    if (wilayaIdNum < 1 || wilayaIdNum > 58) {
+    const wilayaIdNum = parseInt(wilaya_id, 10);
+    if (wilayaIdNum < 1) {
       return res.status(400).json({ success: false, message: 'معرف الولاية غير صالح' });
     }
     
@@ -107,7 +112,6 @@ router.post('/sync-communes', verifyAdmin, async (req, res) => {
     
     let count = 0;
     for (const c of communes) {
-      // Validate commune data
       if (!c.nom || typeof c.nom !== 'string') {
         console.warn('Invalid commune data:', c);
         continue;
