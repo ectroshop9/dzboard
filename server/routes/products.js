@@ -22,7 +22,7 @@ router.post('/upload', verifyAdmin, async (req, res) => {
     const result = await cloudinary.uploader.upload(image, {
       folder: 'dzboard-products',
       transformation: [
-        { width: 1000, crop: 'limit' }, // تصغير الصورة تلقائياً لحماية الأداء
+        { width: 1000, crop: 'limit' },
         { quality: 'auto', fetch_format: 'webp' }
       ]
     });

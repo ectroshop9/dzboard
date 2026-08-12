@@ -20,18 +20,46 @@ export const getById = async (req, res) => {
 
 export const create = async (req, res) => {
   try {
-    const p = await Product.create(req.body);
+    const { name, category, brand, price, stock, image, description, active, update_url } = req.body;
+    
+    const p = await Product.create({
+      name,
+      category: category || 'parts',
+      brand: brand || 'generic',
+      price: Number(price) || 0,
+      stock: Number(stock) || 0,
+      image: image || '',
+      description: description || '',
+      active: active !== undefined ? active : true,
+      update_url: update_url || null
+    });
+    
     res.json({ success: true, product: p });
   } catch (e) {
+    console.error('Create error:', e);
     res.json({ success: true, product: { id: 0 } });
   }
 };
 
 export const update = async (req, res) => {
   try {
-    const p = await Product.update(parseInt(req.params.id), req.body);
+    const { name, category, brand, price, stock, image, description, active, update_url } = req.body;
+    
+    const p = await Product.update(parseInt(req.params.id), {
+      name,
+      category: category || 'parts',
+      brand: brand || 'generic',
+      price: Number(price) || 0,
+      stock: Number(stock) || 0,
+      image: image || '',
+      description: description || '',
+      active: active !== undefined ? active : true,
+      update_url: update_url || null
+    });
+    
     res.json({ success: true, product: p });
   } catch (e) {
+    console.error('Update error:', e);
     res.json({ success: false });
   }
 };

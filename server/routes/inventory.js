@@ -31,13 +31,14 @@ router.get('/items', async (req, res) => {
       if (item.product_id) {
         const { data: product } = await supabase
           .from('products')
-          .select('image,price')
+          .select('image,price,update_url')
           .eq('id', item.product_id)
           .single();
           
         if (product) {
           item.image = product.image;
           item.price = product.price;
+          item.update_url = product.update_url;
         }
       }
     }
@@ -60,7 +61,6 @@ router.get('/search', async (req, res) => {
     
     const cleanQuery = query.trim();
     
-    // 1. ابحث في inventory_items بالباركود أو SKU أو ID أو product_id
     const { data: items, error } = await supabase
       .from('inventory_items')
       .select('*')
@@ -68,31 +68,29 @@ router.get('/search', async (req, res) => {
       .limit(1);
     
     if (error) {
-      console.error('Search items error:', error);
       return res.status(500).json({ success: false, error: error.message });
     }
     
     if (items && items.length > 0) {
       const item = items[0];
       
-      // جلب تفاصيل المنتج المرتبط
       if (item.product_id) {
         const { data: product } = await supabase
           .from('products')
-          .select('image,price')
+          .select('image,price,update_url')
           .eq('id', item.product_id)
           .single();
         
         if (product) {
           item.image = product.image;
           item.price = product.price;
+          item.update_url = product.update_url;
         }
       }
       
       return res.json({ success: true, item });
     }
     
-    // 2. إذا لم يجد في inventory_items، ابحث في products
     const { data: products, error: productError } = await supabase
       .from('products')
       .select('*')
@@ -100,14 +98,12 @@ router.get('/search', async (req, res) => {
       .limit(1);
     
     if (productError) {
-      console.error('Search products error:', productError);
       return res.status(500).json({ success: false, error: productError.message });
     }
     
     if (products && products.length > 0) {
       const product = products[0];
       
-      // ابحث عن قطعة مخزون مرتبطة
       const { data: relatedItems } = await supabase
         .from('inventory_items')
         .select('*')
@@ -118,7 +114,6 @@ router.get('/search', async (req, res) => {
         return res.json({ success: true, item: relatedItems[0] });
       }
       
-      // إذا لا توجد قطعة، ارجع المنتج مع بيانات إضافية
       return res.json({ 
         success: true, 
         item: {
@@ -135,15 +130,14 @@ router.get('/search', async (req, res) => {
     return res.json({ success: false, error: 'Not found' });
     
   } catch (err) {
-    console.error('Search error:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// POST /items - إضافة قطعة أو أكثر ومزامنة الكمية مع جدول المنتجات
+// POST /items - إضافة قطعة أو أكثر مع update_url
 router.post('/items', async (req, res) => {
   try {
-    const { name, price, quantity, category, brand, image } = req.body;
+    const { name, price, quantity, category, brand, image, update_url } = req.body;
     
     const cleanName = String(name || '').trim();
     const cleanPrice = Number(price) || 0;
@@ -166,13 +160,13 @@ router.post('/items', async (req, res) => {
         category: category || 'parts',
         brand: brand || 'generic',
         image: image || '',
-        description: ''
+        description: '',
+        update_url: update_url || null
       })
       .select()
       .single();
 
     if (productError) {
-      console.error('Product error:', productError);
       return res.status(500).json({ 
         success: false, 
         error: productError.message 
@@ -184,7 +178,6 @@ router.post('/items', async (req, res) => {
       .select('*', { count: 'exact', head: true });
 
     if (countError) {
-      console.error('Count error:', countError);
       return res.status(500).json({ 
         success: false, 
         error: countError.message 
@@ -216,7 +209,6 @@ router.post('/items', async (req, res) => {
       .select();
 
     if (itemsError) {
-      console.error('Items error:', itemsError);
       return res.status(500).json({ 
         success: false, 
         error: itemsError.message 
@@ -230,7 +222,6 @@ router.post('/items', async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Server error:', err);
     res.status(500).json({ 
       success: false, 
       error: err.message 
@@ -238,7 +229,7 @@ router.post('/items', async (req, res) => {
   }
 });
 
-// PUT /items/:id - تحديث حالة القطعة وتحديث كمية المنتج
+// PUT /items/:id - تحديث حالة القطعة
 router.put('/items/:id', async (req, res) => {
   try {
     const { status } = req.body;
@@ -258,7 +249,6 @@ router.put('/items/:id', async (req, res) => {
       .single();
 
     if (oldError) {
-      console.error('Old item error:', oldError);
       return res.status(500).json({ 
         success: false, 
         error: oldError.message 
@@ -273,7 +263,6 @@ router.put('/items/:id', async (req, res) => {
       .single();
 
     if (error) {
-      console.error('Update error:', error);
       return res.status(500).json({ 
         success: false, 
         error: error.message 
@@ -281,13 +270,13 @@ router.put('/items/:id', async (req, res) => {
     }
 
     if (old?.product_id) {
-      const { data: product, error: productError } = await supabase
+      const { data: product } = await supabase
         .from('products')
         .select('stock')
         .eq('id', old.product_id)
         .single();
 
-      if (!productError && product) {
+      if (product) {
         if (status === 'sold' && old.status === 'available') {
           await supabase
             .from('products')
@@ -304,7 +293,6 @@ router.put('/items/:id', async (req, res) => {
 
     res.json({ success: true, item });
   } catch (err) {
-    console.error('Server error:', err);
     res.status(500).json({ 
       success: false, 
       error: err.message 
@@ -312,7 +300,7 @@ router.put('/items/:id', async (req, res) => {
   }
 });
 
-// PUT /items/:id/status - تحديث حالة قطعة أو منتج (شامل)
+// PUT /items/:id/status - تحديث حالة قطعة أو منتج
 router.put('/items/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
@@ -322,7 +310,6 @@ router.put('/items/:id/status', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid request' });
     }
     
-    // 1. حاول تحديث قطعة مخزون
     const { data: item, error: itemError } = await supabase
       .from('inventory_items')
       .select('id,product_id,status')
@@ -341,7 +328,6 @@ router.put('/items/:id/status', async (req, res) => {
         return res.status(500).json({ success: false, error: updateError.message });
       }
       
-      // تحديث stock في products
       if (item.product_id) {
         const { data: product } = await supabase
           .from('products')
@@ -367,7 +353,6 @@ router.put('/items/:id/status', async (req, res) => {
       return res.json({ success: true, item: updatedItem });
     }
     
-    // 2. إذا لم توجد قطعة، حدث المنتج مباشرة
     const { data: product, error: productError } = await supabase
       .from('products')
       .select('*')
@@ -401,7 +386,6 @@ router.put('/items/:id/status', async (req, res) => {
     return res.status(404).json({ success: false, error: 'Item not found' });
     
   } catch (err) {
-    console.error('Status update error:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });

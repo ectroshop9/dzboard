@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
   Plus, Trash2, Save, Package, Monitor, Zap, Cpu, 
   Search, Loader2, Upload, Edit3, X, CheckCircle, AlertCircle,
-  Printer
+  Printer, Download
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -35,7 +35,8 @@ export default function AdminProductsPage() {
     stock: '1', 
     description: '', 
     image: '', 
-    brand: 'generic'
+    brand: 'generic',
+    update_url: ''
   };
   
   const [formData, setFormData] = useState(initialForm);
@@ -118,7 +119,8 @@ export default function AdminProductsPage() {
       stock: p.stock || '1', 
       description: p.description || '', 
       image: p.image || '', 
-      brand: p.brand || 'generic'
+      brand: p.brand || 'generic',
+      update_url: p.update_url || ''
     }); 
     setShowForm(true); 
   };
@@ -146,7 +148,8 @@ export default function AdminProductsPage() {
           stock: parseInt(formData.stock, 10) || 0,
           image: formData.image || '',
           brand: formData.brand || 'generic',
-          description: formData.description || ''
+          description: formData.description || '',
+          update_url: formData.update_url || null
         };
 
         const res = await fetch(`${API}/products/${editingProduct.id}`, { 
@@ -170,7 +173,8 @@ export default function AdminProductsPage() {
           brand: formData.brand || 'generic',
           price: priceNum,
           quantity: validQuantity,
-          image: formData.image || ''
+          image: formData.image || '',
+          update_url: formData.update_url || null
         };
 
         const res = await fetch(`${API}/inventory/items`, { 
@@ -323,6 +327,7 @@ export default function AdminProductsPage() {
               <input className="field-input" type="number" placeholder="السعر *" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
               <input className="field-input" type="number" placeholder="المخزون *" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
               <input className="field-input" placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
+              <input className="field-input" placeholder="رابط التحديث (اختياري)" value={formData.update_url} onChange={e => setFormData({...formData, update_url: e.target.value})} />
               <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', background: '#f1f5f9', borderRadius: 8, fontWeight: 600, fontSize: 13, width: 'fit-content' }}>
                 <Upload size={14} /> {uploading ? 'جاري...' : 'رفع صورة'}
                 <input type="file" accept="image/*" hidden onChange={e => handleImageUpload(e.target.files[0])} />
@@ -355,6 +360,7 @@ export default function AdminProductsPage() {
             {filtered.map(product => {
               const catObj = getCat(product.category);
               const barcode = items.find(i => i.product_id === product.id)?.barcode;
+              const hasUpdate = product.update_url && product.update_url.trim() !== '';
               return (
                 <div key={product.id} className="card" style={{ padding: 16 }}>
                   <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
@@ -363,6 +369,11 @@ export default function AdminProductsPage() {
                       <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: `${catObj.color}15`, color: catObj.color, fontWeight: 700 }}>{catObj.label}</span>
                       <h4 style={{ fontSize: 14, fontWeight: 800, margin: '4px 0' }}>{product.name}</h4>
                       <div style={{ fontSize: 16, fontWeight: 900, color: '#d97706' }}>{(parseFloat(product.price) || 0).toLocaleString('en-US')} دج</div>
+                      {hasUpdate && (
+                        <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: '#dbeafe', color: '#1d4ed8', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <Download size={10} /> تحديث متوفر
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>

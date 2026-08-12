@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, ChevronLeft, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, SlidersHorizontal } from 'lucide-react';
+import { Search, ChevronLeft, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, SlidersHorizontal, Download } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function StorePage() {
@@ -90,6 +90,13 @@ export default function StorePage() {
     });
   };
 
+  const handleDownloadUpdate = (e, product) => {
+    e.stopPropagation();
+    if (product.update_url) {
+      window.open(product.update_url, '_blank');
+    }
+  };
+
   const handleClearFilters = () => {
     setSelectedCategory('all');
     setSelectedBrand('all');
@@ -110,7 +117,6 @@ export default function StorePage() {
             <h1 style={{ fontSize: 15, fontWeight: 800, margin: 0, color: '#0f172a', whiteSpace: 'nowrap' }}>المتجر</h1>
           </div>
 
-          {/* بحث مضغوط في الهيدر */}
           <div style={{ position: 'relative', flex: 1, maxWidth: 350 }}>
             <input
               type="text"
@@ -142,7 +148,7 @@ export default function StorePage() {
           </button>
         </div>
 
-        {/* شريط التصنيفات - أفقي صغير تحت الهيدر */}
+        {/* شريط التصنيفات */}
         <div style={{ maxWidth: 1100, margin: '8px auto 0', display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
           {categories.map(cat => {
             const Icon = cat.icon;
@@ -176,7 +182,7 @@ export default function StorePage() {
         </div>
       </div>
 
-      {/* فلاتر إضافية - تظهر عند الضغط على زر فلاتر */}
+      {/* فلاتر إضافية */}
       {showFilters && (
         <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '10px 12px', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
           <select
@@ -210,14 +216,12 @@ export default function StorePage() {
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '10px 12px 24px' }}>
         
-        {/* عدد النتائج */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div style={{ color: '#64748b', fontSize: 12, fontWeight: 700 }}>
             {loading ? 'جاري البحث...' : `${products.length} قطعة`}
           </div>
         </div>
 
-        {/* عرض المنتجات */}
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 }}>
             {[1, 2, 3, 4, 5, 6].map(n => (
@@ -246,6 +250,7 @@ export default function StorePage() {
             {products.map(product => {
               const numericPrice = parseFloat(product.price) || 0;
               const isAvailable = product.stock !== false && product.stock !== 0;
+              const hasUpdate = product.update_url && product.update_url.trim() !== '';
 
               return (
                 <div
@@ -279,6 +284,23 @@ export default function StorePage() {
                     {isAvailable ? 'متوفر' : 'غير متوفر'}
                   </span>
 
+                  {hasUpdate && (
+                    <span style={{
+                      position: 'absolute',
+                      top: 8,
+                      left: 8,
+                      zIndex: 2,
+                      fontSize: 9,
+                      fontWeight: 800,
+                      padding: '2px 6px',
+                      borderRadius: 10,
+                      background: '#dbeafe',
+                      color: '#1d4ed8',
+                    }}>
+                      تحديث متوفر
+                    </span>
+                  )}
+
                   <div style={{ 
                     background: '#fafafa', 
                     height: viewMode === 'list' ? 95 : 140, 
@@ -308,30 +330,53 @@ export default function StorePage() {
                       </p>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: 6, borderTop: '1px dashed #f1f5f9' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: 6, borderTop: '1px dashed #f1f5f9', flexWrap: 'wrap', gap: 4 }}>
                       <span style={{ fontSize: 13, fontWeight: 800, color: '#d97706' }}>
                         {numericPrice.toLocaleString('en-US')} <span style={{ fontSize: 10 }}>دج</span>
                       </span>
 
-                      <button
-                        onClick={(e) => handleBuyNow(e, product)}
-                        disabled={!isAvailable}
-                        style={{
-                          padding: '6px 10px',
-                          background: isAvailable ? '#f59e0b' : '#cbd5e1',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: 6,
-                          fontWeight: 700,
-                          fontSize: 11,
-                          cursor: isAvailable ? 'pointer' : 'not-allowed',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4
-                        }}
-                      >
-                        <ShoppingCart size={13} /> {isAvailable ? 'شراء' : 'نفد'}
-                      </button>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        {hasUpdate && (
+                          <button
+                            onClick={(e) => handleDownloadUpdate(e, product)}
+                            style={{
+                              padding: '6px 10px',
+                              background: '#3b82f6',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: 6,
+                              fontWeight: 700,
+                              fontSize: 11,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4
+                            }}
+                          >
+                            <Download size={13} /> تحديث
+                          </button>
+                        )}
+
+                        <button
+                          onClick={(e) => handleBuyNow(e, product)}
+                          disabled={!isAvailable}
+                          style={{
+                            padding: '6px 10px',
+                            background: isAvailable ? '#f59e0b' : '#cbd5e1',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: 6,
+                            fontWeight: 700,
+                            fontSize: 11,
+                            cursor: isAvailable ? 'pointer' : 'not-allowed',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4
+                          }}
+                        >
+                          <ShoppingCart size={13} /> {isAvailable ? 'شراء' : 'نفد'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
