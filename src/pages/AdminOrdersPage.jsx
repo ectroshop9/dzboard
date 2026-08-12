@@ -1,17 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, Package, ShoppingBag, QrCode,
   Search, Truck, Eye, Check, X, Loader2, AlertCircle, RefreshCw, Filter, Phone, MapPin
 } from 'lucide-react';
-
-const MENU = [
-  { path: '/admin/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
-  { path: '/admin/products', label: 'المنتجات', icon: Package },
-  { path: '/admin/orders', label: 'الطلبات', icon: ShoppingBag },
-  { path: '/admin/requests', label: 'خاصة', icon: ShoppingBag },
-  { path: '/admin/scan', label: 'QR', icon: QrCode },
-];
 
 const STATUS_MAP = {
   pending: { label: 'قيد الانتظار', bg: '#fef3c7', color: '#b45309' },
@@ -25,7 +16,6 @@ const API = 'https://dzboard.onrender.com/api';
 
 export default function AdminOrdersPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const token = localStorage.getItem('dzboard_admin_token');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +23,10 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  useEffect(() => { if (!token) navigate('/admin'); else fetchOrders(); }, []);
+  useEffect(() => { 
+    if (!token) navigate('/admin'); 
+    else fetchOrders(); 
+  }, []);
 
   const fetchOrders = () => {
     setLoading(true);
@@ -43,7 +36,11 @@ export default function AdminOrdersPage() {
   };
 
   const handleStatus = async (id, status) => {
-    await fetch(`${API}/orders/${id}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ status }) });
+    await fetch(`${API}/orders/${id}/status`, { 
+      method: 'PUT', 
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, 
+      body: JSON.stringify({ status }) 
+    });
     fetchOrders();
   };
 
@@ -54,7 +51,7 @@ export default function AdminOrdersPage() {
   });
 
   return (
-    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 70, fontFamily: 'system-ui' }}>
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 120, fontFamily: 'system-ui' }}>
       
       <main style={{ padding: 16, maxWidth: 1200, margin: '0 auto' }}>
         <h1 style={{ fontSize: 20, fontWeight: 900, marginBottom: 16, color: '#0f172a' }}>إدارة الطلبات</h1>
@@ -66,17 +63,49 @@ export default function AdminOrdersPage() {
           </div>
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
             {['all','pending','confirmed','shipped','delivered','cancelled'].map(k => (
-              <button key={k} onClick={() => setStatusFilter(k)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', background: statusFilter === k ? '#2563eb' : '#f1f5f9', color: statusFilter === k ? '#fff' : '#64748b' }}>{k === 'all' ? 'الكل' : STATUS_MAP[k]?.label || k}</button>
+              <button 
+                key={k} 
+                onClick={() => setStatusFilter(k)} 
+                style={{ 
+                  padding: '6px 12px', 
+                  borderRadius: 8, 
+                  border: 'none', 
+                  fontSize: 12, 
+                  fontWeight: 700, 
+                  cursor: 'pointer', 
+                  whiteSpace: 'nowrap', 
+                  background: statusFilter === k ? '#2563eb' : '#f1f5f9', 
+                  color: statusFilter === k ? '#fff' : '#64748b' 
+                }}
+              >
+                {k === 'all' ? 'الكل' : STATUS_MAP[k]?.label || k}
+              </button>
             ))}
           </div>
         </div>
 
-        {loading ? <div style={{ textAlign: 'center', padding: 60 }}><Loader2 size={32} className="spin" /></div> : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 50, background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', color: '#64748b' }}>لا توجد طلبات</div>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 60 }}>
+            <Loader2 size={32} className="spin" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 50, background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', color: '#64748b' }}>
+            لا توجد طلبات
+          </div>
         ) : (
           <div style={{ overflowX: 'auto', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 700 }}>
-              <thead><tr style={{ background: '#f8fafc', color: '#64748b' }}><th style={{ padding: '12px 14px' }}>#</th><th style={{ padding: '12px 14px' }}>العميل</th><th style={{ padding: '12px 14px' }}>الهاتف</th><th style={{ padding: '12px 14px' }}>العنوان</th><th style={{ padding: '12px 14px' }}>المبلغ</th><th style={{ padding: '12px 14px' }}>الحالة</th><th style={{ padding: '12px 14px' }}>إجراء</th></tr></thead>
+              <thead>
+                <tr style={{ background: '#f8fafc', color: '#64748b' }}>
+                  <th style={{ padding: '12px 14px' }}>#</th>
+                  <th style={{ padding: '12px 14px' }}>العميل</th>
+                  <th style={{ padding: '12px 14px' }}>الهاتف</th>
+                  <th style={{ padding: '12px 14px' }}>العنوان</th>
+                  <th style={{ padding: '12px 14px' }}>المبلغ</th>
+                  <th style={{ padding: '12px 14px' }}>الحالة</th>
+                  <th style={{ padding: '12px 14px' }}>إجراء</th>
+                </tr>
+              </thead>
               <tbody>
                 {filtered.map(o => {
                   const st = STATUS_MAP[o.status] || { label: o.status, bg: '#f1f5f9', color: '#475569' };
@@ -86,14 +115,34 @@ export default function AdminOrdersPage() {
                       <td style={{ padding: '12px 14px' }}>{o.customer}</td>
                       <td style={{ padding: '12px 14px', direction: 'ltr', textAlign: 'right' }}>{o.phone}</td>
                       <td style={{ padding: '12px 14px', fontSize: 12, color: '#64748b' }}>{o.address}</td>
-                      <td style={{ padding: '12px 14px', fontWeight: 800, color: '#10b981' }}>{(parseFloat(o.amount||0)+parseFloat(o.shipping||0)).toLocaleString('en-US')} دج</td>
-                      <td style={{ padding: '12px 14px' }}><span style={{ padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 800, background: st.bg, color: st.color }}>{st.label}</span></td>
+                      <td style={{ padding: '12px 14px', fontWeight: 800, color: '#10b981' }}>
+                        {(parseFloat(o.amount||0)+parseFloat(o.shipping||0)).toLocaleString('en-US')} دج
+                      </td>
+                      <td style={{ padding: '12px 14px' }}>
+                        <span style={{ padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 800, background: st.bg, color: st.color }}>
+                          {st.label}
+                        </span>
+                      </td>
                       <td style={{ padding: '12px 14px' }}>
                         <div style={{ display: 'flex', gap: 4 }}>
-                          <button onClick={() => setSelectedOrder(o)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer' }}><Eye size={14} /></button>
-                          {o.status === 'pending' && <button onClick={() => handleStatus(o.id, 'confirmed')} style={{ background: '#dbeafe', border: 'none', color: '#1d4ed8', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', fontSize: 12 }}><Check size={14} /></button>}
-                          {o.status === 'confirmed' && <button onClick={() => handleStatus(o.id, 'shipped')} style={{ background: '#e0e7ff', border: 'none', color: '#4338ca', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', fontSize: 12 }}><Truck size={14} /></button>}
-                          {o.status === 'shipped' && <button onClick={() => handleStatus(o.id, 'delivered')} style={{ background: '#d1fae5', border: 'none', color: '#047857', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', fontSize: 12 }}><Check size={14} /></button>}
+                          <button onClick={() => setSelectedOrder(o)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer' }}>
+                            <Eye size={14} />
+                          </button>
+                          {o.status === 'pending' && (
+                            <button onClick={() => handleStatus(o.id, 'confirmed')} style={{ background: '#dbeafe', border: 'none', color: '#1d4ed8', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', fontSize: 12 }}>
+                              <Check size={14} />
+                            </button>
+                          )}
+                          {o.status === 'confirmed' && (
+                            <button onClick={() => handleStatus(o.id, 'shipped')} style={{ background: '#e0e7ff', border: 'none', color: '#4338ca', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', fontSize: 12 }}>
+                              <Truck size={14} />
+                            </button>
+                          )}
+                          {o.status === 'shipped' && (
+                            <button onClick={() => handleStatus(o.id, 'delivered')} style={{ background: '#d1fae5', border: 'none', color: '#047857', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', fontSize: 12 }}>
+                              <Check size={14} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -110,25 +159,24 @@ export default function AdminOrdersPage() {
           <div style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ padding: 16, borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between' }}>
               <h3>طلب #{selectedOrder.id}</h3>
-              <button onClick={() => setSelectedOrder(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+              <button onClick={() => setSelectedOrder(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
             </div>
             <div style={{ padding: 16 }}>
               <div style={{ marginBottom: 12 }}><strong>العميل:</strong> {selectedOrder.customer}</div>
               <div style={{ marginBottom: 12 }}><strong>الهاتف:</strong> {selectedOrder.phone}</div>
               <div style={{ marginBottom: 12 }}><strong>العنوان:</strong> {selectedOrder.address}</div>
-              <div style={{ marginBottom: 12 }}><strong>الإجمالي:</strong> {(parseFloat(selectedOrder.amount||0)+parseFloat(selectedOrder.shipping||0)).toLocaleString('en-US')} دج</div>
-              <div style={{ marginBottom: 12 }}><strong>الحالة:</strong> {STATUS_MAP[selectedOrder.status]?.label || selectedOrder.status}</div>
+              <div style={{ marginBottom: 12 }}>
+                <strong>الإجمالي:</strong> {(parseFloat(selectedOrder.amount||0)+parseFloat(selectedOrder.shipping||0)).toLocaleString('en-US')} دج
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <strong>الحالة:</strong> {STATUS_MAP[selectedOrder.status]?.label || selectedOrder.status}
+              </div>
             </div>
           </div>
         </div>
       )}
-
-      <nav style={{ display: 'flex', position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e2e8f0', justifyContent: 'space-around', padding: '8px 0', zIndex: 40 }}>
-        {MENU.map(item => {
-          const Icon = item.icon; const isActive = location.pathname === item.path;
-          return <Link key={item.path} to={item.path} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, textDecoration: 'none', color: isActive ? '#2563eb' : '#64748b', fontWeight: isActive ? 800 : 600, fontSize: 10 }}><Icon size={20} /><span>{item.label}</span></Link>;
-        })}
-      </nav>
     </div>
   );
 }
