@@ -3,7 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   Plus, Trash2, Save, Package, Monitor, Zap, Cpu, 
   Search, Loader2, Upload, Edit3, X, CheckCircle, AlertCircle,
-  LayoutDashboard, ClipboardList, ScanLine, FileText, Settings
+  LayoutDashboard, ClipboardList, ScanLine, FileText, Settings, Printer
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -140,7 +140,6 @@ export default function AdminProductsPage() {
 
     try {
       if (editingProduct) {
-        // تحديث منتج موجود - مع stock
         const payload = {
           name: formData.name.trim(),
           category: formData.category || 'tcon',
@@ -163,7 +162,6 @@ export default function AdminProductsPage() {
           throw new Error(data.error?.message || data.error || 'فشل التحديث');
         }
       } else {
-        // إضافة منتج جديد
         const quantityNum = parseInt(formData.stock, 10);
         const validQuantity = isNaN(quantityNum) || quantityNum < 1 ? 1 : quantityNum;
         
@@ -228,6 +226,60 @@ export default function AdminProductsPage() {
     printWindow.document.close();
   };
 
+  // طباعة جميع الباركودات
+  const handlePrintAllBarcodes = () => {
+    if (!products.length) {
+      showToast('لا توجد منتجات للطباعة', 'error');
+      return;
+    }
+    
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    let barcodesHTML = '';
+    
+    products.forEach((product) => {
+      const barcode = items.find(i => i.product_id === product.id)?.barcode || product.id;
+      
+      barcodesHTML += `
+        <div class="barcode-item">
+          <div class="title">${product.name}</div>
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${barcode}" />
+          <div class="code">${barcode}</div>
+          <div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div>
+        </div>
+      `;
+    });
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html dir="rtl">
+        <head>
+          <title>جميع الباركودات - ${products.length} منتج</title>
+          <style>
+            @page{size:auto;margin:10mm}
+            body{font-family:system-ui;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px}
+            .barcode-item{border:1px dashed #000;padding:10px;text-align:center;border-radius:8px;page-break-inside:avoid}
+            .title{font-size:12px;font-weight:800;margin-bottom:6px;word-break:break-word}
+            img{width:100px;height:100px}
+            .code{font-size:10px;font-family:monospace;margin-top:4px}
+            .price{font-size:12px;font-weight:bold;margin-top:4px;border-top:1px solid #ddd;padding-top:4px}
+            @media print {
+              body{grid-template-columns:repeat(3,1fr)}
+              .barcode-item{page-break-inside:avoid}
+            }
+          </style>
+        </head>
+        <body>
+          ${barcodesHTML}
+          <script>
+            setTimeout(()=>{window.print();window.close()},1000)
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   const getCat = (k) => CATEGORIES.find(c => c.key === k) || { label: k, color: '#94a3b8' };
   
   const filtered = products.filter(p => 
@@ -257,6 +309,9 @@ export default function AdminProductsPage() {
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>المنتجات والمخزون</h1>
           <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={handlePrintAllBarcodes} style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+              <Printer size={16} /> طباعة الكل
+            </button>
             <button onClick={handleOpenAdd} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
               <Plus size={16} /> إضافة منتج
             </button>
