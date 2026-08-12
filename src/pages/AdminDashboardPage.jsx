@@ -1,25 +1,22 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Package, ShoppingBag, QrCode, TrendingUp, Clock, Loader2, AlertCircle } from 'lucide-react';
-
-const MENU = [
-  { path: '/admin/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
-  { path: '/admin/products', label: 'المنتجات', icon: Package },
-  { path: '/admin/orders', label: 'الطلبات', icon: ShoppingBag },
-  { path: '/admin/requests', label: 'خاصة', icon: ShoppingBag },
-  { path: '/admin/scan', label: 'QR', icon: QrCode },
-];
 
 const API = 'https://dzboard.onrender.com/api';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const token = localStorage.getItem('dzboard_admin_token');
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { if (!token) { navigate('/admin'); return; } loadData(); }, []);
+  useEffect(() => { 
+    if (!token) { 
+      navigate('/admin'); 
+      return; 
+    } 
+    loadData(); 
+  }, []);
 
   const loadData = () => {
     setLoading(true);
@@ -27,7 +24,8 @@ export default function AdminDashboardPage() {
       fetch(`${API}/products`).then(r => r.json()),
       fetch(`${API}/orders`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
     ]).then(([p, o]) => {
-      const products = p.products || []; const orders = o.orders || [];
+      const products = p.products || []; 
+      const orders = o.orders || [];
       setStats({
         totalOrders: orders.length,
         pendingOrders: orders.filter(x => x.status === 'pending').length,
@@ -38,10 +36,14 @@ export default function AdminDashboardPage() {
     }).finally(() => setLoading(false));
   };
 
-  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}><Loader2 size={36} className="spin" /></div>;
+  if (loading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+      <Loader2 size={36} className="spin" />
+    </div>
+  );
 
   return (
-    <div style={{ background: '#f8fafc', fontFamily: 'system-ui', direction: 'rtl', minHeight: '100vh', paddingBottom: 70 }}>
+    <div style={{ background: '#f8fafc', fontFamily: 'system-ui', direction: 'rtl', minHeight: '100vh', paddingBottom: 120 }}>
       <main style={{ padding: 16, maxWidth: 1200, margin: '0 auto' }}>
         <h1 style={{ fontSize: 20, fontWeight: 900, marginBottom: 16, color: '#0f172a' }}>لوحة التحكم</h1>
         
@@ -53,35 +55,64 @@ export default function AdminDashboardPage() {
             { icon: TrendingUp, label: 'الإيرادات', value: `${(stats?.totalRevenue || 0).toLocaleString('en-US')} دج`, color: '#059669', bg: '#e6fffa' },
           ].map((s, i) => {
             const Icon = s.icon;
-            return <div key={i} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, borderRight: `4px solid ${s.color}` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}><span style={{ fontSize: 12, color: '#64748b' }}>{s.label}</span><div style={{ background: s.bg, color: s.color, width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={18} /></div></div>
-              <div style={{ fontSize: 20, fontWeight: 900 }}>{s.value}</div>
-            </div>;
+            return (
+              <div key={i} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, borderRight: `4px solid ${s.color}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <span style={{ fontSize: 12, color: '#64748b' }}>{s.label}</span>
+                  <div style={{ background: s.bg, color: s.color, width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon size={18} />
+                  </div>
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 900 }}>{s.value}</div>
+              </div>
+            );
           })}
         </div>
 
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden' }}>
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid #e2e8f0' }}><h3 style={{ fontSize: 15, fontWeight: 800 }}>آخر الطلبات</h3></div>
+          <div style={{ padding: '14px 16px', borderBottom: '1px solid #e2e8f0' }}>
+            <h3 style={{ fontSize: 15, fontWeight: 800 }}>آخر الطلبات</h3>
+          </div>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 500 }}>
-              <thead><tr style={{ background: '#f8fafc', color: '#64748b' }}><th style={{ padding: '10px 14px' }}>#</th><th style={{ padding: '10px 14px' }}>العميل</th><th style={{ padding: '10px 14px' }}>المبلغ</th><th style={{ padding: '10px 14px' }}>الحالة</th></tr></thead>
+              <thead>
+                <tr style={{ background: '#f8fafc', color: '#64748b' }}>
+                  <th style={{ padding: '10px 14px' }}>#</th>
+                  <th style={{ padding: '10px 14px' }}>العميل</th>
+                  <th style={{ padding: '10px 14px' }}>المبلغ</th>
+                  <th style={{ padding: '10px 14px' }}>الحالة</th>
+                </tr>
+              </thead>
               <tbody>
                 {stats?.recentOrders?.map(o => {
-                  const st = { pending: { bg: '#fef3c7', color: '#b45309' }, confirmed: { bg: '#dbeafe', color: '#1d4ed8' }, shipped: { bg: '#e0e7ff', color: '#4338ca' }, delivered: { bg: '#d1fae5', color: '#047857' }, cancelled: { bg: '#fee2e2', color: '#b91c1c' } }[o.status] || { bg: '#f1f5f9', color: '#475569' };
-                  return <tr key={o.id} style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '10px 14px', fontWeight: 800 }}>#{o.id}</td><td style={{ padding: '10px 14px' }}>{o.customer}</td><td style={{ padding: '10px 14px', fontWeight: 800, color: '#10b981' }}>{(parseFloat(o.amount||0)+parseFloat(o.shipping||0)).toLocaleString('en-US')} دج</td><td style={{ padding: '10px 14px' }}><span style={{ padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 800, background: st.bg, color: st.color }}>{o.status}</span></td></tr>;
+                  const st = { 
+                    pending: { bg: '#fef3c7', color: '#b45309' }, 
+                    confirmed: { bg: '#dbeafe', color: '#1d4ed8' }, 
+                    shipped: { bg: '#e0e7ff', color: '#4338ca' }, 
+                    delivered: { bg: '#d1fae5', color: '#047857' }, 
+                    cancelled: { bg: '#fee2e2', color: '#b91c1c' } 
+                  }[o.status] || { bg: '#f1f5f9', color: '#475569' };
+                  
+                  return (
+                    <tr key={o.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px 14px', fontWeight: 800 }}>#{o.id}</td>
+                      <td style={{ padding: '10px 14px' }}>{o.customer}</td>
+                      <td style={{ padding: '10px 14px', fontWeight: 800, color: '#10b981' }}>
+                        {(parseFloat(o.amount||0)+parseFloat(o.shipping||0)).toLocaleString('en-US')} دج
+                      </td>
+                      <td style={{ padding: '10px 14px' }}>
+                        <span style={{ padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 800, background: st.bg, color: st.color }}>
+                          {o.status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
                 })}
               </tbody>
             </table>
           </div>
         </div>
       </main>
-
-      <nav style={{ display: 'flex', position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e2e8f0', justifyContent: 'space-around', padding: '8px 0', zIndex: 40 }}>
-        {MENU.map(item => {
-          const Icon = item.icon; const isActive = location.pathname === item.path;
-          return <Link key={item.path} to={item.path} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, textDecoration: 'none', color: isActive ? '#2563eb' : '#64748b', fontWeight: isActive ? 800 : 600, fontSize: 10 }}><Icon size={20} /><span>{item.label}</span></Link>;
-        })}
-      </nav>
     </div>
   );
 }
