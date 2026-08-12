@@ -27,54 +27,128 @@ export default function AdminProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [uploading, setUploading] = useState(false);
   const [notification, setNotification] = useState(null);
-  const initialForm = { name: '', category: 'tcon', price: '', stock: '1', description: '', image: '', shelf: '' };
+  const initialForm = { name: '', category: 'tcon', price: '', stock: '1', description: '', image: '', shelf: '', position: '' };
   const [formData, setFormData] = useState(initialForm);
 
-  useEffect(() => { if (!localStorage.getItem('dzboard_admin_token')) navigate('/admin'); else loadAll(); }, []);
+  useEffect(() => { 
+    if (!localStorage.getItem('dzboard_admin_token')) navigate('/admin'); 
+    else loadAll(); 
+  }, []);
 
-  const showToast = (m, t = 'success') => { setNotification({ message: m, type: t }); setTimeout(() => setNotification(null), 3000); };
+  const showToast = (m, t = 'success') => { 
+    setNotification({ message: m, type: t }); 
+    setTimeout(() => setNotification(null), 3000); 
+  };
   
-  const getAuthHeader = () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('dzboard_admin_token')}` });
+  const getAuthHeader = () => ({ 
+    'Content-Type': 'application/json', 
+    Authorization: `Bearer ${localStorage.getItem('dzboard_admin_token')}` 
+  });
 
   const loadAll = () => {
     setLoading(true);
-    Promise.all([fetch(`${API}/products`).then(r => r.json()), fetch(`${API}/inventory/items`).then(r => r.json())])
-      .then(([a, b]) => { if (a?.success) setProducts(a.products || []); if (b?.success) setItems(b.items || []); })
+    Promise.all([
+      fetch(`${API}/products`).then(r => r.json()), 
+      fetch(`${API}/inventory/items`).then(r => r.json())
+    ])
+      .then(([a, b]) => { 
+        if (a?.success) setProducts(a.products || []); 
+        if (b?.success) setItems(b.items || []); 
+      })
       .finally(() => setLoading(false));
   };
 
   const handleImageUpload = async (file) => {
-    if (!file) return; setUploading(true);
-    const reader = new FileReader(); reader.readAsDataURL(file);
+    if (!file) return; 
+    setUploading(true);
+    const reader = new FileReader(); 
+    reader.readAsDataURL(file);
     reader.onload = async () => {
-      const res = await fetch(`${API}/products/upload`, { method: 'POST', headers: getAuthHeader(), body: JSON.stringify({ image: reader.result }) });
-      const data = await res.json();
-      if (data.success) setFormData(p => ({ ...p, image: data.url })); else showToast('فشل الرفع', 'error');
-      setUploading(false);
+      try {
+        const res = await fetch(`${API}/products/upload`, { 
+          method: 'POST', 
+          headers: getAuthHeader(), 
+          body: JSON.stringify({ image: reader.result }) 
+        });
+        const data = await res.json();
+        if (data.success) setFormData(p => ({ ...p, image: data.url })); 
+        else showToast('فشل الرفع', 'error');
+      } catch {
+        showToast('خطأ أثناء رفع الصورة', 'error');
+      } finally {
+        setUploading(false);
+      }
     };
   };
 
-  const handleOpenAdd = () => { setEditingProduct(null); setFormData(initialForm); setShowForm(true); };
-  const handleOpenEdit = (p) => { setEditingProduct(p); setFormData({ name: p.name || '', category: p.category || 'tcon', price: p.price || '', stock: p.stock || '1', description: p.description || '', image: p.image || '', shelf: p.shelf || '' }); setShowForm(true); };
-
-  const handleSave = async () => {
-    if (!formData.name || !formData.price) { showToast('الاسم والسعر مطلوبان', 'error'); return; }
-    try {
-      if (editingProduct) {
-        await fetch(`${API}/products/${editingProduct.id}`, { method: 'PUT', headers: getAuthHeader(), body: JSON.stringify(formData) });
-      } else {
-        const res = await fetch(`${API}/products`, { method: 'POST', headers: getAuthHeader(), body: JSON.stringify(formData) });
-        const prod = await res.json();
-        if (prod.success && parseInt(formData.stock) > 0) {
-          for (let i = 0; i < parseInt(formData.stock); i++)
-            await fetch(`${API}/inventory/items`, { method: 'POST', headers: getAuthHeader(), body: JSON.stringify({ name: formData.name, shelf: formData.shelf, position: i + 1, price: formData.price, image: formData.image, product_id: prod.product?.id }) });
-        }
-      }
-      showToast('تم الحفظ'); setShowForm(false); setEditingProduct(null); loadAll();
-    } catch { showToast('خطأ', 'error'); }
+  const handleOpenAdd = () => { 
+    setEditingProduct(null); 
+    setFormData(initialForm); 
+    setShowForm(true); 
   };
 
-  const handleDelete = async (id) => { if (!confirm('حذف؟')) return; await fetch(`${API}/products/${id}`, { method: 'DELETE', headers: getAuthHeader() }); loadAll(); };
+  const handleOpenEdit = (p) => { 
+    setEditingProduct(p); 
+    setFormData({ 
+      name: p.name || '', 
+      category: p.category || 'tcon', 
+      price: p.price || '', 
+      stock: p.stock || '1', 
+      description: p.description || '', 
+      image: p.image || '', 
+      shelf: p.shelf || '',
+      position: p.position || '' 
+    }); 
+    setShowForm(true); 
+  };
+
+  const handleSave = async () => {
+    if (!formData.name || !formData.price) { 
+      showToast('الاسم والسعر مطلوبان', 'error'); 
+      return; 
+    }
+
+    try {
+      if (editingProduct) {
+        // تحديث منتج موجود
+        await fetch(`${API}/products/${editingProduct.id}`, { 
+          method: 'PUT', 
+          headers: getAuthHeader(), 
+          body: JSON.stringify(formData) 
+        });
+      } else {
+        // إضافة منتج جديد وقطع المخزون دفعة واحدة إلى مسار /inventory/items المتوافق
+        const res = await fetch(`${API}/inventory/items`, { 
+          method: 'POST', 
+          headers: getAuthHeader(), 
+          body: JSON.stringify({
+            name: formData.name,
+            category: formData.category,
+            price: formData.price,
+            quantity: parseInt(formData.stock, 10) || 1, // إرسال الكمية كاملة
+            shelf: formData.shelf,
+            position: formData.position,
+            image: formData.image
+          }) 
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+      }
+
+      showToast('تم الحفظ بنجاح'); 
+      setShowForm(false); 
+      setEditingProduct(null); 
+      loadAll();
+    } catch (err) { 
+      showToast('حدث خطأ أثناء الحفظ', 'error'); 
+    }
+  };
+
+  const handleDelete = async (id) => { 
+    if (!confirm('هل أنت تأكد من الحذف؟')) return; 
+    await fetch(`${API}/products/${id}`, { method: 'DELETE', headers: getAuthHeader() }); 
+    loadAll(); 
+  };
 
   const handlePrintBarcode = (product, barcodeCode) => {
     const code = barcodeCode || product.id;
@@ -96,13 +170,20 @@ export default function AdminProductsPage() {
 
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 70, fontFamily: 'system-ui' }}>
-      {notification && <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100, background: notification.type === 'error' ? '#ef4444' : '#10b981', color: '#fff', padding: '12px 20px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)', fontSize: 14, fontWeight: 700 }}>{notification.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} />}{notification.message}</div>}
+      {notification && (
+        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100, background: notification.type === 'error' ? '#ef4444' : '#10b981', color: '#fff', padding: '12px 20px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)', fontSize: 14, fontWeight: 700 }}>
+          {notification.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
+          {notification.message}
+        </div>
+      )}
 
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>المنتجات والمخزون</h1>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleOpenAdd} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}><Plus size={16} /> إضافة منتج</button>
+            <button onClick={handleOpenAdd} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+              <Plus size={16} /> إضافة منتج
+            </button>
           </div>
         </div>
       </div>
@@ -110,17 +191,30 @@ export default function AdminProductsPage() {
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: 16 }}>
         {showForm && (
           <div style={{ background: '#fff', border: '1px solid #3b82f6', borderRadius: 14, padding: 20, marginBottom: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}><h3 style={{ fontSize: 16, fontWeight: 800 }}>{editingProduct ? 'تعديل منتج' : 'إضافة منتج'}</h3><button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}><X size={20} /></button></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 800 }}>{editingProduct ? 'تعديل منتج' : 'إضافة منتج'}</h3>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}><X size={20} /></button>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
               <input className="field-input" placeholder="اسم المنتج *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-              <select className="field-input" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>{CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}</select>
+              <select className="field-input" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+              </select>
               <input className="field-input" type="number" placeholder="السعر *" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
-              <input className="field-input" type="number" placeholder="الكمية" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
+              {!editingProduct && (
+                <input className="field-input" type="number" placeholder="الكمية *" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
+              )}
               <input className="field-input" placeholder="الرف" value={formData.shelf} onChange={e => setFormData({...formData, shelf: e.target.value})} />
               <input className="field-input" placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
-              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', background: '#f1f5f9', borderRadius: 8, fontWeight: 600, fontSize: 13, width: 'fit-content' }}><Upload size={14} /> {uploading ? 'جاري...' : 'رفع صورة'}<input type="file" accept="image/*" hidden onChange={e => handleImageUpload(e.target.files[0])} /></label>
+              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', background: '#f1f5f9', borderRadius: 8, fontWeight: 600, fontSize: 13, width: 'fit-content' }}>
+                <Upload size={14} /> {uploading ? 'جاري...' : 'رفع صورة'}
+                <input type="file" accept="image/*" hidden onChange={e => handleImageUpload(e.target.files[0])} />
+              </label>
             </div>
-            <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end', gap: 10 }}><button onClick={() => setShowForm(false)} className="btn btn-ghost btn-sm">إلغاء</button><button onClick={handleSave} className="btn btn-accent btn-sm"><Save size={14} /> حفظ</button></div>
+            <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <button onClick={() => setShowForm(false)} className="btn btn-ghost btn-sm">إلغاء</button>
+              <button onClick={handleSave} className="btn btn-accent btn-sm"><Save size={14} /> حفظ</button>
+            </div>
           </div>
         )}
 
@@ -129,10 +223,15 @@ export default function AdminProductsPage() {
             <button onClick={() => setSelectedCategory('all')} className={`btn ${selectedCategory === 'all' ? 'btn-primary' : 'btn-ghost'} btn-sm`}>الكل ({products.length})</button>
             {CATEGORIES.map(c => <button key={c.key} onClick={() => setSelectedCategory(c.key)} className={`btn ${selectedCategory === c.key ? 'btn-primary' : 'btn-ghost'} btn-sm`}>{c.label}</button>)}
           </div>
-          <div style={{ flex: 1, minWidth: 200, position: 'relative' }}><input className="field-input" placeholder="بحث..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} /><Search size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} /></div>
+          <div style={{ flex: 1, minWidth: 200, position: 'relative' }}>
+            <input className="field-input" placeholder="بحث..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            <Search size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+          </div>
         </div>
 
-        {loading ? <div style={{ textAlign: 'center', padding: 60 }}><Loader2 size={32} className="spin" /></div> : (
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 60 }}><Loader2 size={32} className="spin" /></div>
+        ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
             {filtered.map(product => {
               const catObj = getCat(product.category);
@@ -140,7 +239,7 @@ export default function AdminProductsPage() {
               return (
                 <div key={product.id} className="card" style={{ padding: 16 }}>
                   <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                    <img src={product.image || 'https://via.placeholder.com/60'} style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }} />
+                    <img src={product.image || 'https://via.placeholder.com/60'} style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }} alt={product.name} />
                     <div style={{ flex: 1 }}>
                       <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: `${catObj.color}15`, color: catObj.color, fontWeight: 700 }}>{catObj.label}</span>
                       <h4 style={{ fontSize: 14, fontWeight: 800, margin: '4px 0' }}>{product.name}</h4>
@@ -164,8 +263,14 @@ export default function AdminProductsPage() {
 
       <nav style={{ display: 'flex', position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e2e8f0', justifyContent: 'space-around', padding: '8px 0', zIndex: 40 }}>
         {NAV.map(item => {
-          const Icon = item.icon; const isActive = location.pathname === item.path;
-          return <Link key={item.path} to={item.path} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, textDecoration: 'none', color: isActive ? '#2563eb' : '#64748b', fontWeight: isActive ? 800 : 600, fontSize: 10 }}><Icon size={20} /><span>{item.label}</span></Link>;
+          const Icon = item.icon; 
+          const isActive = location.pathname === item.path;
+          return (
+            <Link key={item.path} to={item.path} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, textDecoration: 'none', color: isActive ? '#2563eb' : '#64748b', fontWeight: isActive ? 800 : 600, fontSize: 10 }}>
+              <Icon size={20} />
+              <span>{item.label}</span>
+            </Link>
+          );
         })}
       </nav>
     </div>
