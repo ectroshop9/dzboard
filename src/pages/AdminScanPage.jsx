@@ -11,7 +11,6 @@ const MENU = [
   { path: '/admin/settings', label: 'إعدادات', icon: Settings },
 ];
 
-// استخدام متغيرات البيئة مع وجود رابط افتراضي
 const API = import.meta.env.VITE_API_URL || 'https://dzboard.onrender.com/api';
 
 export default function AdminScanPage() {
@@ -57,14 +56,14 @@ export default function AdminScanPage() {
         
         await qrScanner.start(
           { facingMode: 'environment' }, 
-          { fps: 10, qrbox: { width: 250, height: 250 } }, // تكبير مربع المسح قليلاً لسهولة القراءة
+          { fps: 10, qrbox: { width: 250, height: 250 } },
           async (text) => { 
             await stopScan(); 
             const clean = text?.replace(/\r?\n|\r/g, '').trim() || ''; 
             setScannedCode(clean); 
             fetchItemDetails(clean); 
           }, 
-          () => {} // تجاهل أخطاء المسح المستمرة
+          () => {}
         );
       } catch { 
         setErrorMsg('تعذر تشغيل الكاميرا. تأكد من منح الصلاحيات.'); 
@@ -73,7 +72,6 @@ export default function AdminScanPage() {
     }, 100);
   };
 
-  // جلب البيانات معتمدًا على الخادم (Backend)
   const fetchItemDetails = async (code) => {
     const searchCode = code?.trim(); 
     if (!searchCode) return;
@@ -83,7 +81,6 @@ export default function AdminScanPage() {
     setItem(null);
     
     try {
-      // نعتمد هنا على API جديد في الخادم يقوم بالبحث الشامل (عن طريق الباركود، SKU، أو ID)
       const res = await fetch(`${API}/inventory/search?query=${encodeURIComponent(searchCode)}`, { 
         headers: { Authorization: `Bearer ${token}` } 
       });
@@ -110,7 +107,6 @@ export default function AdminScanPage() {
     } 
   };
 
-  // تبديل حالة المنتج بطلب واحد مبسط
   const toggleItemStatus = async () => {
     if (!item) return; 
     setLoading(true);
@@ -130,6 +126,7 @@ export default function AdminScanPage() {
       const data = await res.json();
       
       if (data.success) {
+        // المنتج يبقى ظاهراً - فقط الحالة تتغير
         setItem(prev => ({ ...prev, status: newStatus }));
       } else {
         setErrorMsg(data.error || 'فشل تعديل حالة المنتج');
@@ -169,10 +166,10 @@ export default function AdminScanPage() {
         {/* منطقة المسح والنتائج */}
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, textAlign: 'center' }}>
           
-          {/* الحالة الافتراضية - زر تشغيل الكاميرا */}
+          {/* الحالة الافتراضية */}
           {!scanning && !item && !loading && (
             <div style={{ padding: '20px 0' }}>
-              <Camera size={48} style={{ color: '#2563eb', marginBottom: 12, margin: '0 auto' }} />
+              <Camera size={48} style={{ color: '#2563eb', marginBottom: 12 }} />
               <h3 style={{ fontSize: 16, margin: '0 0 12px 0' }}>مسح بكاميرا الهاتف</h3>
               <button 
                 onClick={startScan} 
@@ -183,7 +180,7 @@ export default function AdminScanPage() {
             </div>
           )}
           
-          {/* الكاميرا قيد التشغيل */}
+          {/* الكاميرا */}
           {scanning && (
             <div>
               <div id="reader" style={{ width: '100%', borderRadius: 12, overflow: 'hidden', border: '2px solid #2563eb' }} />
@@ -196,21 +193,21 @@ export default function AdminScanPage() {
             </div>
           )}
           
-          {/* مؤشر التحميل */}
+          {/* التحميل */}
           {loading && (
             <div style={{ padding: 40, display: 'flex', justifyContent: 'center' }}>
               <Loader2 size={36} style={{ animation: 'spin 1s linear infinite', color: '#2563eb' }} />
             </div>
           )}
           
-          {/* رسائل الخطأ */}
+          {/* الخطأ */}
           {errorMsg && (
             <div style={{ background: '#fef2f2', color: '#b91c1c', padding: 12, borderRadius: 10, margin: '12px 0', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
               <AlertCircle size={18} /> {errorMsg}
             </div>
           )}
           
-          {/* تفاصيل المنتج المسترجع */}
+          {/* تفاصيل المنتج - يبقى ظاهر دائماً */}
           {item && !loading && (
             <div style={{ textAlign: 'right', background: '#f8fafc', borderRadius: 12, padding: 16, border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
@@ -238,7 +235,7 @@ export default function AdminScanPage() {
                   onClick={toggleItemStatus} 
                   style={{ 
                     flex: 1, 
-                    background: item.status === 'available' ? '#f59e0b' : '#2563eb', // البرتقالي للبيع، الأزرق للإرجاع
+                    background: item.status === 'available' ? '#f59e0b' : '#2563eb',
                     color: '#fff', 
                     border: 'none', 
                     borderRadius: 8, 
@@ -262,7 +259,7 @@ export default function AdminScanPage() {
         </div>
       </main>
 
-      {/* شريط التنقل السفلي */}
+      {/* شريط التنقل */}
       <nav style={{ 
         display: 'flex', position: 'fixed', bottom: 0, left: 0, right: 0, 
         background: '#fff', borderTop: '1px solid #e2e8f0', justifyContent: 'space-around', 
