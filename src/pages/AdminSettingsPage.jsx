@@ -1,25 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, Package, ShoppingBag, QrCode, Eye, EyeOff, 
-  CheckCircle2, AlertCircle, Loader2, KeyRound, Shield,
-  Database, Download, Upload, Settings
+  Eye, EyeOff, CheckCircle2, AlertCircle, Loader2, KeyRound, Shield,
+  Database, Download, Upload
 } from 'lucide-react';
-
-const MENU = [
-  { path: '/admin/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
-  { path: '/admin/products', label: 'المنتجات', icon: Package },
-  { path: '/admin/orders', label: 'الطلبات', icon: ShoppingBag },
-  { path: '/admin/requests', label: 'خاصة', icon: ShoppingBag },
-  { path: '/admin/scan', label: 'QR', icon: QrCode },
-  { path: '/admin/settings', label: 'إعدادات', icon: Settings },
-];
 
 const API = 'https://dzboard.onrender.com/api';
 
 export default function AdminSettingsPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const token = localStorage.getItem('dzboard_admin_token');
   
   // حالة تغيير كلمة المرور
@@ -76,7 +65,7 @@ export default function AdminSettingsPage() {
     setSubmitting(false);
   };
 
-  // إنشاء نسخة احتياطية - الطريقة الصحيحة
+  // إنشاء نسخة احتياطية
   const handleBackup = async () => {
     setBackupLoading(true);
     setBackupFeedback({ type: '', text: '' });
@@ -87,14 +76,10 @@ export default function AdminSettingsPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // لا تحاول قراءة JSON - استقبل الملف مباشرة
       const blob = await res.blob();
-      
-      // تحقق من نوع المحتوى
       const contentType = res.headers.get('Content-Type');
       
       if (contentType && contentType.includes('application/json')) {
-        // تنزيل الملف
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -106,7 +91,6 @@ export default function AdminSettingsPage() {
         
         setBackupFeedback({ type: 'success', text: 'تم تنزيل النسخة الاحتياطية بنجاح' });
       } else {
-        // إذا كان الرد HTML (خطأ)
         const text = await blob.text();
         console.error('Server returned HTML:', text.substring(0, 200));
         throw new Error('السيرفر غير متاح حالياً');
@@ -184,7 +168,7 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div style={{ background: '#f8fafc', fontFamily: 'system-ui', direction: 'rtl', minHeight: '100vh', paddingBottom: 70 }}>
+    <div style={{ background: '#f8fafc', fontFamily: 'system-ui', direction: 'rtl', minHeight: '100vh', paddingBottom: 120 }}>
       <main style={{ padding: 16, maxWidth: 600, margin: '0 auto' }}>
         <h1 style={{ fontSize: 20, fontWeight: 900, marginBottom: 16, color: '#0f172a' }}>الإعدادات</h1>
 
@@ -400,43 +384,6 @@ export default function AdminSettingsPage() {
           </form>
         </div>
       </main>
-
-      <nav style={{ 
-        display: 'flex', 
-        position: 'fixed', 
-        bottom: 0, 
-        left: 0, 
-        right: 0, 
-        background: '#fff', 
-        borderTop: '1px solid #e2e8f0', 
-        justifyContent: 'space-around', 
-        padding: '8px 0', 
-        zIndex: 40 
-      }}>
-        {MENU.map(item => {
-          const Icon = item.icon; 
-          const isActive = location.pathname === item.path;
-          return (
-            <Link 
-              key={item.path} 
-              to={item.path} 
-              style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                gap: 2, 
-                textDecoration: 'none', 
-                color: isActive ? '#2563eb' : '#64748b', 
-                fontWeight: isActive ? 800 : 600, 
-                fontSize: 10 
-              }}
-            >
-              <Icon size={20} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
     </div>
   );
 }
