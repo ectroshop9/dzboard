@@ -122,9 +122,9 @@ export default function AdminProductsPage() {
       if (editingProduct) {
         // تحديث منتج
         const payload = {
-          name: formData.name,
+          name: formData.name.trim(),
           category: formData.category,
-          price: parseFloat(formData.price) || 0,
+          price: Number(formData.price) || 0,
           image: formData.image || '',
           brand: formData.brand || 'generic',
           description: formData.description || ''
@@ -136,19 +136,18 @@ export default function AdminProductsPage() {
           body: JSON.stringify(payload) 
         });
         const data = await res.json();
-        if (!data.success) throw new Error(data.message || data.error || 'فشل التحديث');
+        if (!res.ok || !data.success) throw new Error(data.message || data.error || 'فشل التحديث');
       } else {
-        // إضافة منتج جديد
+        // إضافة منتج جديد - إرسال الحقول الصريحة فقط وتجنب إرسال shelf/position تماماً
         const payload = {
-          name: formData.name,
+          name: formData.name.trim(),
           category: formData.category,
           brand: formData.brand || 'generic',
-          price: parseFloat(formData.price) || 0,
-          quantity: Math.max(1, parseInt(formData.stock, 10) || 1),
-          image: formData.image || '',
-          shelf: '',     // نرسل قيمة فارغة لتفادي خطأ INVALID من السيرفر
-          position: ''  // نرسل قيمة فارغة لتفادي خطأ INVALID من السيرفر
+          price: Number(formData.price) || 0,
+          quantity: Math.max(1, parseInt(formData.stock, 10) || 1)
         };
+
+        if (formData.image) payload.image = formData.image;
 
         const res = await fetch(`${API}/inventory/items`, { 
           method: 'POST', 
@@ -156,7 +155,7 @@ export default function AdminProductsPage() {
           body: JSON.stringify(payload) 
         });
         const data = await res.json();
-        if (!data.success) throw new Error(data.message || data.error || 'فشل حفظ القطعة');
+        if (!res.ok || !data.success) throw new Error(data.message || data.error || 'فشل حفظ القطعة بالسيرفر');
       }
 
       showToast('تم الحفظ بنجاح'); 
