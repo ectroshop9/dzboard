@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, ChevronLeft, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X } from 'lucide-react';
+import { Search, ChevronLeft, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, SlidersHorizontal } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function StorePage() {
@@ -10,6 +10,7 @@ export default function StorePage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
+  const [showFilters, setShowFilters] = useState(false);
 
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedBrand, setSelectedBrand] = useState(searchParams.get('brand') || 'all');
@@ -33,15 +34,11 @@ export default function StorePage() {
     { code: 'maxtor', name: 'Maxtor' }, { code: 'kiowa', name: 'Kiowa' },
   ];
 
-  // تأخير إرسال البحث (Debounce)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery);
-    }, 400);
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 400);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // تحديث الـ URL عند تغيير أي فلتر
   useEffect(() => {
     const params = new URLSearchParams();
     if (selectedCategory !== 'all') params.set('category', selectedCategory);
@@ -50,7 +47,6 @@ export default function StorePage() {
     setSearchParams(params, { replace: true });
   }, [selectedCategory, selectedBrand, debouncedQuery, setSearchParams]);
 
-  // جلب البيانات من الـ API
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -104,127 +100,124 @@ export default function StorePage() {
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', system-ui, sans-serif", paddingBottom: 40 }}>
       
-      {/* الهيدر العلوي */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Link to="/" style={{ textDecoration: 'none', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 2, fontWeight: 700, fontSize: 13 }}>
+      {/* الهيدر العلوي - مضغوط */}
+      <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '10px 12px', position: 'sticky', top: 0, zIndex: 30 }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+            <Link to="/" style={{ textDecoration: 'none', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 2, fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
               <ChevronLeft size={18} /> الرئيسية
             </Link>
-            <h1 style={{ fontSize: 'clamp(15px, 4vw, 18px)', fontWeight: 800, margin: 0, color: '#0f172a' }}>المتجر الإلكتروني</h1>
+            <h1 style={{ fontSize: 15, fontWeight: 800, margin: 0, color: '#0f172a', whiteSpace: 'nowrap' }}>المتجر</h1>
+          </div>
+
+          {/* بحث مضغوط في الهيدر */}
+          <div style={{ position: 'relative', flex: 1, maxWidth: 350 }}>
+            <input
+              type="text"
+              placeholder="ابحث..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{ width: '100%', padding: '8px 32px 8px 28px', border: '1px solid #cbd5e1', borderRadius: 20, outline: 'none', boxSizing: 'border-box', fontSize: 12, color: '#1e293b', background: '#f8fafc' }}
+            />
+            <Search size={14} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0 }}>
+                <X size={14} />
+              </button>
+            )}
           </div>
 
           <button
-            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-            style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700 }}
-            title="تغيير طريقة العرض"
+            onClick={() => setShowFilters(!showFilters)}
+            style={{ background: showFilters ? '#eff6ff' : '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 20, padding: '7px 10px', cursor: 'pointer', color: showFilters ? '#2563eb' : '#475569', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, flexShrink: 0 }}
           >
-            {viewMode === 'grid' ? <List size={16} /> : <Grid size={16} />}
-            <span style={{ display: 'inline-block' }}>{viewMode === 'grid' ? 'قائمة' : 'شبكة'}</span>
+            <SlidersHorizontal size={14} /> فلاتر
           </button>
+
+          <button
+            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+            style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 20, padding: '7px 10px', cursor: 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, flexShrink: 0 }}
+          >
+            {viewMode === 'grid' ? <List size={14} /> : <Grid size={14} />}
+          </button>
+        </div>
+
+        {/* شريط التصنيفات - أفقي صغير تحت الهيدر */}
+        <div style={{ maxWidth: 1100, margin: '8px auto 0', display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+          {categories.map(cat => {
+            const Icon = cat.icon;
+            const isActive = selectedCategory === cat.key;
+            return (
+              <button
+                key={cat.key}
+                onClick={() => setSelectedCategory(cat.key)}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: 16,
+                  border: isActive ? '2px solid #3b82f6' : '1px solid #e2e8f0',
+                  background: isActive ? '#eff6ff' : '#fff',
+                  color: isActive ? '#2563eb' : '#64748b',
+                  cursor: 'pointer',
+                  fontWeight: isActive ? 700 : 600,
+                  fontSize: 11,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <Icon size={12} style={{ color: isActive ? '#2563eb' : cat.color }} />
+                {cat.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '12px 12px 24px' }}>
-        
-        {/* شريط الفلاتر والبحث */}
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 12, marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-          
-          {/* التصنيفات */}
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: 12, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-            {categories.map(cat => {
-              const Icon = cat.icon;
-              const isActive = selectedCategory === cat.key;
-              return (
-                <button
-                  key={cat.key}
-                  onClick={() => setSelectedCategory(cat.key)}
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: 8,
-                    border: isActive ? '2px solid #3b82f6' : '1px solid #e2e8f0',
-                    background: isActive ? '#eff6ff' : '#fff',
-                    color: isActive ? '#2563eb' : '#64748b',
-                    cursor: 'pointer',
-                    fontWeight: isActive ? 700 : 600,
-                    fontSize: 12,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  <Icon size={14} style={{ color: isActive ? '#2563eb' : cat.color }} />
-                  {cat.label}
-                </button>
-              );
-            })}
-          </div>
+      {/* فلاتر إضافية - تظهر عند الضغط على زر فلاتر */}
+      {showFilters && (
+        <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '10px 12px', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+          <select
+            value={selectedBrand}
+            onChange={e => setSelectedBrand(e.target.value)}
+            style={{ padding: '7px 10px', border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', outline: 'none', cursor: 'pointer', fontSize: 12, color: '#334155', flex: 1, minWidth: 140, maxWidth: 200 }}
+          >
+            {brands.map(b => <option key={b.code} value={b.code}>{b.name}</option>)}
+          </select>
 
-          {/* أدوات البحث والتصفية */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8, alignItems: 'center' }}>
-            
-            {/* حقل البحث */}
-            <div style={{ position: 'relative', gridColumn: '1 / -1' }}>
-              <input
-                type="text"
-                placeholder="ابحث برقم الكارت، اسم الموديل..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                style={{ width: '100%', padding: '10px 36px 10px 36px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none', boxSizing: 'border-box', fontSize: 13, color: '#1e293b' }}
-              />
-              <Search size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2 }}
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </div>
-
-            {/* القائمة المنسدلة للماركات */}
-            <select
-              value={selectedBrand}
-              onChange={e => setSelectedBrand(e.target.value)}
-              style={{ width: '100%', padding: '9px 10px', border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', outline: 'none', cursor: 'pointer', fontSize: 12, color: '#334155' }}
-            >
-              {brands.map(b => <option key={b.code} value={b.code}>{b.name}</option>)}
-            </select>
-
-            {/* ترتيب النتائج */}
-            <select
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              style={{ width: '100%', padding: '9px 10px', border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', outline: 'none', cursor: 'pointer', fontSize: 12, color: '#334155' }}
-            >
-              <option value="newest">الأحدث أولاً</option>
-              <option value="price-low">السعر: من الأدنى للأعلى</option>
-              <option value="price-high">السعر: من الأعلى للأدنى</option>
-            </select>
-          </div>
-        </div>
-
-        {/* معلومات النتائج وزر إعادة الضبط */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <div style={{ color: '#64748b', fontSize: 12, fontWeight: 700 }}>
-            {loading ? 'جاري البحث...' : `${products.length} قطعة متوفرة`}
-          </div>
+          <select
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value)}
+            style={{ padding: '7px 10px', border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', outline: 'none', cursor: 'pointer', fontSize: 12, color: '#334155', flex: 1, minWidth: 140, maxWidth: 200 }}
+          >
+            <option value="newest">الأحدث أولاً</option>
+            <option value="price-low">السعر: من الأدنى</option>
+            <option value="price-high">السعر: من الأعلى</option>
+          </select>
 
           {(selectedCategory !== 'all' || selectedBrand !== 'all' || searchQuery) && (
             <button
               onClick={handleClearFilters}
               style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
             >
-              <X size={14} /> مسح الفلاتر
+              <X size={14} /> مسح
             </button>
           )}
         </div>
+      )}
 
-        {/* عرض المنتجات / حالة التحميل */}
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '10px 12px 24px' }}>
+        
+        {/* عدد النتائج */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <div style={{ color: '#64748b', fontSize: 12, fontWeight: 700 }}>
+            {loading ? 'جاري البحث...' : `${products.length} قطعة`}
+          </div>
+        </div>
+
+        {/* عرض المنتجات */}
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 }}>
             {[1, 2, 3, 4, 5, 6].map(n => (
@@ -271,7 +264,6 @@ export default function StorePage() {
                     position: 'relative'
                   }}
                 >
-                  {/* شارة توفر المنتج */}
                   <span style={{
                     position: 'absolute',
                     top: 8,
@@ -287,7 +279,6 @@ export default function StorePage() {
                     {isAvailable ? 'متوفر' : 'غير متوفر'}
                   </span>
 
-                  {/* صورة المنتج */}
                   <div style={{ 
                     background: '#fafafa', 
                     height: viewMode === 'list' ? 95 : 140, 
@@ -307,14 +298,13 @@ export default function StorePage() {
                     />
                   </div>
 
-                  {/* التفاصيل والأسعار */}
                   <div style={{ padding: 10, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 6 }}>
                     <div>
                       <h2 style={{ fontSize: 13, fontWeight: 700, margin: '0 0 4px 0', color: '#0f172a', lineHeight: 1.3 }}>
                         {product.name || product.title}
                       </h2>
                       <p style={{ fontSize: 11, color: '#64748b', margin: 0, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {product.description || 'قطعة غيار إلكترونية ذات جودة عالية'}
+                        {product.description || 'قطعة غيار إلكترونية'}
                       </p>
                     </div>
 
