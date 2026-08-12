@@ -3,7 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Package, ShoppingBag, QrCode, Eye, EyeOff, 
   CheckCircle2, AlertCircle, Loader2, KeyRound, Shield,
-  Database, Download, Upload, RefreshCw, Settings
+  Database, Download, Upload, Settings
 } from 'lucide-react';
 
 const MENU = [
@@ -76,37 +76,46 @@ export default function AdminSettingsPage() {
     setSubmitting(false);
   };
 
-  // إنشاء نسخة احتياطية
+  // إنشاء نسخة احتياطية - الطريقة الصحيحة
   const handleBackup = async () => {
     setBackupLoading(true);
     setBackupFeedback({ type: '', text: '' });
+    
     try {
       const res = await fetch(`${API}/backup`, {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'فشل إنشاء النسخة الاحتياطية');
-      }
-      
-      // تنزيل الملف
+      // لا تحاول قراءة JSON - استقبل الملف مباشرة
       const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
       
-      setBackupFeedback({ type: 'success', text: 'تم إنشاء النسخة الاحتياطية بنجاح' });
+      // تحقق من نوع المحتوى
+      const contentType = res.headers.get('Content-Type');
+      
+      if (contentType && contentType.includes('application/json')) {
+        // تنزيل الملف
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        setBackupFeedback({ type: 'success', text: 'تم تنزيل النسخة الاحتياطية بنجاح' });
+      } else {
+        // إذا كان الرد HTML (خطأ)
+        const text = await blob.text();
+        console.error('Server returned HTML:', text.substring(0, 200));
+        throw new Error('السيرفر غير متاح حالياً');
+      }
     } catch (err) {
       console.error('Backup error:', err);
       setBackupFeedback({ type: 'error', text: err.message || 'فشل إنشاء النسخة الاحتياطية' });
     }
+    
     setBackupLoading(false);
   };
 
@@ -154,7 +163,6 @@ export default function AdminSettingsPage() {
           if (data.success) {
             setBackupFeedback({ type: 'success', text: 'تم استرجاع البيانات بنجاح' });
             setRestoreFile(null);
-            // إعادة تعيين input file
             const fileInput = document.getElementById('restore-file-input');
             if (fileInput) fileInput.value = '';
           } else {
@@ -206,7 +214,6 @@ export default function AdminSettingsPage() {
           )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {/* زر النسخ الاحتياطي */}
             <button 
               onClick={handleBackup} 
               disabled={backupLoading}
