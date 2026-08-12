@@ -11,12 +11,14 @@ const MENU = [
   { path: '/admin/settings', label: 'إعدادات', icon: Settings },
 ];
 
-const API = 'https://dzboard.onrender.com/api';
+// استخدام متغيرات البيئة مع وجود رابط افتراضي
+const API = import.meta.env.VITE_API_URL || 'https://dzboard.onrender.com/api';
 
 export default function AdminScanPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const token = localStorage.getItem('dzboard_admin_token');
+  
   const [scanning, setScanning] = useState(false);
   const [loading, setLoading] = useState(false);
   const [manualCode, setManualCode] = useState('');
@@ -28,14 +30,16 @@ export default function AdminScanPage() {
   useEffect(() => { 
     if (!token) navigate('/admin'); 
     return () => stopScan(); 
-  }, []);
+  }, [navigate, token]);
 
   const stopScan = async () => {
     if (html5QrCodeRef.current?.isScanning) {
       try { 
         await html5QrCodeRef.current.stop(); 
         html5QrCodeRef.current.clear(); 
-      } catch {}
+      } catch (err) {
+        console.error('فشل إيقاف الكاميرا:', err);
+      }
     }
     setScanning(false);
   };
@@ -53,91 +57,46 @@ export default function AdminScanPage() {
         
         await qrScanner.start(
           { facingMode: 'environment' }, 
-          { fps: 10, qrbox: { width: 220, height: 220 } },
+          { fps: 10, qrbox: { width: 250, height: 250 } }, // تكبير مربع المسح قليلاً لسهولة القراءة
           async (text) => { 
             await stopScan(); 
             const clean = text?.replace(/\r?\n|\r/g, '').trim() || ''; 
             setScannedCode(clean); 
             fetchItemDetails(clean); 
           }, 
-          () => {}
+          () => {} // تجاهل أخطاء المسح المستمرة
         );
       } catch { 
-        setErrorMsg('تعذر تشغيل الكاميرا.'); 
+        setErrorMsg('تعذر تشغيل الكاميرا. تأكد من منح الصلاحيات.'); 
         setScanning(false); 
       }
     }, 100);
   };
 
+  // جلب البيانات معتمدًا على الخادم (Backend)
   const fetchItemDetails = async (code) => {
-    const clean = code?.trim(); 
-    if (!clean) return;
+    const searchCode = code?.trim(); 
+    if (!searchCode) return;
     
     setLoading(true); 
     setErrorMsg(''); 
     setItem(null);
     
     try {
-      let searchCode = clean;
-      const idMatch = clean.match(/(\d+)/);
-      if (idMatch) {
-        searchCode = idMatch[1];
-      }
-      
-      console.log('Search code:', searchCode);
-      
-      // جلب جميع قطع المخزون
-      const res = await fetch(`${API}/inventory/items`, { 
+      // نعتمد هنا على API جديد في الخادم يقوم بالبحث الشامل (عن طريق الباركود، SKU، أو ID)
+      const res = await fetch(`${API}/inventory/search?query=${encodeURIComponent(searchCode)}`, { 
         headers: { Authorization: `Bearer ${token}` } 
       });
       const data = await res.json();
       
-      if (data?.success && data?.items?.length > 0) {
-        // ابحث بالباركود أو SKU أو ID أو product_id
-        const found = data.items.find(i => 
-          i.barcode?.trim() === searchCode || 
-          i.sku?.trim() === searchCode ||
-          String(i.id) === searchCode ||
-          String(i.product_id) === searchCode
-        );
-        
-        if (found) {
-          setItem(found);
-          setLoading(false);
-          return;
-        }
-      }
-      
-      // إذا لم يجد في inventory، ابحث في products
-      const productRes = await fetch(`${API}/products/${searchCode}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const productData = await productRes.json();
-      
-      if (productData?.success && productData?.product) {
-        const product = productData.product;
-        
-        // ابحث عن قطعة مخزون مرتبطة
-        const relatedItem = data?.items?.find(i => i.product_id === product.id);
-        
-        if (relatedItem) {
-          setItem(relatedItem);
-        } else {
-          // اعرض المنتج مع بيانات كاملة
-          setItem({
-            ...product,
-            product_id: product.id,
-            sku: '-',
-            barcode: '-',
-            status: 'available'
-          });
-        }
+      if (data?.success && data?.item) {
+        setItem(data.item);
       } else {
-        setErrorMsg(`لم يتم العثور على: "${clean}"`);
+        setErrorMsg(`لم يتم العثور على منتج برمز: "${searchCode}"`);
       }
     } catch (err) {
       console.error('Fetch error:', err);
-      setErrorMsg('خطأ في الاتصال');
+      setErrorMsg('خطأ في الاتصال بالخادم.');
     } finally { 
       setLoading(false); 
     }
@@ -151,81 +110,33 @@ export default function AdminScanPage() {
     } 
   };
 
+  // تبديل حالة المنتج بطلب واحد مبسط
   const toggleItemStatus = async () => {
     if (!item) return; 
     setLoading(true);
     
-    const ns = item.status === 'available' ? 'sold' : 'available';
+    const newStatus = item.status === 'available' ? 'sold' : 'available';
     
     try {
-      // إذا كانت قطعة مخزون (لها barcode حقيقي)
-      if (item.barcode && item.barcode !== '-') {
-        const res = await fetch(`${API}/inventory/items/${item.id}`, { 
-          method: 'PUT', 
-          headers: { 
-            'Content-Type': 'application/json', 
-            Authorization: `Bearer ${token}` 
-          }, 
-          body: JSON.stringify({ status: ns }) 
-        });
-        
-        const data = await res.json();
-        
-        if (data.success) {
-          setItem({ ...item, status: ns });
-        } else {
-          setErrorMsg(data.error || 'فشل التعديل');
-        }
+      const res = await fetch(`${API}/inventory/items/${item.id}/status`, { 
+        method: 'PUT', 
+        headers: { 
+          'Content-Type': 'application/json', 
+          Authorization: `Bearer ${token}` 
+        }, 
+        body: JSON.stringify({ status: newStatus }) 
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        setItem(prev => ({ ...prev, status: newStatus }));
       } else {
-        // هذا منتج من products - ابحث عن قطعة مخزون أو حدث المنتج
-        const res = await fetch(`${API}/inventory/items`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
-        
-        const relatedItem = data.items?.find(i => i.product_id === item.product_id || i.product_id === item.id);
-        
-        if (relatedItem) {
-          // حدث قطعة المخزون المرتبطة
-          const updateRes = await fetch(`${API}/inventory/items/${relatedItem.id}`, { 
-            method: 'PUT', 
-            headers: { 
-              'Content-Type': 'application/json', 
-              Authorization: `Bearer ${token}` 
-            }, 
-            body: JSON.stringify({ status: ns }) 
-          });
-          
-          const updateData = await updateRes.json();
-          
-          if (updateData.success) {
-            setItem({ ...item, ...relatedItem, status: ns });
-          } else {
-            setErrorMsg(updateData.error || 'فشل التعديل');
-          }
-        } else {
-          // حدث المنتج مباشرة
-          const productRes = await fetch(`${API}/products/${item.product_id || item.id}`, { 
-            method: 'PUT', 
-            headers: { 
-              'Content-Type': 'application/json', 
-              Authorization: `Bearer ${token}` 
-            }, 
-            body: JSON.stringify({ active: ns === 'available' }) 
-          });
-          
-          const productData = await productRes.json();
-          
-          if (productData.success) {
-            setItem({ ...item, status: ns });
-          } else {
-            setErrorMsg(productData.error || 'فشل التعديل');
-          }
-        }
+        setErrorMsg(data.error || 'فشل تعديل حالة المنتج');
       }
     } catch (err) {
       console.error('Toggle error:', err);
-      setErrorMsg('خطأ');
+      setErrorMsg('حدث خطأ أثناء الاتصال بالخادم.');
     } finally { 
       setLoading(false); 
     }
@@ -234,6 +145,8 @@ export default function AdminScanPage() {
   return (
     <div style={{ background: '#f8fafc', direction: 'rtl', minHeight: '100vh', paddingBottom: 70, fontFamily: 'system-ui' }}>
       <main style={{ padding: 16, maxWidth: 500, margin: '0 auto' }}>
+        
+        {/* شريط البحث اليدوي */}
         <form onSubmit={handleManualSearch} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 12, marginBottom: 12 }}>
           <div style={{ display: 'flex', gap: 8 }}>
             <input 
@@ -245,59 +158,68 @@ export default function AdminScanPage() {
             />
             <button 
               type="submit" 
-              style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontWeight: 800, cursor: 'pointer' }}
+              disabled={loading}
+              style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontWeight: 800, cursor: 'pointer', opacity: loading ? 0.7 : 1 }}
             >
               <Search size={16} /> بحث
             </button>
           </div>
         </form>
 
+        {/* منطقة المسح والنتائج */}
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, textAlign: 'center' }}>
+          
+          {/* الحالة الافتراضية - زر تشغيل الكاميرا */}
           {!scanning && !item && !loading && (
-            <div>
-              <Camera size={48} style={{ color: '#2563eb', marginBottom: 12 }} />
-              <h3 style={{ fontSize: 16 }}>مسح بكاميرا الهاتف</h3>
+            <div style={{ padding: '20px 0' }}>
+              <Camera size={48} style={{ color: '#2563eb', marginBottom: 12, margin: '0 auto' }} />
+              <h3 style={{ fontSize: 16, margin: '0 0 12px 0' }}>مسح بكاميرا الهاتف</h3>
               <button 
                 onClick={startScan} 
-                style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 24px', fontWeight: 800, cursor: 'pointer', marginTop: 12 }}
+                style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 24px', fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}
               >
                 <Camera size={18} /> بدء الكاميرا
               </button>
             </div>
           )}
           
+          {/* الكاميرا قيد التشغيل */}
           {scanning && (
             <div>
               <div id="reader" style={{ width: '100%', borderRadius: 12, overflow: 'hidden', border: '2px solid #2563eb' }} />
               <button 
                 onClick={stopScan} 
-                style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: 8, padding: '8px 16px', fontWeight: 700, cursor: 'pointer', marginTop: 8 }}
+                style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: 8, padding: '8px 24px', fontWeight: 700, cursor: 'pointer', marginTop: 12 }}
               >
-                إلغاء
+                إلغاء المسح
               </button>
             </div>
           )}
           
+          {/* مؤشر التحميل */}
           {loading && (
-            <div style={{ padding: 40 }}>
-              <Loader2 size={36} className="spin" />
+            <div style={{ padding: 40, display: 'flex', justifyContent: 'center' }}>
+              <Loader2 size={36} style={{ animation: 'spin 1s linear infinite', color: '#2563eb' }} />
             </div>
           )}
           
+          {/* رسائل الخطأ */}
           {errorMsg && (
             <div style={{ background: '#fef2f2', color: '#b91c1c', padding: 12, borderRadius: 10, margin: '12px 0', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
               <AlertCircle size={18} /> {errorMsg}
             </div>
           )}
           
-          {item && (
+          {/* تفاصيل المنتج المسترجع */}
+          {item && !loading && (
             <div style={{ textAlign: 'right', background: '#f8fafc', borderRadius: 12, padding: 16, border: '1px solid #e2e8f0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <strong>{item.name}</strong>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
+                <strong style={{ fontSize: 16 }}>{item.name}</strong>
                 <span style={{ 
                   padding: '4px 10px', 
                   borderRadius: 20, 
-                  fontSize: 12, 
+                  fontSize: 12,
+                  fontWeight: 'bold',
                   background: item.status === 'available' ? '#d1fae5' : '#fee2e2', 
                   color: item.status === 'available' ? '#047857' : '#b91c1c' 
                 }}>
@@ -305,16 +227,18 @@ export default function AdminScanPage() {
                 </span>
               </div>
               
-              <div style={{ fontSize: 13 }}>
-                SKU: <code>{item.sku}</code> | رف: {item.shelf || '-'} | باركود: <code>{item.barcode}</code>
+              <div style={{ fontSize: 13, color: '#475569', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div><strong>SKU:</strong> <code style={{ background: '#e2e8f0', padding: '2px 4px', borderRadius: 4 }}>{item.sku}</code></div>
+                <div><strong>الباركود:</strong> <code style={{ background: '#e2e8f0', padding: '2px 4px', borderRadius: 4 }}>{item.barcode}</code></div>
+                <div><strong>الرف:</strong> {item.shelf || '-'}</div>
               </div>
               
-              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
                 <button 
                   onClick={toggleItemStatus} 
                   style={{ 
                     flex: 1, 
-                    background: item.status === 'available' ? '#d97706' : '#2563eb', 
+                    background: item.status === 'available' ? '#f59e0b' : '#2563eb', // البرتقالي للبيع، الأزرق للإرجاع
                     color: '#fff', 
                     border: 'none', 
                     borderRadius: 8, 
@@ -323,14 +247,14 @@ export default function AdminScanPage() {
                     cursor: 'pointer' 
                   }}
                 >
-                  {item.status === 'available' ? 'بيع' : 'إرجاع'}
+                  {item.status === 'available' ? 'تحديد كمباع' : 'إرجاع للمخزون'}
                 </button>
                 
                 <button 
                   onClick={() => { setItem(null); setManualCode(''); setScannedCode(''); }} 
-                  style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, padding: '10px', fontWeight: 700, cursor: 'pointer' }}
+                  style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, padding: '10px 16px', fontWeight: 700, cursor: 'pointer' }}
                 >
-                  مسح آخر
+                  مسح جديد
                 </button>
               </div>
             </div>
@@ -338,17 +262,11 @@ export default function AdminScanPage() {
         </div>
       </main>
 
+      {/* شريط التنقل السفلي */}
       <nav style={{ 
-        display: 'flex', 
-        position: 'fixed', 
-        bottom: 0, 
-        left: 0, 
-        right: 0, 
-        background: '#fff', 
-        borderTop: '1px solid #e2e8f0', 
-        justifyContent: 'space-around', 
-        padding: '8px 0', 
-        zIndex: 40 
+        display: 'flex', position: 'fixed', bottom: 0, left: 0, right: 0, 
+        background: '#fff', borderTop: '1px solid #e2e8f0', justifyContent: 'space-around', 
+        padding: '8px 0', zIndex: 40, paddingBottom: 'max(8px, env(safe-area-inset-bottom))'
       }}>
         {MENU.map(item => {
           const Icon = item.icon; 
@@ -358,17 +276,12 @@ export default function AdminScanPage() {
               key={item.path} 
               to={item.path} 
               style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                gap: 2, 
-                textDecoration: 'none', 
-                color: isActive ? '#2563eb' : '#64748b', 
-                fontWeight: isActive ? 800 : 600, 
-                fontSize: 10 
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, 
+                textDecoration: 'none', color: isActive ? '#2563eb' : '#64748b', 
+                fontWeight: isActive ? 800 : 600, fontSize: 11
               }}
             >
-              <Icon size={20} />
+              <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
               <span>{item.label}</span>
             </Link>
           );

@@ -12,7 +12,8 @@ router.get('/items', async (req, res) => {
       .order('id', { ascending: false });
     
     if (search) {
-      query = query.or(`sku.ilike.%${search}%,name.ilike.%${search}%,barcode.ilike.%${search}%`);
+      const cleanSearch = search.trim();
+      query = query.or(`sku.eq.${cleanSearch},barcode.eq.${cleanSearch},name.ilike.%${cleanSearch}%`);
     }
     
     const { data: items, error } = await query;
@@ -48,12 +49,102 @@ router.get('/items', async (req, res) => {
   }
 });
 
+// GET /search - بحث شامل عن قطعة أو منتج
+router.get('/search', async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || !query.trim()) {
+      return res.status(400).json({ success: false, error: 'Query is required' });
+    }
+    
+    const cleanQuery = query.trim();
+    
+    // 1. ابحث في inventory_items بالباركود أو SKU أو ID أو product_id
+    const { data: items, error } = await supabase
+      .from('inventory_items')
+      .select('*')
+      .or(`barcode.eq.${cleanQuery},sku.eq.${cleanQuery},id.eq.${cleanQuery},product_id.eq.${cleanQuery}`)
+      .limit(1);
+    
+    if (error) {
+      console.error('Search items error:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+    
+    if (items && items.length > 0) {
+      const item = items[0];
+      
+      // جلب تفاصيل المنتج المرتبط
+      if (item.product_id) {
+        const { data: product } = await supabase
+          .from('products')
+          .select('image,price')
+          .eq('id', item.product_id)
+          .single();
+        
+        if (product) {
+          item.image = product.image;
+          item.price = product.price;
+        }
+      }
+      
+      return res.json({ success: true, item });
+    }
+    
+    // 2. إذا لم يجد في inventory_items، ابحث في products
+    const { data: products, error: productError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', cleanQuery)
+      .limit(1);
+    
+    if (productError) {
+      console.error('Search products error:', productError);
+      return res.status(500).json({ success: false, error: productError.message });
+    }
+    
+    if (products && products.length > 0) {
+      const product = products[0];
+      
+      // ابحث عن قطعة مخزون مرتبطة
+      const { data: relatedItems } = await supabase
+        .from('inventory_items')
+        .select('*')
+        .eq('product_id', product.id)
+        .limit(1);
+      
+      if (relatedItems && relatedItems.length > 0) {
+        return res.json({ success: true, item: relatedItems[0] });
+      }
+      
+      // إذا لا توجد قطعة، ارجع المنتج مع بيانات إضافية
+      return res.json({ 
+        success: true, 
+        item: {
+          ...product,
+          product_id: product.id,
+          sku: '-',
+          barcode: '-',
+          shelf: '-',
+          status: 'available'
+        }
+      });
+    }
+    
+    return res.json({ success: false, error: 'Not found' });
+    
+  } catch (err) {
+    console.error('Search error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // POST /items - إضافة قطعة أو أكثر ومزامنة الكمية مع جدول المنتجات
 router.post('/items', async (req, res) => {
   try {
     const { name, price, quantity, category, brand, image } = req.body;
     
-    // تنظيف البيانات
     const cleanName = String(name || '').trim();
     const cleanPrice = Number(price) || 0;
     const cleanQuantity = Math.max(1, Number(quantity) || 1);
@@ -65,7 +156,6 @@ router.post('/items', async (req, res) => {
       });
     }
 
-    // إنشاء المنتج في جدول products
     const { data: product, error: productError } = await supabase
       .from('products')
       .insert({
@@ -89,7 +179,6 @@ router.post('/items', async (req, res) => {
       });
     }
 
-    // جلب العدد الحالي للقطع لإنشاء SKU و Barcode متسلسلين
     const { count, error: countError } = await supabase
       .from('inventory_items')
       .select('*', { count: 'exact', head: true });
@@ -105,7 +194,6 @@ router.post('/items', async (req, res) => {
     let currentCount = count || 0;
     const newItems = [];
 
-    // تجهيز القطع بعدد الكمية المطلوب إضافتها
     for (let i = 0; i < cleanQuantity; i++) {
       currentCount++;
       const sku = `DZB-${String(currentCount).padStart(3, '0')}`;
@@ -122,7 +210,6 @@ router.post('/items', async (req, res) => {
       });
     }
 
-    // حفظ جميع القطع دفعة واحدة
     const { data: items, error: itemsError } = await supabase
       .from('inventory_items')
       .insert(newItems)
@@ -151,7 +238,7 @@ router.post('/items', async (req, res) => {
   }
 });
 
-// PUT /items/:id - تحديث حالة القطعة وتحديث كمية المنتج في المتجر
+// PUT /items/:id - تحديث حالة القطعة وتحديث كمية المنتج
 router.put('/items/:id', async (req, res) => {
   try {
     const { status } = req.body;
@@ -164,7 +251,6 @@ router.put('/items/:id', async (req, res) => {
       });
     }
     
-    // جلب الحالة القديمة ورقم المنتج المربوط
     const { data: old, error: oldError } = await supabase
       .from('inventory_items')
       .select('product_id,status')
@@ -179,7 +265,6 @@ router.put('/items/:id', async (req, res) => {
       });
     }
 
-    // تحديث حالة القطعة
     const { data: item, error } = await supabase
       .from('inventory_items')
       .update({ status })
@@ -195,7 +280,6 @@ router.put('/items/:id', async (req, res) => {
       });
     }
 
-    // مزامنة المخزون في جدول المنتجات
     if (old?.product_id) {
       const { data: product, error: productError } = await supabase
         .from('products')
@@ -225,6 +309,100 @@ router.put('/items/:id', async (req, res) => {
       success: false, 
       error: err.message 
     });
+  }
+});
+
+// PUT /items/:id/status - تحديث حالة قطعة أو منتج (شامل)
+router.put('/items/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const itemId = parseInt(req.params.id, 10);
+    
+    if (!itemId || !status) {
+      return res.status(400).json({ success: false, error: 'Invalid request' });
+    }
+    
+    // 1. حاول تحديث قطعة مخزون
+    const { data: item, error: itemError } = await supabase
+      .from('inventory_items')
+      .select('id,product_id,status')
+      .eq('id', itemId)
+      .single();
+    
+    if (!itemError && item) {
+      const { data: updatedItem, error: updateError } = await supabase
+        .from('inventory_items')
+        .update({ status })
+        .eq('id', itemId)
+        .select()
+        .single();
+      
+      if (updateError) {
+        return res.status(500).json({ success: false, error: updateError.message });
+      }
+      
+      // تحديث stock في products
+      if (item.product_id) {
+        const { data: product } = await supabase
+          .from('products')
+          .select('stock')
+          .eq('id', item.product_id)
+          .single();
+        
+        if (product) {
+          if (status === 'sold' && item.status === 'available') {
+            await supabase
+              .from('products')
+              .update({ stock: Math.max(0, (product.stock || 0) - 1) })
+              .eq('id', item.product_id);
+          } else if (status === 'available' && item.status === 'sold') {
+            await supabase
+              .from('products')
+              .update({ stock: (product.stock || 0) + 1 })
+              .eq('id', item.product_id);
+          }
+        }
+      }
+      
+      return res.json({ success: true, item: updatedItem });
+    }
+    
+    // 2. إذا لم توجد قطعة، حدث المنتج مباشرة
+    const { data: product, error: productError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', itemId)
+      .single();
+    
+    if (!productError && product) {
+      const { data: updatedProduct, error: updateError } = await supabase
+        .from('products')
+        .update({ active: status === 'available' })
+        .eq('id', itemId)
+        .select()
+        .single();
+      
+      if (updateError) {
+        return res.status(500).json({ success: false, error: updateError.message });
+      }
+      
+      return res.json({ 
+        success: true, 
+        item: {
+          ...updatedProduct,
+          product_id: updatedProduct.id,
+          sku: '-',
+          barcode: '-',
+          status: status
+        }
+      });
+    }
+    
+    return res.status(404).json({ success: false, error: 'Item not found' });
+    
+  } catch (err) {
+    console.error('Status update error:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
