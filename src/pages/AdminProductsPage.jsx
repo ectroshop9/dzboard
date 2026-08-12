@@ -3,7 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   Plus, Trash2, Save, Package, Monitor, Zap, Cpu, 
   Search, Loader2, Upload, Edit3, X, CheckCircle, AlertCircle,
-  LayoutDashboard, ClipboardList, ScanLine, FileText
+  LayoutDashboard, ClipboardList, ScanLine, FileText, Settings
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -125,7 +125,6 @@ export default function AdminProductsPage() {
   };
 
   const handleSave = async () => {
-    // التحقق من البيانات
     if (!formData.name || formData.name.trim() === '') {
       showToast('الاسم مطلوب', 'error');
       return;
@@ -141,11 +140,12 @@ export default function AdminProductsPage() {
 
     try {
       if (editingProduct) {
-        // تحديث منتج موجود
+        // تحديث منتج موجود - مع stock
         const payload = {
           name: formData.name.trim(),
           category: formData.category || 'tcon',
           price: priceNum,
+          stock: parseInt(formData.stock, 10) || 0,
           image: formData.image || '',
           brand: formData.brand || 'generic',
           description: formData.description || ''
@@ -176,8 +176,6 @@ export default function AdminProductsPage() {
           image: formData.image || ''
         };
 
-        console.log('Sending payload:', payload);
-
         const res = await fetch(`${API}/inventory/items`, { 
           method: 'POST', 
           headers: getAuthHeader(), 
@@ -185,7 +183,6 @@ export default function AdminProductsPage() {
         });
         
         const data = await res.json();
-        console.log('Server response:', data);
         
         if (!res.ok || !data.success) {
           throw new Error(data.error?.message || data.error || 'فشل حفظ القطعة');
@@ -227,7 +224,7 @@ export default function AdminProductsPage() {
   const handlePrintBarcode = (product, barcodeCode) => {
     const code = barcodeCode || items.find(i => i.product_id === product.id)?.barcode || product.id;
     const printWindow = window.open('', '_blank', 'width=500,height=500');
-    printWindow.document.write(`<!DOCTYPE html><html dir="rtl"><head><title>${product.name}</title><style>@page{size:auto;margin:0}body{font-family:system-ui;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#fff}.card{border:2px dashed #000;padding:16px;text-align:center;max-width:280px;border-radius:8px}.title{font-size:16px;font-weight:800;margin-bottom:8px;word-break:break-word}img{width:140px;height:140px}.code{font-size:12px;font-family:monospace;margin-top:4px}.price{font-size:15px;font-weight:bold;margin-top:6px;border-top:1px solid #ddd;padding-top:4px}</style></head><body><div class="card"><div class="title">${product.name}</div><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${code}" /><div class="code">ID: ${code}</div><div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div></div><script>setTimeout(()=>{window.print();window.close()},500)</script></body></html>`);
+    printWindow.document.write(`<!DOCTYPE html><html dir="rtl"><head><title>${product.name}</title><style>@page{size:auto;margin:0}body{font-family:system-ui;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#fff}.card{border:2px dashed #000;padding:16px;text-align:center;max-width:280px;border-radius:8px}.title{font-size:16px;font-weight:800;margin-bottom:8px;word-break:break-word}img{width:140px;height:140px}.code{font-size:12px;font-family:monospace;margin-top:4px}.price{font-size:15px;font-weight:bold;margin-top:6px;border-top:1px solid #ddd;padding-top:4px}</style></head><body><div class="card"><div class="title">${product.name}</div><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${code}" /><div class="code">Barcode: ${code}</div><div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div></div><script>setTimeout(()=>{window.print();window.close()},500)</script></body></html>`);
     printWindow.document.close();
   };
 
@@ -244,6 +241,7 @@ export default function AdminProductsPage() {
     { label: 'الطلبات', path: '/admin/orders', icon: ClipboardList },
     { label: 'QR', path: '/admin/scan', icon: ScanLine },
     { label: 'الطلبات الخاصة', path: '/admin/requests', icon: FileText },
+    { label: 'إعدادات', path: '/admin/settings', icon: Settings },
   ];
 
   return (
@@ -279,9 +277,7 @@ export default function AdminProductsPage() {
                 {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
               </select>
               <input className="field-input" type="number" placeholder="السعر *" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
-              {!editingProduct && (
-                <input className="field-input" type="number" placeholder="الكمية *" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
-              )}
+              <input className="field-input" type="number" placeholder="المخزون *" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
               <input className="field-input" placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
               <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', background: '#f1f5f9', borderRadius: 8, fontWeight: 600, fontSize: 13, width: 'fit-content' }}>
                 <Upload size={14} /> {uploading ? 'جاري...' : 'رفع صورة'}
