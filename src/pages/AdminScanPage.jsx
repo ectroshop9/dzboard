@@ -80,7 +80,7 @@ export default function AdminScanPage() {
     try {
       console.log('Original scan:', clean);
       
-      // تنظيف الكود - استخرج الرقم فقط
+      // استخرج الرقم فقط من أي نص
       let searchCode = clean;
       const idMatch = clean.match(/(\d+)/);
       if (idMatch) {
@@ -108,7 +108,7 @@ export default function AdminScanPage() {
           console.log('Found item:', found);
           setItem(found);
         } else {
-          // إذا لم يجد في inventory، ابحث في products
+          // إذا لم يجد، ابحث في products
           const productRes = await fetch(`${API}/products/${searchCode}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -147,7 +147,26 @@ export default function AdminScanPage() {
     const ns = item.status === 'available' ? 'sold' : 'available';
     
     try {
-      const res = await fetch(`${API}/inventory/items/${item.id}`, { 
+      let itemId = item.id;
+      
+      // إذا كان item من products (ليس له barcode)، ابحث عن القطعة المرتبطة
+      if (!item.barcode && !item.sku) {
+        const res = await fetch(`${API}/inventory/items`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        
+        const relatedItem = data.items?.find(i => i.product_id === item.id);
+        if (relatedItem) {
+          itemId = relatedItem.id;
+        } else {
+          setErrorMsg('لا توجد قطعة مخزون مرتبطة بهذا المنتج');
+          setLoading(false);
+          return;
+        }
+      }
+      
+      const res = await fetch(`${API}/inventory/items/${itemId}`, { 
         method: 'PUT', 
         headers: { 
           'Content-Type': 'application/json', 
@@ -161,7 +180,7 @@ export default function AdminScanPage() {
       if (data.success) {
         setItem({ ...item, status: ns });
       } else {
-        setErrorMsg('فشل التعديل');
+        setErrorMsg(data.error || 'فشل التعديل');
       }
     } catch (err) {
       console.error('Toggle error:', err);
@@ -225,7 +244,7 @@ export default function AdminScanPage() {
           )}
           
           {errorMsg && (
-            <div style={{ background: '#fef2f2', color: '#b91c1c', padding: 12, borderRadius: 10, margin: '12px 0' }}>
+            <div style={{ background: '#fef2f2', color: '#b91c1c', padding: 12, borderRadius: 10, margin: '12px 0', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
               <AlertCircle size={18} /> {errorMsg}
             </div>
           )}
@@ -250,21 +269,23 @@ export default function AdminScanPage() {
               </div>
               
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                <button 
-                  onClick={toggleItemStatus} 
-                  style={{ 
-                    flex: 1, 
-                    background: item.status === 'available' ? '#d97706' : '#2563eb', 
-                    color: '#fff', 
-                    border: 'none', 
-                    borderRadius: 8, 
-                    padding: '10px', 
-                    fontWeight: 800, 
-                    cursor: 'pointer' 
-                  }}
-                >
-                  {item.status === 'available' ? 'بيع' : 'إرجاع'}
-                </button>
+                {item.barcode || item.sku ? (
+                  <button 
+                    onClick={toggleItemStatus} 
+                    style={{ 
+                      flex: 1, 
+                      background: item.status === 'available' ? '#d97706' : '#2563eb', 
+                      color: '#fff', 
+                      border: 'none', 
+                      borderRadius: 8, 
+                      padding: '10px', 
+                      fontWeight: 800, 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    {item.status === 'available' ? 'بيع' : 'إرجاع'}
+                  </button>
+                ) : null}
                 
                 <button 
                   onClick={() => { setItem(null); setManualCode(''); setScannedCode(''); }} 
