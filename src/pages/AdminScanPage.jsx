@@ -80,11 +80,11 @@ export default function AdminScanPage() {
     try {
       console.log('Original scan:', clean);
       
-      // تنظيف الكود - استخرج الرقم من "ID: 15" أو "ID 15" أو "15"
+      // تنظيف الكود - استخرج الرقم فقط
       let searchCode = clean;
-      const idMatch = clean.match(/ID:?\s*(\d+)/i);
+      const idMatch = clean.match(/(\d+)/);
       if (idMatch) {
-        searchCode = idMatch[1]; // الرقم فقط
+        searchCode = idMatch[1];
       }
       
       console.log('Search code:', searchCode);
@@ -95,10 +95,8 @@ export default function AdminScanPage() {
       });
       const data = await res.json();
       
-      console.log('Items count:', data?.items?.length);
-      
       if (data?.success && data?.items?.length > 0) {
-        // ابحث عن التطابق بالباركود أو SKU أو ID
+        // ابحث بالباركود أو SKU أو ID أو product_id
         const found = data.items.find(i => 
           i.barcode?.trim() === searchCode || 
           i.sku?.trim() === searchCode ||
@@ -107,17 +105,18 @@ export default function AdminScanPage() {
         );
         
         if (found) {
-          console.log('Found:', found);
+          console.log('Found item:', found);
           setItem(found);
         } else {
-          // جرب البحث المباشر
-          const searchRes = await fetch(`${API}/inventory/items?search=${encodeURIComponent(searchCode)}`, { 
-            headers: { Authorization: `Bearer ${token}` } 
+          // إذا لم يجد في inventory، ابحث في products
+          const productRes = await fetch(`${API}/products/${searchCode}`, {
+            headers: { Authorization: `Bearer ${token}` }
           });
-          const searchData = await searchRes.json();
+          const productData = await productRes.json();
           
-          if (searchData?.success && searchData?.items?.length > 0) {
-            setItem(searchData.items[0]);
+          if (productData?.success && productData?.product) {
+            console.log('Found product:', productData.product);
+            setItem(productData.product);
           } else {
             setErrorMsg(`لم يتم العثور على: "${clean}"`);
           }
@@ -175,7 +174,6 @@ export default function AdminScanPage() {
   return (
     <div style={{ background: '#f8fafc', direction: 'rtl', minHeight: '100vh', paddingBottom: 70, fontFamily: 'system-ui' }}>
       <main style={{ padding: 16, maxWidth: 500, margin: '0 auto' }}>
-        {/* البحث اليدوي */}
         <form onSubmit={handleManualSearch} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 12, marginBottom: 12 }}>
           <div style={{ display: 'flex', gap: 8 }}>
             <input 
@@ -194,7 +192,6 @@ export default function AdminScanPage() {
           </div>
         </form>
 
-        {/* منطقة المسح */}
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, textAlign: 'center' }}>
           {!scanning && !item && !loading && (
             <div>
@@ -249,7 +246,7 @@ export default function AdminScanPage() {
               </div>
               
               <div style={{ fontSize: 13 }}>
-                SKU: <code>{item.sku}</code> | رف: {item.shelf || '-'} | باركود: <code>{item.barcode}</code>
+                SKU: <code>{item.sku || '-'}</code> | رف: {item.shelf || '-'} | باركود: <code>{item.barcode || '-'}</code>
               </div>
               
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
@@ -281,7 +278,6 @@ export default function AdminScanPage() {
         </div>
       </main>
 
-      {/* القائمة السفلية */}
       <nav style={{ 
         display: 'flex', 
         position: 'fixed', 
