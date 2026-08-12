@@ -27,8 +27,8 @@ export default function AdminProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [uploading, setUploading] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [saving, setSaving] = useState(false);
   
-  // تم إزالة shelf و position
   const initialForm = { 
     name: '', 
     category: 'tcon', 
@@ -42,8 +42,11 @@ export default function AdminProductsPage() {
   const [formData, setFormData] = useState(initialForm);
 
   useEffect(() => { 
-    if (!localStorage.getItem('dzboard_admin_token')) navigate('/admin'); 
-    else loadAll(); 
+    if (!localStorage.getItem('dzboard_admin_token')) {
+      navigate('/admin');
+    } else {
+      loadAll(); 
+    }
   }, []);
 
   const showToast = (m, t = 'success') => { 
@@ -66,7 +69,10 @@ export default function AdminProductsPage() {
         if (a?.success) setProducts(a.products || []); 
         if (b?.success) setItems(b.items || []); 
       })
-      .catch(() => showToast('حدث خطأ أثناء تحميل البيانات', 'error'))
+      .catch((err) => {
+        console.error('Load error:', err);
+        showToast('حدث خطأ أثناء تحميل البيانات', 'error');
+      })
       .finally(() => setLoading(false));
   };
 
@@ -83,9 +89,14 @@ export default function AdminProductsPage() {
           body: JSON.stringify({ image: reader.result }) 
         });
         const data = await res.json();
-        if (data.success) setFormData(p => ({ ...p, image: data.url })); 
-        else showToast('فشل رفع الصورة', 'error');
-      } catch {
+        if (data.success) {
+          setFormData(p => ({ ...p, image: data.url }));
+          showToast('تم رفع الصورة بنجاح');
+        } else {
+          showToast('فشل رفع الصورة', 'error');
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
         showToast('خطأ أثناء رفع الصورة', 'error');
       } finally {
         setUploading(false);
@@ -114,44 +125,71 @@ export default function AdminProductsPage() {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.price) { 
-      showToast('الاسم والسعر مطلوبان', 'error'); 
-      return; 
+    // التحقق من البيانات
+    if (!formData.name || formData.name.trim() === '') {
+      showToast('الاسم مطلوب', 'error');
+      return;
     }
+    
+    const priceNum = Number(formData.price);
+    if (isNaN(priceNum) || priceNum < 0) {
+      showToast('السعر يجب أن يكون رقماً صحيحاً', 'error');
+      return;
+    }
+
+    setSaving(true);
 
     try {
       if (editingProduct) {
-        // 1. تحديث منتج موجود
+        // تحديث منتج موجود
+        const payload = {
+          name: formData.name.trim(),
+          category: formData.category || 'tcon',
+          price: priceNum,
+          image: formData.image || '',
+          brand: formData.brand || 'generic',
+          description: formData.description || ''
+        };
+
         const res = await fetch(`${API}/products/${editingProduct.id}`, { 
           method: 'PUT', 
           headers: getAuthHeader(), 
-          body: JSON.stringify({
-            name: formData.name,
-            category: formData.category,
-            price: parseFloat(formData.price) || 0,
-            image: formData.image,
-            brand: formData.brand,
-            description: formData.description
-          }) 
+          body: JSON.stringify(payload) 
         });
+        
         const data = await res.json();
-        if (!data.success) throw new Error(data.error);
+        
+        if (!res.ok || !data.success) {
+          throw new Error(data.error?.message || data.error || 'فشل التحديث');
+        }
       } else {
-        // 2. إضافة منتج جديد
+        // إضافة منتج جديد
+        const quantityNum = parseInt(formData.stock, 10);
+        const validQuantity = isNaN(quantityNum) || quantityNum < 1 ? 1 : quantityNum;
+        
+        const payload = {
+          name: formData.name.trim(),
+          category: formData.category || 'tcon',
+          brand: formData.brand || 'generic',
+          price: priceNum,
+          quantity: validQuantity,
+          image: formData.image || ''
+        };
+
+        console.log('Sending payload:', payload);
+
         const res = await fetch(`${API}/inventory/items`, { 
           method: 'POST', 
           headers: getAuthHeader(), 
-          body: JSON.stringify({
-            name: formData.name,
-            category: formData.category,
-            brand: formData.brand,
-            price: parseFloat(formData.price) || 0,
-            quantity: Math.max(1, parseInt(formData.stock, 10) || 1),
-            image: formData.image
-          }) 
+          body: JSON.stringify(payload) 
         });
+        
         const data = await res.json();
-        if (!data.success) throw new Error(data.error || 'فشل حفظ القطعة');
+        console.log('Server response:', data);
+        
+        if (!res.ok || !data.success) {
+          throw new Error(data.error?.message || data.error || 'فشل حفظ القطعة');
+        }
       }
 
       showToast('تم الحفظ بنجاح'); 
@@ -159,22 +197,29 @@ export default function AdminProductsPage() {
       setEditingProduct(null); 
       loadAll();
     } catch (err) { 
+      console.error('Save error:', err);
       showToast(err.message || 'حدث خطأ أثناء الحفظ', 'error'); 
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDelete = async (id) => { 
-    if (!confirm('هل أنت تأكد من الحذف؟')) return; 
+    if (!confirm('هل أنت متأكد من الحذف؟')) return; 
     try {
-      const res = await fetch(`${API}/products/${id}`, { method: 'DELETE', headers: getAuthHeader() });
+      const res = await fetch(`${API}/products/${id}`, { 
+        method: 'DELETE', 
+        headers: getAuthHeader() 
+      });
       const data = await res.json();
       if (data.success) {
         showToast('تم الحذف بنجاح');
         loadAll(); 
       } else {
-        showToast('فشل عملية الحذف', 'error');
+        showToast(data.message || 'فشل عملية الحذف', 'error');
       }
-    } catch {
+    } catch (err) {
+      console.error('Delete error:', err);
       showToast('خطأ أثناء الاتصال بالخادم', 'error');
     }
   };
@@ -187,7 +232,11 @@ export default function AdminProductsPage() {
   };
 
   const getCat = (k) => CATEGORIES.find(c => c.key === k) || { label: k, color: '#94a3b8' };
-  const filtered = products.filter(p => (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) && (selectedCategory === 'all' || p.category === selectedCategory));
+  
+  const filtered = products.filter(p => 
+    (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) && 
+    (selectedCategory === 'all' || p.category === selectedCategory)
+  );
 
   const NAV = [
     { label: 'الرئيسية', path: '/admin/dashboard', icon: LayoutDashboard },
@@ -241,7 +290,9 @@ export default function AdminProductsPage() {
             </div>
             <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               <button onClick={() => setShowForm(false)} className="btn btn-ghost btn-sm">إلغاء</button>
-              <button onClick={handleSave} className="btn btn-accent btn-sm"><Save size={14} /> حفظ</button>
+              <button onClick={handleSave} className="btn btn-accent btn-sm" disabled={saving}>
+                <Save size={14} /> {saving ? 'جاري...' : 'حفظ'}
+              </button>
             </div>
           </div>
         )}
