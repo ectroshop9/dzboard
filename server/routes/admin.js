@@ -5,7 +5,7 @@ const router = express.Router();
 const cookieOptions = {
   httpOnly: true,
   secure: true, // ضروري مع HTTPS و sameSite: 'none'
-  sameSite: 'none', // لسمح للمتصفح بإرسال الكوكي من Vercel إلى Render
+  sameSite: 'none', // يسمح للمتصفح بإرسال الكوكي من Vercel إلى Render
   maxAge: 24 * 60 * 60 * 1000, // 24 ساعة
   path: '/'
 };
@@ -23,7 +23,7 @@ router.post('/login', (req, res) => {
 
     return res.json({ 
       success: true, 
-      token: ADMIN_TOKEN, // إرجاعه اختطافاً لدعم الطرق القديمة
+      token: ADMIN_TOKEN, // يدعم التطبيق والواجهة الأمامية القديمة والحديثة
       message: 'تم تسجيل الدخول بنجاح' 
     });
   }
@@ -33,7 +33,7 @@ router.post('/login', (req, res) => {
 
 // 2. مسار التحقق من الجلسة (قراءة التوكن من الكوكي أو الهيدر)
 router.get('/verify', (req, res) => {
-  // قراءة التوكن إما من الكوكي أو من الهيدر (لضمان عمل الطريقتين)
+  // قراءة التوكن إما من الكوكي أو من الهيدر (لضمان عمل الطريقتين دون توقف)
   const tokenFromCookie = req.cookies?.admin_token;
   const tokenFromHeader = req.headers.authorization?.replace('Bearer ', '');
   const token = tokenFromCookie || tokenFromHeader;
@@ -49,12 +49,7 @@ router.get('/verify', (req, res) => {
 
 // 3. مسار تسجيل الخروج (مسح الكوكي)
 router.post('/logout', (req, res) => {
-  res.clearCookie('admin_token', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    path: '/'
-  });
+  res.clearCookie('admin_token', cookieOptions);
   res.json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
 });
 
