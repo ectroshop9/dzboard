@@ -17,22 +17,24 @@ export default function MobileBottomNav() {
   return (
     <nav style={{
       position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: 72,
-      background: '#d97706',
-      borderTop: '1px solid rgba(255, 255, 255, 0.2)',
+      bottom: 20,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: 'calc(100% - 32px)',
+      maxWidth: 500,
+      height: 70,
+      background: 'rgba(15, 23, 42, 0.92)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      borderRadius: 24,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-around',
       zIndex: 1000,
-      boxShadow: '0 -4px 20px rgba(217, 119, 6, 0.3)',
-      paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
-      paddingTop: 6,
-      paddingLeft: 8,
-      paddingRight: 8,
-      boxSizing: 'border-box'
+      boxShadow: '0 10px 35px rgba(0, 0, 0, 0.35)',
+      padding: '6px 10px',
+      boxSizing: 'border-box',
+      border: '1px solid rgba(255, 255, 255, 0.08)'
     }}>
       {navItems.map((item) => {
         const Icon = item.icon;
@@ -50,23 +52,35 @@ export default function MobileBottomNav() {
               textDecoration: 'none',
               flex: 1,
               height: '100%',
-              borderRadius: 14,
-              transition: 'all 0.2s',
-              background: isActive ? 'rgba(255, 255, 255, 0.25)' : 'transparent',
+              borderRadius: 16,
+              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+              background: isActive ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'transparent',
               color: '#ffffff',
-              padding: '2px 0'
+              padding: '4px 0',
+              boxShadow: isActive ? '0 4px 15px rgba(59, 130, 246, 0.5)' : 'none',
+              transform: isActive ? 'translateY(-3px)' : 'translateY(0)'
             }}
           >
-            <Icon 
-              size={22} 
-              strokeWidth={isActive ? 2.8 : 1.8} 
-              color={isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.75)'} 
-            />
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transform: isActive ? 'scale(1.1)' : 'scale(1)',
+              transition: 'transform 0.25s ease',
+              marginBottom: 3
+            }}>
+              <Icon 
+                size={22} 
+                strokeWidth={isActive ? 2.8 : 1.8} 
+                color={isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.7)'} 
+              />
+            </div>
             <span style={{ 
               whiteSpace: 'nowrap',
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: isActive ? 900 : 600,
-              color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.85)'
+              color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.75)',
+              letterSpacing: '-0.2px'
             }}>
               {item.label}
             </span>
