@@ -1,21 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
-import { LayoutDashboard, Package, ShoppingBag, QrCode, Camera, Search, Loader2, AlertCircle, Settings } from 'lucide-react';
-
-const MENU = [
-  { path: '/admin/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
-  { path: '/admin/products', label: 'المنتجات', icon: Package },
-  { path: '/admin/orders', label: 'الطلبات', icon: ShoppingBag },
-  { path: '/admin/scan', label: 'QR', icon: QrCode },
-  { path: '/admin/settings', label: 'إعدادات', icon: Settings },
-];
+import { Camera, Search, Loader2, AlertCircle } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'https://dzboard.onrender.com/api';
 
 export default function AdminScanPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const token = localStorage.getItem('dzboard_admin_token');
   
   const [scanning, setScanning] = useState(false);
@@ -126,7 +117,6 @@ export default function AdminScanPage() {
       const data = await res.json();
       
       if (data.success) {
-        // المنتج يبقى ظاهراً - فقط الحالة تتغير
         setItem(prev => ({ ...prev, status: newStatus }));
       } else {
         setErrorMsg(data.error || 'فشل تعديل حالة المنتج');
@@ -140,7 +130,7 @@ export default function AdminScanPage() {
   };
 
   return (
-    <div style={{ background: '#f8fafc', direction: 'rtl', minHeight: '100vh', paddingBottom: 70, fontFamily: 'system-ui' }}>
+    <div style={{ background: '#f8fafc', direction: 'rtl', minHeight: '100vh', paddingBottom: 120, fontFamily: 'system-ui' }}>
       <main style={{ padding: 16, maxWidth: 500, margin: '0 auto' }}>
         
         {/* شريط البحث اليدوي */}
@@ -166,7 +156,6 @@ export default function AdminScanPage() {
         {/* منطقة المسح والنتائج */}
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, textAlign: 'center' }}>
           
-          {/* الحالة الافتراضية */}
           {!scanning && !item && !loading && (
             <div style={{ padding: '20px 0' }}>
               <Camera size={48} style={{ color: '#2563eb', marginBottom: 12 }} />
@@ -180,7 +169,6 @@ export default function AdminScanPage() {
             </div>
           )}
           
-          {/* الكاميرا */}
           {scanning && (
             <div>
               <div id="reader" style={{ width: '100%', borderRadius: 12, overflow: 'hidden', border: '2px solid #2563eb' }} />
@@ -193,21 +181,18 @@ export default function AdminScanPage() {
             </div>
           )}
           
-          {/* التحميل */}
           {loading && (
             <div style={{ padding: 40, display: 'flex', justifyContent: 'center' }}>
               <Loader2 size={36} style={{ animation: 'spin 1s linear infinite', color: '#2563eb' }} />
             </div>
           )}
           
-          {/* الخطأ */}
           {errorMsg && (
             <div style={{ background: '#fef2f2', color: '#b91c1c', padding: 12, borderRadius: 10, margin: '12px 0', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
               <AlertCircle size={18} /> {errorMsg}
             </div>
           )}
           
-          {/* تفاصيل المنتج - يبقى ظاهر دائماً */}
           {item && !loading && (
             <div style={{ textAlign: 'right', background: '#f8fafc', borderRadius: 12, padding: 16, border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
@@ -258,32 +243,6 @@ export default function AdminScanPage() {
           )}
         </div>
       </main>
-
-      {/* شريط التنقل */}
-      <nav style={{ 
-        display: 'flex', position: 'fixed', bottom: 0, left: 0, right: 0, 
-        background: '#fff', borderTop: '1px solid #e2e8f0', justifyContent: 'space-around', 
-        padding: '8px 0', zIndex: 40, paddingBottom: 'max(8px, env(safe-area-inset-bottom))'
-      }}>
-        {MENU.map(item => {
-          const Icon = item.icon; 
-          const isActive = location.pathname === item.path;
-          return (
-            <Link 
-              key={item.path} 
-              to={item.path} 
-              style={{ 
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, 
-                textDecoration: 'none', color: isActive ? '#2563eb' : '#64748b', 
-                fontWeight: isActive ? 800 : 600, fontSize: 11
-              }}
-            >
-              <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
     </div>
   );
 }
