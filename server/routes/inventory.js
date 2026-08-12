@@ -3,7 +3,7 @@ const router = express.Router();
 import { supabase } from '../supabase.js';
 import { verifyAdmin } from '../middleware/auth.js';
 
-// GET /items - جلب القطع وإضافة تفاصيل المنتج المربوط بها
+// GET /items - جلب عناصر المخزون مع تفاصيل المنتج
 router.get('/items', async (req, res) => {
   try {
     const { search } = req.query;
@@ -50,16 +50,15 @@ router.get('/items', async (req, res) => {
   }
 });
 
-// POST /items - إضافة قطعة أو أكثر ومزامنة الكمية مع جدول المنتجات
+// POST /items - إضافة قطع مباشرة بدون رفوف
 router.post('/items', verifyAdmin, async (req, res) => {
   try {
-    const { name, shelf, position, price, image, category, brand, quantity } = req.body;
+    const { name, price, image, category, brand, quantity } = req.body;
     
     if (!name) {
       return res.status(400).json({ success: false, message: 'اسم القطعة مطلوب' });
     }
 
-    // تنظيف وحساب الأرقام لمنع خطأ integer: ""
     const qtyNum = parseInt(quantity, 10) > 0 ? parseInt(quantity, 10) : 1;
     const parsedPrice = (price !== "" && price !== null && !isNaN(price)) ? parseFloat(price) : 0;
 
@@ -71,10 +70,9 @@ router.post('/items', verifyAdmin, async (req, res) => {
         price: parsedPrice,
         stock: qtyNum,
         active: true,
-        category: category || 'parts',
+        category: category || 'general',
         brand: brand || 'generic',
-        image: image || '',
-        description: shelf ? `الرف: ${shelf} - الموضع: ${position || ''}` : ''
+        image: image || ''
       })
       .select()
       .single();
@@ -93,7 +91,7 @@ router.post('/items', verifyAdmin, async (req, res) => {
     const newItems = [];
     const timestamp = Date.now().toString().slice(-4);
 
-    // 3. تجهيز القطع مع ضمان معالجة المعرفات
+    // 3. تجهيز القطع (تم إزالة shelf و position)
     for (let i = 0; i < qtyNum; i++) {
       currentCount++;
       const uniqueSeq = String(currentCount).padStart(4, '0');
@@ -103,10 +101,10 @@ router.post('/items', verifyAdmin, async (req, res) => {
       newItems.push({
         sku,
         barcode,
-        shelf: shelf || '',
-        position: position || '',
+        shelf: '',
+        position: '',
         image: image || '',
-        product_id: parseInt(product.id, 10), // التأكد من تحويل المعرف لرقم صحيح
+        product_id: parseInt(product.id, 10),
         status: 'available'
       });
     }
@@ -129,54 +127,44 @@ router.post('/items', verifyAdmin, async (req, res) => {
   }
 });
 
-// PUT /items/:id - تحديث حالة القطعة
-router.put('/items/:id', verifyAdmin, async (req, res) => {
+// DELETE /items/:id - حذف قطعة من المخزون
+router.delete('/items/:id', verifyAdmin, async (req, res) => {
   try {
-    const { status } = req.body;
     const itemId = parseInt(req.params.id, 10);
 
     if (isNaN(itemId)) {
-      return res.status(400).json({ success: false, message: 'معرف القطعة غير صالح' });
+      return res.status(400).json({ success: false, message: 'معرف غير صالح' });
     }
 
-    const { data: old } = await supabase
+    const { data: item } = await supabase
       .from('inventory_items')
-      .select('product_id, status')
+      .select('product_id')
       .eq('id', itemId)
       .single();
 
-    const { data: item, error } = await supabase
+    const { error } = await supabase
       .from('inventory_items')
-      .update({ status })
-      .eq('id', itemId)
-      .select()
-      .single();
+      .delete()
+      .eq('id', itemId);
 
     if (error) return res.status(500).json({ success: false, error: error.message });
 
-    if (old?.product_id) {
+    if (item?.product_id) {
       const { data: product } = await supabase
         .from('products')
         .select('stock')
-        .eq('id', old.product_id)
+        .eq('id', item.product_id)
         .single();
 
       if (product) {
-        if (status === 'sold' && old.status === 'available') {
-          await supabase
-            .from('products')
-            .update({ stock: Math.max(0, product.stock - 1) })
-            .eq('id', old.product_id);
-        } else if (status === 'available' && old.status === 'sold') {
-          await supabase
-            .from('products')
-            .update({ stock: product.stock + 1 })
-            .eq('id', old.product_id);
-        }
+        await supabase
+          .from('products')
+          .update({ stock: Math.max(0, product.stock - 1) })
+          .eq('id', item.product_id);
       }
     }
 
-    res.json({ success: true, item });
+    res.json({ success: true, message: 'تم الحذف بنجاح' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

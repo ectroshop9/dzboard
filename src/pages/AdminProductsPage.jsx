@@ -28,6 +28,7 @@ export default function AdminProductsPage() {
   const [uploading, setUploading] = useState(false);
   const [notification, setNotification] = useState(null);
   
+  // تم إزالة shelf و position
   const initialForm = { 
     name: '', 
     category: 'tcon', 
@@ -35,8 +36,6 @@ export default function AdminProductsPage() {
     stock: '1', 
     description: '', 
     image: '', 
-    shelf: '', 
-    position: '',
     brand: 'generic'
   };
   
@@ -102,10 +101,6 @@ export default function AdminProductsPage() {
 
   const handleOpenEdit = (p) => { 
     setEditingProduct(p); 
-    
-    // العثور على مكان الرف والوضعية من القطعة المرتبطة بها
-    const relatedItem = items.find(i => i.product_id === p.id);
-
     setFormData({ 
       name: p.name || '', 
       category: p.category || 'tcon', 
@@ -113,8 +108,6 @@ export default function AdminProductsPage() {
       stock: p.stock || '1', 
       description: p.description || '', 
       image: p.image || '', 
-      shelf: relatedItem?.shelf || '',
-      position: relatedItem?.position || '',
       brand: p.brand || 'generic'
     }); 
     setShowForm(true); 
@@ -128,7 +121,7 @@ export default function AdminProductsPage() {
 
     try {
       if (editingProduct) {
-        // 1. تحديث منتج موجود في جدول products
+        // 1. تحديث منتج موجود
         const res = await fetch(`${API}/products/${editingProduct.id}`, { 
           method: 'PUT', 
           headers: getAuthHeader(), 
@@ -138,13 +131,13 @@ export default function AdminProductsPage() {
             price: parseFloat(formData.price) || 0,
             image: formData.image,
             brand: formData.brand,
-            description: formData.shelf ? `${formData.shelf} - ${formData.position || ''}` : ''
+            description: formData.description
           }) 
         });
         const data = await res.json();
         if (!data.success) throw new Error(data.error);
       } else {
-        // 2. إضافة منتج جديد وقطع المخزون المرافقة له
+        // 2. إضافة منتج جديد
         const res = await fetch(`${API}/inventory/items`, { 
           method: 'POST', 
           headers: getAuthHeader(), 
@@ -154,8 +147,6 @@ export default function AdminProductsPage() {
             brand: formData.brand,
             price: parseFloat(formData.price) || 0,
             quantity: Math.max(1, parseInt(formData.stock, 10) || 1),
-            shelf: formData.shelf,
-            position: formData.position,
             image: formData.image
           }) 
         });
@@ -242,7 +233,6 @@ export default function AdminProductsPage() {
               {!editingProduct && (
                 <input className="field-input" type="number" placeholder="الكمية *" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
               )}
-              <input className="field-input" placeholder="الرف" value={formData.shelf} onChange={e => setFormData({...formData, shelf: e.target.value})} />
               <input className="field-input" placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
               <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', background: '#f1f5f9', borderRadius: 8, fontWeight: 600, fontSize: 13, width: 'fit-content' }}>
                 <Upload size={14} /> {uploading ? 'جاري...' : 'رفع صورة'}
