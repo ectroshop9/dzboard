@@ -14,10 +14,8 @@ export default function MobileBottomNav() {
       const currentScrollY = window.scrollY;
       
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // التمرير للأسفل - إخفاء
         setVisible(false);
       } else {
-        // التمرير للأعلى - إظهار
         setVisible(true);
       }
       
@@ -45,7 +43,7 @@ export default function MobileBottomNav() {
       width: 'calc(100% - 32px)',
       maxWidth: 500,
       height: 70,
-      background: 'rgba(15, 23, 42, 0.92)',
+      background: 'rgba(255, 255, 255, 0.85)',
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
       borderRadius: 24,
@@ -53,10 +51,10 @@ export default function MobileBottomNav() {
       alignItems: 'center',
       justifyContent: 'space-around',
       zIndex: 1000,
-      boxShadow: '0 10px 35px rgba(0, 0, 0, 0.35)',
+      boxShadow: '0 10px 35px rgba(0, 0, 0, 0.1)',
       padding: '6px 10px',
       boxSizing: 'border-box',
-      border: '1px solid rgba(255, 255, 255, 0.08)',
+      border: '1px solid rgba(255, 255, 255, 0.6)',
       opacity: visible ? 1 : 0,
       transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
       pointerEvents: visible ? 'auto' : 'none'
@@ -80,9 +78,9 @@ export default function MobileBottomNav() {
               borderRadius: 16,
               transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
               background: isActive ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'transparent',
-              color: '#ffffff',
+              color: isActive ? '#ffffff' : '#64748b',
               padding: '4px 0',
-              boxShadow: isActive ? '0 4px 15px rgba(59, 130, 246, 0.5)' : 'none',
+              boxShadow: isActive ? '0 4px 15px rgba(59, 130, 246, 0.4)' : 'none',
               transform: isActive ? 'translateY(-3px)' : 'translateY(0)'
             }}
           >
@@ -97,14 +95,14 @@ export default function MobileBottomNav() {
               <Icon 
                 size={22} 
                 strokeWidth={isActive ? 2.8 : 1.8} 
-                color={isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.7)'} 
+                color={isActive ? '#ffffff' : '#94a3b8'} 
               />
             </div>
             <span style={{ 
               whiteSpace: 'nowrap',
               fontSize: 10,
               fontWeight: isActive ? 900 : 600,
-              color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.75)',
+              color: isActive ? '#ffffff' : '#94a3b8',
               letterSpacing: '-0.2px'
             }}>
               {item.label}
