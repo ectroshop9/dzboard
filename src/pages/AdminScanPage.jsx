@@ -78,18 +78,50 @@ export default function AdminScanPage() {
     setItem(null);
     
     try {
-      console.log('Searching for:', clean); // للتشخيص
+      console.log('Original scan:', clean);
       
-      const res = await fetch(`${API}/inventory/items?search=${encodeURIComponent(clean)}`, { 
+      // تنظيف الكود - استخرج الرقم من "ID: 15" أو "ID 15" أو "15"
+      let searchCode = clean;
+      const idMatch = clean.match(/ID:?\s*(\d+)/i);
+      if (idMatch) {
+        searchCode = idMatch[1]; // الرقم فقط
+      }
+      
+      console.log('Search code:', searchCode);
+      
+      // جلب جميع العناصر
+      const res = await fetch(`${API}/inventory/items`, { 
         headers: { Authorization: `Bearer ${token}` } 
       });
       const data = await res.json();
       
-      console.log('API Response:', data); // للتشخيص
+      console.log('Items count:', data?.items?.length);
       
-      // التحقق الصحيح من النتيجة
-      if (data.success && data.items && data.items.length > 0) {
-        setItem(data.items[0]);
+      if (data?.success && data?.items?.length > 0) {
+        // ابحث عن التطابق بالباركود أو SKU أو ID
+        const found = data.items.find(i => 
+          i.barcode?.trim() === searchCode || 
+          i.sku?.trim() === searchCode ||
+          String(i.id) === searchCode ||
+          String(i.product_id) === searchCode
+        );
+        
+        if (found) {
+          console.log('Found:', found);
+          setItem(found);
+        } else {
+          // جرب البحث المباشر
+          const searchRes = await fetch(`${API}/inventory/items?search=${encodeURIComponent(searchCode)}`, { 
+            headers: { Authorization: `Bearer ${token}` } 
+          });
+          const searchData = await searchRes.json();
+          
+          if (searchData?.success && searchData?.items?.length > 0) {
+            setItem(searchData.items[0]);
+          } else {
+            setErrorMsg(`لم يتم العثور على: "${clean}"`);
+          }
+        }
       } else {
         setErrorMsg(`لم يتم العثور على: "${clean}"`);
       }
@@ -148,7 +180,7 @@ export default function AdminScanPage() {
           <div style={{ display: 'flex', gap: 8 }}>
             <input 
               type="text" 
-              placeholder="أدخل رمز الباركود..." 
+              placeholder="أدخل رمز الباركود أو ID..." 
               value={manualCode} 
               onChange={e => setManualCode(e.target.value)} 
               style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none' }} 
