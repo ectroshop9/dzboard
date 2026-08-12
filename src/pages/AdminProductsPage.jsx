@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Plus, Trash2, Save, Package, Monitor, Zap, Cpu, 
   Search, Loader2, Upload, Edit3, X, CheckCircle, AlertCircle,
-  LayoutDashboard, ClipboardList, ScanLine, FileText, Settings, Printer
+  Printer
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -17,7 +17,6 @@ const API = 'https://dzboard.onrender.com/api';
 
 export default function AdminProductsPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [products, setProducts] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -226,7 +225,6 @@ export default function AdminProductsPage() {
     printWindow.document.close();
   };
 
-  // طباعة جميع الباركودات
   const handlePrintAllBarcodes = () => {
     if (!products.length) {
       showToast('لا توجد منتجات للطباعة', 'error');
@@ -287,17 +285,8 @@ export default function AdminProductsPage() {
     (selectedCategory === 'all' || p.category === selectedCategory)
   );
 
-  const NAV = [
-    { label: 'الرئيسية', path: '/admin/dashboard', icon: LayoutDashboard },
-    { label: 'المنتجات', path: '/admin/products', icon: Package },
-    { label: 'الطلبات', path: '/admin/orders', icon: ClipboardList },
-    { label: 'QR', path: '/admin/scan', icon: ScanLine },
-    { label: 'الطلبات الخاصة', path: '/admin/requests', icon: FileText },
-    { label: 'إعدادات', path: '/admin/settings', icon: Settings },
-  ];
-
   return (
-    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 70, fontFamily: 'system-ui' }}>
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 100, fontFamily: 'system-ui' }}>
       {notification && (
         <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100, background: notification.type === 'error' ? '#ef4444' : '#10b981', color: '#fff', padding: '12px 20px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)', fontSize: 14, fontWeight: 700 }}>
           {notification.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
@@ -390,19 +379,6 @@ export default function AdminProductsPage() {
           </div>
         )}
       </div>
-
-      <nav style={{ display: 'flex', position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e2e8f0', justifyContent: 'space-around', padding: '8px 0', zIndex: 40 }}>
-        {NAV.map(item => {
-          const Icon = item.icon; 
-          const isActive = location.pathname === item.path;
-          return (
-            <Link key={item.path} to={item.path} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, textDecoration: 'none', color: isActive ? '#2563eb' : '#64748b', fontWeight: isActive ? 800 : 600, fontSize: 10 }}>
-              <Icon size={20} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
     </div>
   );
 }
