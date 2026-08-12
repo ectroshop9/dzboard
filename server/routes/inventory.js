@@ -1,6 +1,7 @@
 import express from 'express';
 const router = express.Router();
 import { supabase } from '../supabase.js';
+import { verifyAdmin } from '../middleware/auth.js';
 
 // GET /items - جلب القطع وإضافة تفاصيل المنتج المربوط بها
 router.get('/items', async (req, res) => {
@@ -15,69 +16,89 @@ router.get('/items', async (req, res) => {
     const { data: items, error } = await query;
     if (error) return res.status(500).json({ success: false, error: error.message });
 
-    // دمج تفاصيل المنتج مع كل قطعة مخزون
-    for (let item of (items || [])) {
-      if (item.product_id) {
-        const { data: product } = await supabase
-          .from('products')
-          .select('name, image, price')
-          .eq('id', item.product_id)
-          .single();
-          
-        if (product) {
-          item.name = product.name;
-          item.image = product.image;
-          item.price = product.price;
-        }
+    // جلب المنتجات المربوطة دفعة واحدة لتقليل الضغط
+    const productIds = [...new Set((items || []).map(i => i.product_id).filter(Boolean))];
+    let productsMap = {};
+
+    if (productIds.length > 0) {
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, name, image, price')
+        .in('id', productIds);
+
+      if (products) {
+        productsMap = products.reduce((acc, p) => {
+          acc[p.id] = p;
+          return acc;
+        }, {});
       }
     }
 
-    res.json({ success: true, items: items || [] });
+    // دمج التفاصيل
+    const formattedItems = (items || []).map(item => {
+      const product = productsMap[item.product_id];
+      return {
+        ...item,
+        name: product?.name || 'قطعة بدون اسم',
+        image: item.image || product?.image || '',
+        price: product?.price || 0
+      };
+    });
+
+    res.json({ success: true, items: formattedItems });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// POST /items - إضافة قطعة أو أكثر ومزامنة الكمية مع جدول المنتجات
-router.post('/items', async (req, res) => {
+// POST /items - إضافة قطعة أو أكثر (محمي للآدمن)
+router.post('/items', verifyAdmin, async (req, res) => {
   try {
     const { name, shelf, position, price, image, category, brand, quantity = 1 } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ success: false, message: 'اسم القطعة مطلوب' });
+    }
+
     const qtyNum = Math.max(1, parseInt(quantity, 10) || 1);
+    const parsedPrice = parseFloat(price) || 0;
 
     // 1. إنشاء المنتج في جدول products
     const { data: product, error: productError } = await supabase
       .from('products')
       .insert({
         name,
-        price: parseFloat(price) || 0,
+        price: parsedPrice,
         stock: qtyNum,
         active: true,
         category: category || 'parts',
         brand: brand || 'generic',
         image: image || '',
-        description: shelf ? `${shelf} - ${position || ''}` : ''
+        description: shelf ? `الرف: ${shelf} - الموضع: ${position || ''}` : ''
       })
       .select()
       .single();
 
     if (productError) {
       console.error('Product Error:', productError);
-      return res.status(500).json({ success: false, error: productError.message });
+      return res.status(500).json({ success: false, error: `خطأ في إنشاء المنتج: ${productError.message}` });
     }
 
-    // 2. جلب العدد الحالي للقطع لإنشاء SKU و Barcode
+    // 2. جلب العدد الحالي للقطع لتوليد الـ SKU
     const { count } = await supabase
       .from('inventory_items')
       .select('*', { count: 'exact', head: true });
 
     let currentCount = count || 0;
     const newItems = [];
+    const timestamp = Date.now().toString().slice(-4);
 
-    // 3. تجهيز القطع (تم إزالة حقل name لتجنب خطأ قاعدة البيانات)
+    // 3. تجهيز القطع مع ضمان أن كل قطعة تمتلك SKU و Barcode فريدين
     for (let i = 0; i < qtyNum; i++) {
       currentCount++;
-      const sku = `DZB-${String(currentCount).padStart(3, '0')}`;
-      const barcode = `613${String(currentCount).padStart(6, '0')}`;
+      const uniqueSeq = String(currentCount).padStart(4, '0');
+      const sku = `DZB-${uniqueSeq}`;
+      const barcode = `613${timestamp}${String(i).padStart(3, '0')}`;
 
       newItems.push({
         sku,
@@ -90,7 +111,7 @@ router.post('/items', async (req, res) => {
       });
     }
 
-    // 4. حفظ القطع دفعة واحدة
+    // 4. حفظ القطع
     const { data: items, error: itemsError } = await supabase
       .from('inventory_items')
       .insert(newItems)
@@ -98,23 +119,28 @@ router.post('/items', async (req, res) => {
 
     if (itemsError) {
       console.error('Inventory Error:', itemsError);
-      return res.status(500).json({ success: false, error: itemsError.message });
+      return res.status(500).json({ success: false, error: `خطأ في إنشاء عناصر المخزون: ${itemsError.message}` });
     }
 
     res.json({ success: true, items, product });
   } catch (err) {
+    console.error('Unhandled POST /items error:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// PUT /items/:id - تحديث حالة القطعة وتحديث كمية المنتج في المتجر
-router.put('/items/:id', async (req, res) => {
+// PUT /items/:id - تحديث حالة القطعة (محمي للآدمن)
+router.put('/items/:id', verifyAdmin, async (req, res) => {
   try {
     const { status } = req.body;
     
+    if (!status) {
+      return res.status(400).json({ success: false, message: 'الحالة مطلوبة' });
+    }
+
     const { data: old } = await supabase
       .from('inventory_items')
-      .select('product_id,status')
+      .select('product_id, status')
       .eq('id', req.params.id)
       .single();
 
@@ -127,6 +153,7 @@ router.put('/items/:id', async (req, res) => {
 
     if (error) return res.status(500).json({ success: false, error: error.message });
 
+    // تحديث مخزون جدول المنتجات
     if (old?.product_id) {
       const { data: product } = await supabase
         .from('products')
