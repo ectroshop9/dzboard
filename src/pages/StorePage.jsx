@@ -284,23 +284,6 @@ export default function StorePage() {
                     {isAvailable ? 'متوفر' : 'غير متوفر'}
                   </span>
 
-                  {hasUpdate && (
-                    <span style={{
-                      position: 'absolute',
-                      top: 8,
-                      left: 8,
-                      zIndex: 2,
-                      fontSize: 9,
-                      fontWeight: 800,
-                      padding: '2px 6px',
-                      borderRadius: 10,
-                      background: '#dbeafe',
-                      color: '#1d4ed8',
-                    }}>
-                      تحديث متوفر
-                    </span>
-                  )}
-
                   <div style={{ 
                     background: '#fafafa', 
                     height: viewMode === 'list' ? 95 : 140, 

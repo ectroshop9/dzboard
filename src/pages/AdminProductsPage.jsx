@@ -1,365 +1,383 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, ChevronLeft, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, SlidersHorizontal, Download } from 'lucide-react';
-import { api } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Plus, Trash2, Save, Package, Monitor, Zap, Cpu, 
+  Search, Loader2, Upload, Edit3, X, CheckCircle, AlertCircle,
+  Printer
+} from 'lucide-react';
 
-export default function StorePage() {
+const CATEGORIES = [
+  { key: 'tcon', label: 'كرت تيكون', icon: Monitor, color: '#3b82f6' },
+  { key: 'alimentation', label: 'اليمونتاسيون', icon: Zap, color: '#f59e0b' },
+  { key: 'main-board', label: 'مين بورد', icon: Cpu, color: '#6366f1' },
+  { key: 'parts', label: 'قطع غيار', icon: Package, color: '#10b981' },
+];
+
+const API = 'https://dzboard.onrender.com/api';
+
+export default function AdminProductsPage() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-
   const [products, setProducts] = useState([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('grid');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [uploading, setUploading] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const [saving, setSaving] = useState(false);
+  
+  const initialForm = { 
+    name: '', 
+    category: 'tcon', 
+    price: '', 
+    stock: '1', 
+    description: '', 
+    image: '', 
+    brand: 'generic',
+    update_url: ''
+  };
+  
+  const [formData, setFormData] = useState(initialForm);
 
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
-  const [selectedBrand, setSelectedBrand] = useState(searchParams.get('brand') || 'all');
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
-  const [sortBy, setSortBy] = useState('newest');
+  useEffect(() => { 
+    if (!localStorage.getItem('dzboard_admin_token')) {
+      navigate('/admin');
+    } else {
+      loadAll(); 
+    }
+  }, []);
 
-  const categories = [
-    { key: 'all', label: 'الكل', icon: Grid, color: '#94a3b8' },
-    { key: 'tcon', label: 'كرت تيكون', icon: Monitor, color: '#3b82f6' },
-    { key: 'alimentation', label: 'اليمونتاسيون', icon: Zap, color: '#f59e0b' },
-    { key: 'main-board', label: 'مين بورد', icon: Cpu, color: '#6366f1' },
-    { key: 'parts', label: 'قطع غيار', icon: Package, color: '#10b981' },
-  ];
+  const showToast = (m, t = 'success') => { 
+    setNotification({ message: m, type: t }); 
+    setTimeout(() => setNotification(null), 3000); 
+  };
+  
+  const getAuthHeader = () => ({ 
+    'Content-Type': 'application/json', 
+    Authorization: `Bearer ${localStorage.getItem('dzboard_admin_token')}` 
+  });
 
-  const brands = [
-    { code: 'all', name: 'كل الماركات' },
-    { code: 'samsung', name: 'Samsung' }, { code: 'lg', name: 'LG' },
-    { code: 'condor', name: 'Condor' }, { code: 'iris', name: 'Iris' },
-    { code: 'geant', name: 'Geant' }, { code: 'stream', name: 'Stream' },
-    { code: 'maxtor', name: 'Maxtor' }, { code: 'kiowa', name: 'Kiowa' },
-  ];
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 400);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (selectedCategory !== 'all') params.set('category', selectedCategory);
-    if (selectedBrand !== 'all') params.set('brand', selectedBrand);
-    if (debouncedQuery) params.set('q', debouncedQuery);
-    setSearchParams(params, { replace: true });
-  }, [selectedCategory, selectedBrand, debouncedQuery, setSearchParams]);
-
-  useEffect(() => {
-    let isMounted = true;
+  const loadAll = () => {
     setLoading(true);
-
-    const params = {};
-    if (selectedCategory !== 'all') params.category = selectedCategory;
-    if (selectedBrand !== 'all') params.brand = selectedBrand;
-    if (debouncedQuery) params.q = debouncedQuery;
-
-    api.getProducts(params)
-      .then(data => {
-        if (isMounted) {
-          if (data && data.success) {
-            let filtered = [...(data.products || [])];
-            if (sortBy === 'price-low') filtered.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
-            if (sortBy === 'price-high') filtered.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
-            setProducts(filtered);
-          } else {
-            setProducts([]);
-          }
-          setLoading(false);
-        }
+    Promise.all([
+      fetch(`${API}/products`).then(r => r.json()), 
+      fetch(`${API}/inventory/items`).then(r => r.json())
+    ])
+      .then(([a, b]) => { 
+        if (a?.success) setProducts(a.products || []); 
+        if (b?.success) setItems(b.items || []); 
       })
       .catch((err) => {
-        console.error('Error fetching products:', err);
-        if (isMounted) {
-          setProducts([]);
-          setLoading(false);
-        }
-      });
-
-    return () => { isMounted = false; };
-  }, [selectedCategory, selectedBrand, debouncedQuery, sortBy]);
-
-  const handleBuyNow = (e, product) => {
-    e.stopPropagation();
-    navigate('/checkout', {
-      state: {
-        items: [{ id: product.id, name: product.name || product.title, price: product.price, quantity: 1, image: product.image }]
-      }
-    });
+        console.error('Load error:', err);
+        showToast('حدث خطأ أثناء تحميل البيانات', 'error');
+      })
+      .finally(() => setLoading(false));
   };
 
-  const handleDownloadUpdate = (e, product) => {
-    e.stopPropagation();
-    if (product.update_url) {
-      window.open(product.update_url, '_blank');
+  const handleImageUpload = async (file) => {
+    if (!file) return; 
+    setUploading(true);
+    const reader = new FileReader(); 
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      try {
+        const res = await fetch(`${API}/products/upload`, { 
+          method: 'POST', 
+          headers: getAuthHeader(), 
+          body: JSON.stringify({ image: reader.result }) 
+        });
+        const data = await res.json();
+        if (data.success) {
+          setFormData(p => ({ ...p, image: data.url }));
+          showToast('تم رفع الصورة بنجاح');
+        } else {
+          showToast('فشل رفع الصورة', 'error');
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+        showToast('خطأ أثناء رفع الصورة', 'error');
+      } finally {
+        setUploading(false);
+      }
+    };
+  };
+
+  const handleOpenAdd = () => { 
+    setEditingProduct(null); 
+    setFormData(initialForm); 
+    setShowForm(true); 
+  };
+
+  const handleOpenEdit = (p) => { 
+    setEditingProduct(p); 
+    setFormData({ 
+      name: p.name || '', 
+      category: p.category || 'tcon', 
+      price: p.price || '', 
+      stock: p.stock || '1', 
+      description: p.description || '', 
+      image: p.image || '', 
+      brand: p.brand || 'generic',
+      update_url: p.update_url || ''
+    }); 
+    setShowForm(true); 
+  };
+
+  const handleSave = async () => {
+    if (!formData.name || formData.name.trim() === '') {
+      showToast('الاسم مطلوب', 'error');
+      return;
+    }
+    
+    const priceNum = Number(formData.price);
+    if (isNaN(priceNum) || priceNum < 0) {
+      showToast('السعر يجب أن يكون رقماً صحيحاً', 'error');
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      if (editingProduct) {
+        const payload = {
+          name: formData.name.trim(),
+          category: formData.category || 'tcon',
+          price: priceNum,
+          stock: parseInt(formData.stock, 10) || 0,
+          image: formData.image || '',
+          brand: formData.brand || 'generic',
+          description: formData.description || '',
+          update_url: formData.update_url || null
+        };
+
+        const res = await fetch(`${API}/products/${editingProduct.id}`, { 
+          method: 'PUT', 
+          headers: getAuthHeader(), 
+          body: JSON.stringify(payload) 
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok || !data.success) {
+          throw new Error(data.error?.message || data.error || 'فشل التحديث');
+        }
+      } else {
+        const quantityNum = parseInt(formData.stock, 10);
+        const validQuantity = isNaN(quantityNum) || quantityNum < 1 ? 1 : quantityNum;
+        
+        const payload = {
+          name: formData.name.trim(),
+          category: formData.category || 'tcon',
+          brand: formData.brand || 'generic',
+          price: priceNum,
+          quantity: validQuantity,
+          image: formData.image || '',
+          description: formData.description || '',
+          update_url: formData.update_url || null
+        };
+
+        const res = await fetch(`${API}/inventory/items`, { 
+          method: 'POST', 
+          headers: getAuthHeader(), 
+          body: JSON.stringify(payload) 
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok || !data.success) {
+          throw new Error(data.error?.message || data.error || 'فشل حفظ القطعة');
+        }
+      }
+
+      showToast('تم الحفظ بنجاح'); 
+      setShowForm(false); 
+      setEditingProduct(null); 
+      loadAll();
+    } catch (err) { 
+      console.error('Save error:', err);
+      showToast(err.message || 'حدث خطأ أثناء الحفظ', 'error'); 
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleClearFilters = () => {
-    setSelectedCategory('all');
-    setSelectedBrand('all');
-    setSearchQuery('');
-    setSortBy('newest');
+  const handleDelete = async (id) => { 
+    if (!confirm('هل أنت متأكد من الحذف؟')) return; 
+    try {
+      const res = await fetch(`${API}/products/${id}`, { 
+        method: 'DELETE', 
+        headers: getAuthHeader() 
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('تم الحذف بنجاح');
+        loadAll(); 
+      } else {
+        showToast(data.message || 'فشل عملية الحذف', 'error');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+      showToast('خطأ أثناء الاتصال بالخادم', 'error');
+    }
   };
 
-  return (
-    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', system-ui, sans-serif", paddingBottom: 40 }}>
+  const handlePrintBarcode = (product, barcodeCode) => {
+    const code = barcodeCode || items.find(i => i.product_id === product.id)?.barcode || product.id;
+    const printWindow = window.open('', '_blank', 'width=500,height=500');
+    printWindow.document.write(`<!DOCTYPE html><html dir="rtl"><head><title>${product.name}</title><style>@page{size:auto;margin:0}body{font-family:system-ui;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#fff}.card{border:2px dashed #000;padding:16px;text-align:center;max-width:280px;border-radius:8px}.title{font-size:16px;font-weight:800;margin-bottom:8px;word-break:break-word}img{width:140px;height:140px}.code{font-size:12px;font-family:monospace;margin-top:4px}.price{font-size:15px;font-weight:bold;margin-top:6px;border-top:1px solid #ddd;padding-top:4px}</style></head><body><div class="card"><div class="title">${product.name}</div><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${code}" /><div class="code">Barcode: ${code}</div><div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div></div><script>setTimeout(()=>{window.print();window.close()},500)</script></body></html>`);
+    printWindow.document.close();
+  };
+
+  const handlePrintAllBarcodes = () => {
+    if (!products.length) {
+      showToast('لا توجد منتجات للطباعة', 'error');
+      return;
+    }
+    
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    let barcodesHTML = '';
+    
+    products.forEach((product) => {
+      const barcode = items.find(i => i.product_id === product.id)?.barcode || product.id;
       
-      {/* الهيدر العلوي - مضغوط */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '10px 12px', position: 'sticky', top: 0, zIndex: 30 }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-            <Link to="/" style={{ textDecoration: 'none', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 2, fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
-              <ChevronLeft size={18} /> الرئيسية
-            </Link>
-            <h1 style={{ fontSize: 15, fontWeight: 800, margin: 0, color: '#0f172a', whiteSpace: 'nowrap' }}>المتجر</h1>
-          </div>
-
-          <div style={{ position: 'relative', flex: 1, maxWidth: 350 }}>
-            <input
-              type="text"
-              placeholder="ابحث..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              style={{ width: '100%', padding: '8px 32px 8px 28px', border: '1px solid #cbd5e1', borderRadius: 20, outline: 'none', boxSizing: 'border-box', fontSize: 12, color: '#1e293b', background: '#f8fafc' }}
-            />
-            <Search size={14} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0 }}>
-                <X size={14} />
-              </button>
-            )}
-          </div>
-
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            style={{ background: showFilters ? '#eff6ff' : '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 20, padding: '7px 10px', cursor: 'pointer', color: showFilters ? '#2563eb' : '#475569', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, flexShrink: 0 }}
-          >
-            <SlidersHorizontal size={14} /> فلاتر
-          </button>
-
-          <button
-            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-            style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 20, padding: '7px 10px', cursor: 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, flexShrink: 0 }}
-          >
-            {viewMode === 'grid' ? <List size={14} /> : <Grid size={14} />}
-          </button>
+      barcodesHTML += `
+        <div class="barcode-item">
+          <div class="title">${product.name}</div>
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${barcode}" />
+          <div class="code">${barcode}</div>
+          <div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div>
         </div>
+      `;
+    });
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html dir="rtl">
+        <head>
+          <title>جميع الباركودات - ${products.length} منتج</title>
+          <style>
+            @page{size:auto;margin:10mm}
+            body{font-family:system-ui;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px}
+            .barcode-item{border:1px dashed #000;padding:10px;text-align:center;border-radius:8px;page-break-inside:avoid}
+            .title{font-size:12px;font-weight:800;margin-bottom:6px;word-break:break-word}
+            img{width:100px;height:100px}
+            .code{font-size:10px;font-family:monospace;margin-top:4px}
+            .price{font-size:12px;font-weight:bold;margin-top:4px;border-top:1px solid #ddd;padding-top:4px}
+            @media print {
+              body{grid-template-columns:repeat(3,1fr)}
+              .barcode-item{page-break-inside:avoid}
+            }
+          </style>
+        </head>
+        <body>
+          ${barcodesHTML}
+          <script>
+            setTimeout(()=>{window.print();window.close()},1000)
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
-        {/* شريط التصنيفات */}
-        <div style={{ maxWidth: 1100, margin: '8px auto 0', display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-          {categories.map(cat => {
-            const Icon = cat.icon;
-            const isActive = selectedCategory === cat.key;
-            return (
-              <button
-                key={cat.key}
-                onClick={() => setSelectedCategory(cat.key)}
-                style={{
-                  padding: '6px 10px',
-                  borderRadius: 16,
-                  border: isActive ? '2px solid #3b82f6' : '1px solid #e2e8f0',
-                  background: isActive ? '#eff6ff' : '#fff',
-                  color: isActive ? '#2563eb' : '#64748b',
-                  cursor: 'pointer',
-                  fontWeight: isActive ? 700 : 600,
-                  fontSize: 11,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <Icon size={12} style={{ color: isActive ? '#2563eb' : cat.color }} />
-                {cat.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+  const getCat = (k) => CATEGORIES.find(c => c.key === k) || { label: k, color: '#94a3b8' };
+  
+  const filtered = products.filter(p => 
+    (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) && 
+    (selectedCategory === 'all' || p.category === selectedCategory)
+  );
 
-      {/* فلاتر إضافية */}
-      {showFilters && (
-        <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '10px 12px', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
-          <select
-            value={selectedBrand}
-            onChange={e => setSelectedBrand(e.target.value)}
-            style={{ padding: '7px 10px', border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', outline: 'none', cursor: 'pointer', fontSize: 12, color: '#334155', flex: 1, minWidth: 140, maxWidth: 200 }}
-          >
-            {brands.map(b => <option key={b.code} value={b.code}>{b.name}</option>)}
-          </select>
-
-          <select
-            value={sortBy}
-            onChange={e => setSortBy(e.target.value)}
-            style={{ padding: '7px 10px', border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', outline: 'none', cursor: 'pointer', fontSize: 12, color: '#334155', flex: 1, minWidth: 140, maxWidth: 200 }}
-          >
-            <option value="newest">الأحدث أولاً</option>
-            <option value="price-low">السعر: من الأدنى</option>
-            <option value="price-high">السعر: من الأعلى</option>
-          </select>
-
-          {(selectedCategory !== 'all' || selectedBrand !== 'all' || searchQuery) && (
-            <button
-              onClick={handleClearFilters}
-              style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-            >
-              <X size={14} /> مسح
-            </button>
-          )}
+  return (
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 100, fontFamily: 'system-ui' }}>
+      {notification && (
+        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100, background: notification.type === 'error' ? '#ef4444' : '#10b981', color: '#fff', padding: '12px 20px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)', fontSize: 14, fontWeight: 700 }}>
+          {notification.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
+          {notification.message}
         </div>
       )}
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '10px 12px 24px' }}>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <div style={{ color: '#64748b', fontSize: 12, fontWeight: 700 }}>
-            {loading ? 'جاري البحث...' : `${products.length} قطعة`}
+      <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>المنتجات والمخزون</h1>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={handlePrintAllBarcodes} style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+              <Printer size={16} /> طباعة الكل
+            </button>
+            <button onClick={handleOpenAdd} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+              <Plus size={16} /> إضافة منتج
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: 16 }}>
+        {showForm && (
+          <div style={{ background: '#fff', border: '1px solid #3b82f6', borderRadius: 14, padding: 20, marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 800 }}>{editingProduct ? 'تعديل منتج' : 'إضافة منتج'}</h3>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}><X size={20} /></button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+              <input className="field-input" placeholder="اسم المنتج *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+              <select className="field-input" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+              </select>
+              <input className="field-input" type="number" placeholder="السعر *" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
+              <input className="field-input" type="number" placeholder="المخزون *" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
+              <input className="field-input" placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
+              <input className="field-input" placeholder="رابط التحديث (اختياري)" value={formData.update_url} onChange={e => setFormData({...formData, update_url: e.target.value})} />
+              <textarea className="field-input" placeholder="وصف المنتج (اختياري)" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} rows={2} style={{ gridColumn: '1 / -1' }} />
+              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', background: '#f1f5f9', borderRadius: 8, fontWeight: 600, fontSize: 13, width: 'fit-content' }}>
+                <Upload size={14} /> {uploading ? 'جاري...' : 'رفع صورة'}
+                <input type="file" accept="image/*" hidden onChange={e => handleImageUpload(e.target.files[0])} />
+              </label>
+            </div>
+            <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <button onClick={() => setShowForm(false)} className="btn btn-ghost btn-sm">إلغاء</button>
+              <button onClick={handleSave} className="btn btn-accent btn-sm" disabled={saving}>
+                <Save size={14} /> {saving ? 'جاري...' : 'حفظ'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14, marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
+            <button onClick={() => setSelectedCategory('all')} className={`btn ${selectedCategory === 'all' ? 'btn-primary' : 'btn-ghost'} btn-sm`}>الكل ({products.length})</button>
+            {CATEGORIES.map(c => <button key={c.key} onClick={() => setSelectedCategory(c.key)} className={`btn ${selectedCategory === c.key ? 'btn-primary' : 'btn-ghost'} btn-sm`}>{c.label}</button>)}
+          </div>
+          <div style={{ flex: 1, minWidth: 200, position: 'relative' }}>
+            <input className="field-input" placeholder="بحث..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            <Search size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
           </div>
         </div>
 
         {loading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 }}>
-            {[1, 2, 3, 4, 5, 6].map(n => (
-              <div key={n} style={{ background: '#fff', borderRadius: 12, height: 220, border: '1px solid #e2e8f0', animation: 'pulse 1.5s infinite ease-in-out' }} />
-            ))}
-            <style>{`@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }`}</style>
-          </div>
-        ) : products.length === 0 ? (
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, textAlign: 'center', padding: '48px 16px' }}>
-            <Package size={44} style={{ color: '#cbd5e1', marginBottom: 12 }} />
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#334155', margin: 0 }}>لم يتم العثور على قطع متطابقة</h3>
-            <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 4, marginBottom: 16 }}>جرب تغيير عبارات البحث أو اختيار ماركة أخرى</p>
-            <button
-              onClick={handleClearFilters}
-              style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
-            >
-              عرض جميع القطع
-            </button>
-          </div>
+          <div style={{ textAlign: 'center', padding: 60 }}><Loader2 size={32} className="spin" /></div>
         ) : (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(150px, 1fr))' : '1fr', 
-            gap: 12 
-          }}>
-            {products.map(product => {
-              const numericPrice = parseFloat(product.price) || 0;
-              const isAvailable = product.stock !== false && product.stock !== 0;
-              const hasUpdate = product.update_url && product.update_url.trim() !== '';
-
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
+            {filtered.map(product => {
+              const catObj = getCat(product.category);
+              const barcode = items.find(i => i.product_id === product.id)?.barcode;
               return (
-                <div
-                  key={product.id}
-                  onClick={() => navigate('/checkout', { state: { items: [{ id: product.id, name: product.name, price: product.price, quantity: 1, image: product.image }] } })}
-                  style={{
-                    background: '#fff',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: 12,
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    flexDirection: viewMode === 'list' ? 'row' : 'column',
-                    alignItems: viewMode === 'list' ? 'center' : 'stretch',
-                    position: 'relative'
-                  }}
-                >
-                  <span style={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    zIndex: 2,
-                    fontSize: 9,
-                    fontWeight: 800,
-                    padding: '2px 6px',
-                    borderRadius: 10,
-                    background: isAvailable ? '#dcfce7' : '#fee2e2',
-                    color: isAvailable ? '#166534' : '#991b1b',
-                  }}>
-                    {isAvailable ? 'متوفر' : 'غير متوفر'}
-                  </span>
-
-                  <div style={{ 
-                    background: '#fafafa', 
-                    height: viewMode === 'list' ? 95 : 140, 
-                    width: viewMode === 'list' ? 100 : '100%', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    overflow: 'hidden', 
-                    borderBottom: viewMode === 'grid' ? '1px solid #f1f5f9' : 'none', 
-                    flexShrink: 0 
-                  }}>
-                    <img
-                      src={product.image || 'https://via.placeholder.com/200?text=لا+توجد+صورة'}
-                      alt={product.name || product.title}
-                      style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 6 }}
-                      onError={(e) => { e.target.src = 'https://via.placeholder.com/200?text=صورة+غير+متاحة'; }}
-                    />
-                  </div>
-
-                  <div style={{ padding: 10, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 6 }}>
-                    <div>
-                      <h2 style={{ fontSize: 13, fontWeight: 700, margin: '0 0 4px 0', color: '#0f172a', lineHeight: 1.3 }}>
-                        {product.name || product.title}
-                      </h2>
-                      <p style={{ fontSize: 11, color: '#64748b', margin: 0, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {product.description || 'قطعة غيار إلكترونية'}
-                      </p>
+                <div key={product.id} className="card" style={{ padding: 16 }}>
+                  <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                    <img src={product.image || 'https://via.placeholder.com/60'} style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }} alt={product.name} />
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: `${catObj.color}15`, color: catObj.color, fontWeight: 700 }}>{catObj.label}</span>
+                      <h4 style={{ fontSize: 14, fontWeight: 800, margin: '4px 0' }}>{product.name}</h4>
+                      <div style={{ fontSize: 16, fontWeight: 900, color: '#d97706' }}>{(parseFloat(product.price) || 0).toLocaleString('en-US')} دج</div>
                     </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: 6, borderTop: '1px dashed #f1f5f9', flexWrap: 'wrap', gap: 4 }}>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: '#d97706' }}>
-                        {numericPrice.toLocaleString('en-US')} <span style={{ fontSize: 10 }}>دج</span>
-                      </span>
-
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        {hasUpdate && (
-                          <button
-                            onClick={(e) => handleDownloadUpdate(e, product)}
-                            style={{
-                              padding: '6px 10px',
-                              background: '#3b82f6',
-                              color: '#fff',
-                              border: 'none',
-                              borderRadius: 6,
-                              fontWeight: 700,
-                              fontSize: 11,
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 4
-                            }}
-                          >
-                            <Download size={13} /> تحديث
-                          </button>
-                        )}
-
-                        <button
-                          onClick={(e) => handleBuyNow(e, product)}
-                          disabled={!isAvailable}
-                          style={{
-                            padding: '6px 10px',
-                            background: isAvailable ? '#f59e0b' : '#cbd5e1',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: 6,
-                            fontWeight: 700,
-                            fontSize: 11,
-                            cursor: isAvailable ? 'pointer' : 'not-allowed',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4
-                          }}
-                        >
-                          <ShoppingCart size={13} /> {isAvailable ? 'شراء' : 'نفد'}
-                        </button>
-                      </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
+                    <span style={{ fontSize: 12, color: '#64748b' }}>المخزون: <strong>{product.stock || 0}</strong></span>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => handlePrintBarcode(product, barcode)} className="btn btn-ghost btn-sm" title="طباعة">🖨️</button>
+                      <button onClick={() => handleOpenEdit(product)} className="btn btn-ghost btn-sm" style={{ color: '#2563eb' }}><Edit3 size={14} /></button>
+                      <button onClick={() => handleDelete(product.id)} className="btn btn-ghost btn-sm" style={{ color: '#ef4444' }}><Trash2 size={14} /></button>
                     </div>
                   </div>
                 </div>
