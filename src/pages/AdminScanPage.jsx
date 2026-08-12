@@ -78,9 +78,6 @@ export default function AdminScanPage() {
     setItem(null);
     
     try {
-      console.log('Original scan:', clean);
-      
-      // استخرج الرقم فقط
       let searchCode = clean;
       const idMatch = clean.match(/(\d+)/);
       if (idMatch) {
@@ -89,7 +86,7 @@ export default function AdminScanPage() {
       
       console.log('Search code:', searchCode);
       
-      // جلب جميع قطع المخزون فقط
+      // جلب جميع قطع المخزون
       const res = await fetch(`${API}/inventory/items`, { 
         headers: { Authorization: `Bearer ${token}` } 
       });
@@ -105,13 +102,38 @@ export default function AdminScanPage() {
         );
         
         if (found) {
-          console.log('Found item:', found);
           setItem(found);
+          setLoading(false);
+          return;
+        }
+      }
+      
+      // إذا لم يجد في inventory، ابحث في products
+      const productRes = await fetch(`${API}/products/${searchCode}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const productData = await productRes.json();
+      
+      if (productData?.success && productData?.product) {
+        const product = productData.product;
+        
+        // ابحث عن قطعة مخزون مرتبطة
+        const relatedItem = data?.items?.find(i => i.product_id === product.id);
+        
+        if (relatedItem) {
+          setItem(relatedItem);
         } else {
-          setErrorMsg(`لا توجد قطعة مخزون للرقم: "${searchCode}"`);
+          // اعرض المنتج مع بيانات كاملة
+          setItem({
+            ...product,
+            product_id: product.id,
+            sku: '-',
+            barcode: '-',
+            status: 'available'
+          });
         }
       } else {
-        setErrorMsg('لا توجد قطع في المخزون');
+        setErrorMsg(`لم يتم العثور على: "${clean}"`);
       }
     } catch (err) {
       console.error('Fetch error:', err);
@@ -136,21 +158,70 @@ export default function AdminScanPage() {
     const ns = item.status === 'available' ? 'sold' : 'available';
     
     try {
-      const res = await fetch(`${API}/inventory/items/${item.id}`, { 
-        method: 'PUT', 
-        headers: { 
-          'Content-Type': 'application/json', 
-          Authorization: `Bearer ${token}` 
-        }, 
-        body: JSON.stringify({ status: ns }) 
-      });
-      
-      const data = await res.json();
-      
-      if (data.success) {
-        setItem({ ...item, status: ns });
+      // إذا كانت قطعة مخزون (لها barcode حقيقي)
+      if (item.barcode && item.barcode !== '-') {
+        const res = await fetch(`${API}/inventory/items/${item.id}`, { 
+          method: 'PUT', 
+          headers: { 
+            'Content-Type': 'application/json', 
+            Authorization: `Bearer ${token}` 
+          }, 
+          body: JSON.stringify({ status: ns }) 
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          setItem({ ...item, status: ns });
+        } else {
+          setErrorMsg(data.error || 'فشل التعديل');
+        }
       } else {
-        setErrorMsg(data.error || 'فشل التعديل');
+        // هذا منتج من products - ابحث عن قطعة مخزون أو حدث المنتج
+        const res = await fetch(`${API}/inventory/items`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        
+        const relatedItem = data.items?.find(i => i.product_id === item.product_id || i.product_id === item.id);
+        
+        if (relatedItem) {
+          // حدث قطعة المخزون المرتبطة
+          const updateRes = await fetch(`${API}/inventory/items/${relatedItem.id}`, { 
+            method: 'PUT', 
+            headers: { 
+              'Content-Type': 'application/json', 
+              Authorization: `Bearer ${token}` 
+            }, 
+            body: JSON.stringify({ status: ns }) 
+          });
+          
+          const updateData = await updateRes.json();
+          
+          if (updateData.success) {
+            setItem({ ...item, ...relatedItem, status: ns });
+          } else {
+            setErrorMsg(updateData.error || 'فشل التعديل');
+          }
+        } else {
+          // حدث المنتج مباشرة
+          const productRes = await fetch(`${API}/products/${item.product_id || item.id}`, { 
+            method: 'PUT', 
+            headers: { 
+              'Content-Type': 'application/json', 
+              Authorization: `Bearer ${token}` 
+            }, 
+            body: JSON.stringify({ active: ns === 'available' }) 
+          });
+          
+          const productData = await productRes.json();
+          
+          if (productData.success) {
+            setItem({ ...item, status: ns });
+          } else {
+            setErrorMsg(productData.error || 'فشل التعديل');
+          }
+        }
       }
     } catch (err) {
       console.error('Toggle error:', err);
@@ -167,7 +238,7 @@ export default function AdminScanPage() {
           <div style={{ display: 'flex', gap: 8 }}>
             <input 
               type="text" 
-              placeholder="أدخل رمز الباركود..." 
+              placeholder="أدخل رمز الباركود أو ID..." 
               value={manualCode} 
               onChange={e => setManualCode(e.target.value)} 
               style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none' }} 
