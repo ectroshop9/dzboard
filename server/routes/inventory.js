@@ -9,22 +9,23 @@ router.get('/items', async (req, res) => {
     let query = supabase.from('inventory_items').select('*').order('id', { ascending: false });
     
     if (search) {
-      query = query.or(`sku.ilike.%${search}%,name.ilike.%${search}%,barcode.ilike.%${search}%`);
+      query = query.or(`sku.ilike.%${search}%,barcode.ilike.%${search}%`);
     }
     
     const { data: items, error } = await query;
-    if (error) return res.status(500).json({ success: false, error });
+    if (error) return res.status(500).json({ success: false, error: error.message });
 
     // دمج تفاصيل المنتج مع كل قطعة مخزون
     for (let item of (items || [])) {
       if (item.product_id) {
         const { data: product } = await supabase
           .from('products')
-          .select('image,price')
+          .select('name, image, price')
           .eq('id', item.product_id)
           .single();
           
         if (product) {
+          item.name = product.name;
           item.image = product.image;
           item.price = product.price;
         }
@@ -40,29 +41,31 @@ router.get('/items', async (req, res) => {
 // POST /items - إضافة قطعة أو أكثر ومزامنة الكمية مع جدول المنتجات
 router.post('/items', async (req, res) => {
   try {
-    // 1. استقبال البيانات والكمية (افتراضياً 1)
     const { name, shelf, position, price, image, category, brand, quantity = 1 } = req.body;
-    const qtyNum = parseInt(quantity, 10) || 1;
+    const qtyNum = Math.max(1, parseInt(quantity, 10) || 1);
 
-    // 2. إنشاء المنتج في جدول products مع ضبط الرصيد (stock) بحسب الكمية
+    // 1. إنشاء المنتج في جدول products
     const { data: product, error: productError } = await supabase
       .from('products')
       .insert({
         name,
-        price: price || 0,
-        stock: qtyNum, // ضبط الكمية هنا
+        price: parseFloat(price) || 0,
+        stock: qtyNum,
         active: true,
         category: category || 'parts',
         brand: brand || 'generic',
         image: image || '',
-        description: `${shelf} - ${position || ''}`
+        description: shelf ? `${shelf} - ${position || ''}` : ''
       })
       .select()
       .single();
 
-    if (productError) return res.status(500).json({ success: false, error: productError });
+    if (productError) {
+      console.error('Product Error:', productError);
+      return res.status(500).json({ success: false, error: productError.message });
+    }
 
-    // 3. جلب العدد الحالي للقطع لإنشاء SKU و Barcode متسلسلين
+    // 2. جلب العدد الحالي للقطع لإنشاء SKU و Barcode
     const { count } = await supabase
       .from('inventory_items')
       .select('*', { count: 'exact', head: true });
@@ -70,7 +73,7 @@ router.post('/items', async (req, res) => {
     let currentCount = count || 0;
     const newItems = [];
 
-    // 4. تجهيز القطع بعدد الكمية المطلوب إضافتها
+    // 3. تجهيز القطع (تم إزالة حقل name لتجنب خطأ قاعدة البيانات)
     for (let i = 0; i < qtyNum; i++) {
       currentCount++;
       const sku = `DZB-${String(currentCount).padStart(3, '0')}`;
@@ -79,22 +82,24 @@ router.post('/items', async (req, res) => {
       newItems.push({
         sku,
         barcode,
-        name,
-        shelf,
-        position,
+        shelf: shelf || '',
+        position: position || '',
         image: image || '',
         product_id: product.id,
         status: 'available'
       });
     }
 
-    // 5. حفظ جميع القطع دفعة واحدة في جدول inventory_items
+    // 4. حفظ القطع دفعة واحدة
     const { data: items, error: itemsError } = await supabase
       .from('inventory_items')
       .insert(newItems)
       .select();
 
-    if (itemsError) return res.status(500).json({ success: false, error: itemsError });
+    if (itemsError) {
+      console.error('Inventory Error:', itemsError);
+      return res.status(500).json({ success: false, error: itemsError.message });
+    }
 
     res.json({ success: true, items, product });
   } catch (err) {
@@ -107,14 +112,12 @@ router.put('/items/:id', async (req, res) => {
   try {
     const { status } = req.body;
     
-    // جلب الحالة القديمة ورقم المنتج المربوط
     const { data: old } = await supabase
       .from('inventory_items')
       .select('product_id,status')
       .eq('id', req.params.id)
       .single();
 
-    // تحديث حالة القطعة
     const { data: item, error } = await supabase
       .from('inventory_items')
       .update({ status })
@@ -122,9 +125,8 @@ router.put('/items/:id', async (req, res) => {
       .select()
       .single();
 
-    if (error) return res.status(500).json({ success: false, error });
+    if (error) return res.status(500).json({ success: false, error: error.message });
 
-    // مزامنة المخزون في جدول المنتجات
     if (old?.product_id) {
       const { data: product } = await supabase
         .from('products')

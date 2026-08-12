@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
-  Plus, Trash2, Save, Package, ChevronLeft, Monitor, Zap, Cpu, 
-  Search, Loader2, Upload, Edit3, X, RefreshCw, CheckCircle, AlertCircle, Printer,
-  LayoutDashboard, ClipboardList, ScanLine, FileText, Settings, Camera
+  Plus, Trash2, Save, Package, Monitor, Zap, Cpu, 
+  Search, Loader2, Upload, Edit3, X, CheckCircle, AlertCircle,
+  LayoutDashboard, ClipboardList, ScanLine, FileText
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -27,7 +27,19 @@ export default function AdminProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [uploading, setUploading] = useState(false);
   const [notification, setNotification] = useState(null);
-  const initialForm = { name: '', category: 'tcon', price: '', stock: '1', description: '', image: '', shelf: '', position: '' };
+  
+  const initialForm = { 
+    name: '', 
+    category: 'tcon', 
+    price: '', 
+    stock: '1', 
+    description: '', 
+    image: '', 
+    shelf: '', 
+    position: '',
+    brand: 'generic'
+  };
+  
   const [formData, setFormData] = useState(initialForm);
 
   useEffect(() => { 
@@ -55,6 +67,7 @@ export default function AdminProductsPage() {
         if (a?.success) setProducts(a.products || []); 
         if (b?.success) setItems(b.items || []); 
       })
+      .catch(() => showToast('حدث خطأ أثناء تحميل البيانات', 'error'))
       .finally(() => setLoading(false));
   };
 
@@ -72,7 +85,7 @@ export default function AdminProductsPage() {
         });
         const data = await res.json();
         if (data.success) setFormData(p => ({ ...p, image: data.url })); 
-        else showToast('فشل الرفع', 'error');
+        else showToast('فشل رفع الصورة', 'error');
       } catch {
         showToast('خطأ أثناء رفع الصورة', 'error');
       } finally {
@@ -89,6 +102,10 @@ export default function AdminProductsPage() {
 
   const handleOpenEdit = (p) => { 
     setEditingProduct(p); 
+    
+    // العثور على مكان الرف والوضعية من القطعة المرتبطة بها
+    const relatedItem = items.find(i => i.product_id === p.id);
+
     setFormData({ 
       name: p.name || '', 
       category: p.category || 'tcon', 
@@ -96,8 +113,9 @@ export default function AdminProductsPage() {
       stock: p.stock || '1', 
       description: p.description || '', 
       image: p.image || '', 
-      shelf: p.shelf || '',
-      position: p.position || '' 
+      shelf: relatedItem?.shelf || '',
+      position: relatedItem?.position || '',
+      brand: p.brand || 'generic'
     }); 
     setShowForm(true); 
   };
@@ -110,29 +128,39 @@ export default function AdminProductsPage() {
 
     try {
       if (editingProduct) {
-        // تحديث منتج موجود
-        await fetch(`${API}/products/${editingProduct.id}`, { 
+        // 1. تحديث منتج موجود في جدول products
+        const res = await fetch(`${API}/products/${editingProduct.id}`, { 
           method: 'PUT', 
           headers: getAuthHeader(), 
-          body: JSON.stringify(formData) 
+          body: JSON.stringify({
+            name: formData.name,
+            category: formData.category,
+            price: parseFloat(formData.price) || 0,
+            image: formData.image,
+            brand: formData.brand,
+            description: formData.shelf ? `${formData.shelf} - ${formData.position || ''}` : ''
+          }) 
         });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
       } else {
-        // إضافة منتج جديد وقطع المخزون دفعة واحدة إلى مسار /inventory/items المتوافق
+        // 2. إضافة منتج جديد وقطع المخزون المرافقة له
         const res = await fetch(`${API}/inventory/items`, { 
           method: 'POST', 
           headers: getAuthHeader(), 
           body: JSON.stringify({
             name: formData.name,
             category: formData.category,
-            price: formData.price,
-            quantity: parseInt(formData.stock, 10) || 1, // إرسال الكمية كاملة
+            brand: formData.brand,
+            price: parseFloat(formData.price) || 0,
+            quantity: Math.max(1, parseInt(formData.stock, 10) || 1),
             shelf: formData.shelf,
             position: formData.position,
             image: formData.image
           }) 
         });
         const data = await res.json();
-        if (!data.success) throw new Error(data.error);
+        if (!data.success) throw new Error(data.error || 'فشل حفظ القطعة');
       }
 
       showToast('تم الحفظ بنجاح'); 
@@ -140,14 +168,24 @@ export default function AdminProductsPage() {
       setEditingProduct(null); 
       loadAll();
     } catch (err) { 
-      showToast('حدث خطأ أثناء الحفظ', 'error'); 
+      showToast(err.message || 'حدث خطأ أثناء الحفظ', 'error'); 
     }
   };
 
   const handleDelete = async (id) => { 
     if (!confirm('هل أنت تأكد من الحذف؟')) return; 
-    await fetch(`${API}/products/${id}`, { method: 'DELETE', headers: getAuthHeader() }); 
-    loadAll(); 
+    try {
+      const res = await fetch(`${API}/products/${id}`, { method: 'DELETE', headers: getAuthHeader() });
+      const data = await res.json();
+      if (data.success) {
+        showToast('تم الحذف بنجاح');
+        loadAll(); 
+      } else {
+        showToast('فشل عملية الحذف', 'error');
+      }
+    } catch {
+      showToast('خطأ أثناء الاتصال بالخادم', 'error');
+    }
   };
 
   const handlePrintBarcode = (product, barcodeCode) => {
@@ -158,7 +196,7 @@ export default function AdminProductsPage() {
   };
 
   const getCat = (k) => CATEGORIES.find(c => c.key === k) || { label: k, color: '#94a3b8' };
-  const filtered = products.filter(p => (p.name || '').includes(searchQuery) && (selectedCategory === 'all' || p.category === selectedCategory));
+  const filtered = products.filter(p => (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) && (selectedCategory === 'all' || p.category === selectedCategory));
 
   const NAV = [
     { label: 'الرئيسية', path: '/admin/dashboard', icon: LayoutDashboard },
