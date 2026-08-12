@@ -13,6 +13,7 @@ import AdminOrdersPage from './pages/AdminOrdersPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 import AdminScanPage from './pages/AdminScanPage';
 import AdminRequestsPage from './pages/AdminRequestsPage';
+import AdminOrdersMenuPage from './pages/AdminOrdersMenuPage'; // ← أضف هذا
 
 // استيراد الشريط السفلي
 import MobileBottomNav from './components/MobileBottomNav';
@@ -48,6 +49,7 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/products" element={<AdminProductsPage />} />
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
+          <Route path="/admin/orders-menu" element={<AdminOrdersMenuPage />} /> {/* ← أضف هذا */}
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
           <Route path="/admin/scan" element={<AdminScanPage />} />
           <Route path="/admin/requests" element={<AdminRequestsPage />} />
