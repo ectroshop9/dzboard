@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Package, ClipboardList, ScanLine, Settings 
@@ -5,6 +6,27 @@ import {
 
 export default function MobileBottomNav() {
   const location = useLocation();
+  const [visible, setVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // التمرير للأسفل - إخفاء
+        setVisible(false);
+      } else {
+        // التمرير للأعلى - إظهار
+        setVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   const navItems = [
     { label: 'الرئيسية', path: '/admin/dashboard', icon: LayoutDashboard },
@@ -19,7 +41,7 @@ export default function MobileBottomNav() {
       position: 'fixed',
       bottom: 20,
       left: '50%',
-      transform: 'translateX(-50%)',
+      transform: `translateX(-50%) translateY(${visible ? '0' : '100px'})`,
       width: 'calc(100% - 32px)',
       maxWidth: 500,
       height: 70,
@@ -34,7 +56,10 @@ export default function MobileBottomNav() {
       boxShadow: '0 10px 35px rgba(0, 0, 0, 0.35)',
       padding: '6px 10px',
       boxSizing: 'border-box',
-      border: '1px solid rgba(255, 255, 255, 0.08)'
+      border: '1px solid rgba(255, 255, 255, 0.08)',
+      opacity: visible ? 1 : 0,
+      transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+      pointerEvents: visible ? 'auto' : 'none'
     }}>
       {navItems.map((item) => {
         const Icon = item.icon;
