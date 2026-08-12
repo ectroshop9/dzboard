@@ -80,7 +80,7 @@ export default function AdminScanPage() {
     try {
       console.log('Original scan:', clean);
       
-      // استخرج الرقم فقط من أي نص
+      // استخرج الرقم فقط
       let searchCode = clean;
       const idMatch = clean.match(/(\d+)/);
       if (idMatch) {
@@ -89,7 +89,7 @@ export default function AdminScanPage() {
       
       console.log('Search code:', searchCode);
       
-      // جلب جميع العناصر
+      // جلب جميع قطع المخزون فقط
       const res = await fetch(`${API}/inventory/items`, { 
         headers: { Authorization: `Bearer ${token}` } 
       });
@@ -108,21 +108,10 @@ export default function AdminScanPage() {
           console.log('Found item:', found);
           setItem(found);
         } else {
-          // إذا لم يجد، ابحث في products
-          const productRes = await fetch(`${API}/products/${searchCode}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          const productData = await productRes.json();
-          
-          if (productData?.success && productData?.product) {
-            console.log('Found product:', productData.product);
-            setItem(productData.product);
-          } else {
-            setErrorMsg(`لم يتم العثور على: "${clean}"`);
-          }
+          setErrorMsg(`لا توجد قطعة مخزون للرقم: "${searchCode}"`);
         }
       } else {
-        setErrorMsg(`لم يتم العثور على: "${clean}"`);
+        setErrorMsg('لا توجد قطع في المخزون');
       }
     } catch (err) {
       console.error('Fetch error:', err);
@@ -147,26 +136,7 @@ export default function AdminScanPage() {
     const ns = item.status === 'available' ? 'sold' : 'available';
     
     try {
-      let itemId = item.id;
-      
-      // إذا كان item من products (ليس له barcode)، ابحث عن القطعة المرتبطة
-      if (!item.barcode && !item.sku) {
-        const res = await fetch(`${API}/inventory/items`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
-        
-        const relatedItem = data.items?.find(i => i.product_id === item.id);
-        if (relatedItem) {
-          itemId = relatedItem.id;
-        } else {
-          setErrorMsg('لا توجد قطعة مخزون مرتبطة بهذا المنتج');
-          setLoading(false);
-          return;
-        }
-      }
-      
-      const res = await fetch(`${API}/inventory/items/${itemId}`, { 
+      const res = await fetch(`${API}/inventory/items/${item.id}`, { 
         method: 'PUT', 
         headers: { 
           'Content-Type': 'application/json', 
@@ -197,7 +167,7 @@ export default function AdminScanPage() {
           <div style={{ display: 'flex', gap: 8 }}>
             <input 
               type="text" 
-              placeholder="أدخل رمز الباركود أو ID..." 
+              placeholder="أدخل رمز الباركود..." 
               value={manualCode} 
               onChange={e => setManualCode(e.target.value)} 
               style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none' }} 
@@ -265,27 +235,25 @@ export default function AdminScanPage() {
               </div>
               
               <div style={{ fontSize: 13 }}>
-                SKU: <code>{item.sku || '-'}</code> | رف: {item.shelf || '-'} | باركود: <code>{item.barcode || '-'}</code>
+                SKU: <code>{item.sku}</code> | رف: {item.shelf || '-'} | باركود: <code>{item.barcode}</code>
               </div>
               
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                {item.barcode || item.sku ? (
-                  <button 
-                    onClick={toggleItemStatus} 
-                    style={{ 
-                      flex: 1, 
-                      background: item.status === 'available' ? '#d97706' : '#2563eb', 
-                      color: '#fff', 
-                      border: 'none', 
-                      borderRadius: 8, 
-                      padding: '10px', 
-                      fontWeight: 800, 
-                      cursor: 'pointer' 
-                    }}
-                  >
-                    {item.status === 'available' ? 'بيع' : 'إرجاع'}
-                  </button>
-                ) : null}
+                <button 
+                  onClick={toggleItemStatus} 
+                  style={{ 
+                    flex: 1, 
+                    background: item.status === 'available' ? '#d97706' : '#2563eb', 
+                    color: '#fff', 
+                    border: 'none', 
+                    borderRadius: 8, 
+                    padding: '10px', 
+                    fontWeight: 800, 
+                    cursor: 'pointer' 
+                  }}
+                >
+                  {item.status === 'available' ? 'بيع' : 'إرجاع'}
+                </button>
                 
                 <button 
                   onClick={() => { setItem(null); setManualCode(''); setScannedCode(''); }} 
