@@ -195,6 +195,19 @@ export default function AdminScanPage() {
           
           {item && !loading && (
             <div style={{ textAlign: 'right', background: '#f8fafc', borderRadius: 12, padding: 16, border: '1px solid #e2e8f0' }}>
+              
+              {/* صورة المنتج */}
+              {item.image && (
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                  <img 
+                    src={item.image} 
+                    alt={item.name}
+                    style={{ width: 120, height: 120, borderRadius: 12, objectFit: 'cover', border: '1px solid #e2e8f0' }}
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                </div>
+              )}
+              
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
                 <strong style={{ fontSize: 16 }}>{item.name}</strong>
                 <span style={{ 
