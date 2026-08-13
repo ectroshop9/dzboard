@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Plus, Trash2, Save, Package, Monitor, Zap, Cpu, 
   Search, Loader2, Upload, Edit3, X, CheckCircle, AlertCircle,
-  Printer
+  Printer, CheckSquare, Square
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -27,6 +27,7 @@ export default function AdminProductsPage() {
   const [uploading, setUploading] = useState(false);
   const [notification, setNotification] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState([]);
   
   const initialForm = { 
     name: '', 
@@ -230,6 +231,71 @@ export default function AdminProductsPage() {
     printWindow.document.close();
   };
 
+  const toggleSelect = (id) => {
+    setSelectedProducts(prev => 
+      prev.includes(id) 
+        ? prev.filter(p => p !== id) 
+        : [...prev, id]
+    );
+  };
+
+  const handlePrintSelected = () => {
+    if (selectedProducts.length === 0) {
+      showToast('اختر منتجات للطباعة أولاً', 'error');
+      return;
+    }
+    
+    const selected = products.filter(p => selectedProducts.includes(p.id));
+    
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    let barcodesHTML = '';
+    
+    selected.forEach((product) => {
+      const barcode = items.find(i => i.product_id === product.id)?.barcode || product.id;
+      
+      barcodesHTML += `
+        <div class="barcode-item">
+          <div class="title">${product.name}</div>
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${barcode}" />
+          <div class="code">${barcode}</div>
+          <div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div>
+        </div>
+      `;
+    });
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html dir="rtl">
+        <head>
+          <title>طباعة الباركودات المحددة - ${selected.length} منتج</title>
+          <style>
+            @page{size:auto;margin:10mm}
+            body{font-family:system-ui;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px}
+            .barcode-item{border:1px dashed #000;padding:10px;text-align:center;border-radius:8px;page-break-inside:avoid}
+            .title{font-size:12px;font-weight:800;margin-bottom:6px;word-break:break-word}
+            img{width:100px;height:100px}
+            .code{font-size:10px;font-family:monospace;margin-top:4px}
+            .price{font-size:12px;font-weight:bold;margin-top:4px;border-top:1px solid #ddd;padding-top:4px}
+            @media print {
+              body{grid-template-columns:repeat(3,1fr)}
+              .barcode-item{page-break-inside:avoid}
+            }
+          </style>
+        </head>
+        <body>
+          ${barcodesHTML}
+          <script>
+            setTimeout(()=>{window.print();window.close()},1000)
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    
+    setSelectedProducts([]);
+  };
+
   const handlePrintAllBarcodes = () => {
     if (!products.length) {
       showToast('لا توجد منتجات للطباعة', 'error');
@@ -302,7 +368,12 @@ export default function AdminProductsPage() {
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>المنتجات والمخزون</h1>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {selectedProducts.length > 0 && (
+              <button onClick={handlePrintSelected} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+                <Printer size={16} /> طباعة المحدد ({selectedProducts.length})
+              </button>
+            )}
             <button onClick={handlePrintAllBarcodes} style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
               <Printer size={16} /> طباعة الكل
             </button>
@@ -362,8 +433,24 @@ export default function AdminProductsPage() {
             {filtered.map(product => {
               const catObj = getCat(product.category);
               const barcode = items.find(i => i.product_id === product.id)?.barcode;
+              const isSelected = selectedProducts.includes(product.id);
               return (
-                <div key={product.id} className="card" style={{ padding: 16 }}>
+                <div key={product.id} className="card" style={{ padding: 16, position: 'relative', border: isSelected ? '2px solid #3b82f6' : '1px solid #e2e8f0' }}>
+                  <button 
+                    onClick={() => toggleSelect(product.id)}
+                    style={{ 
+                      position: 'absolute', 
+                      top: 10, 
+                      left: 10, 
+                      background: 'none', 
+                      border: 'none', 
+                      cursor: 'pointer',
+                      color: isSelected ? '#3b82f6' : '#94a3b8',
+                      zIndex: 2
+                    }}
+                  >
+                    {isSelected ? <CheckSquare size={22} /> : <Square size={22} />}
+                  </button>
                   <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
                     <img src={product.image || 'https://via.placeholder.com/60'} style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }} alt={product.name} />
                     <div style={{ flex: 1 }}>
@@ -388,4 +475,4 @@ export default function AdminProductsPage() {
       </div>
     </div>
   );
-}
+} 
