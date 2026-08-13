@@ -1,38 +1,64 @@
-let orders = [];
-let nextId = 1001;
+import { supabase } from '../supabase.js';
 
 export default {
-  getAll: () => orders.sort((a, b) => b.id - a.id),
-  
-  create: (data) => {
-    const o = {
-      id: nextId++,
-      ...data,
-      status: 'pending',
-      tracking: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    orders.push(o);
-    return o;
+  getAll: async () => {
+    const { data } = await supabase.from('orders').select('*').order('id', { ascending: false });
+    return data || [];
   },
   
-  updateStatus: (id, status, tracking = null) => {
-    const o = orders.find(order => order.id === id);
-    if (o) {
-      o.status = status;
-      if (tracking) o.tracking = tracking;
-      o.updatedAt = new Date().toISOString();
-      return o;
-    }
-    return null;
+  create: async (data) => {
+    const { data: order, error } = await supabase
+      .from('orders')
+      .insert({
+        customer: data.customer,
+        phone: data.phone,
+        wilaya_id: data.wilayaId,
+        commune: data.commune,
+        address: data.address,
+        shipping_type: data.shippingType,
+        items: data.items,
+        amount: data.amount,
+        shipping: data.shipping,
+        status: 'pending',
+        tracking: null
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return order;
   },
   
-  getByTracking: (tracking) => {
-    return orders.find(o => o.tracking === tracking);
+  updateStatus: async (id, status, tracking = null) => {
+    const updateData = { status, updated_at: new Date().toISOString() };
+    if (tracking) updateData.tracking = tracking;
+    
+    const { data, error } = await supabase
+      .from('orders')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
   },
   
-  getById: (id) => {
-    return orders.find(o => o.id === id);
+  getByTracking: async (tracking) => {
+    const { data } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('tracking', tracking)
+      .single();
+    return data;
+  },
+  
+  getById: async (id) => {
+    const { data } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', id)
+      .single();
+    return data;
   },
 };
