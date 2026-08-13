@@ -25,23 +25,38 @@ export const ecotrackService = {
 
   createShipment: async (order) => {
     try {
+      console.log('=== Ecotrack createShipment ===');
+      console.log('Order received:', JSON.stringify(order, null, 2));
+      
+      // إصلاح أسماء الحقول
+      const wilayaId = order.wilayaId || order.wilaya_id;
+      const shippingType = order.shippingType || order.shipping_type;
+      
       const p = new URLSearchParams({
         reference: String(order.id), 
         nom_client: order.customer || '', 
         telephone: order.phone || '', 
         adresse: order.address || '',
         commune: order.commune || '', 
-        code_wilaya: String(order.wilayaId),
+        code_wilaya: String(wilayaId),
         montant: String(parseFloat(order.amount || 0) + parseFloat(order.shipping || 0)),
-        produit: order.items?.map(i => `${i.name} x${i.quantity}`).join(', ') || '', 
+        produit: order.items?.map(i => `${i.name || i.title} x${i.quantity}`).join(', ') || '', 
         type: '1',
-        stop_desk: order.shippingType === 'stopdesk' ? '1' : '0',
+        stop_desk: shippingType === 'stopdesk' ? '1' : '0',
       });
 
+      console.log('URL params:', p.toString());
+      
       const r = await fetch(`${URL}/create/order?${p}`, { method: 'POST', headers: H });
       const d = await r.json();
       
-      return d.tracking ? { success: true, tracking: d.tracking } : { success: false, error: d.message || 'فشل إنشاء الطلب في Ecotrack' };
+      console.log('Ecotrack API Response:', JSON.stringify(d));
+      
+      if (d.tracking) {
+        return { success: true, tracking: d.tracking };
+      } else {
+        return { success: false, error: d.message || d.error || 'فشل إنشاء الطلب في Ecotrack' };
+      }
     } catch (error) {
       console.error('Ecotrack createShipment Error:', error);
       return { success: false, error: error.message };

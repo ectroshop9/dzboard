@@ -26,7 +26,13 @@ export default {
       .single();
     
     if (error) throw error;
-    return order;
+    
+    // أضف الحقول بالشكلين ليعمل Ecotrack
+    return {
+      ...order,
+      wilayaId: order.wilaya_id,
+      shippingType: order.shipping_type
+    };
   },
   
   updateStatus: async (id, status, tracking = null) => {
