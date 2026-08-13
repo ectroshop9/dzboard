@@ -15,6 +15,7 @@ export default function AdminScanPage() {
   const [scannedCode, setScannedCode] = useState('');
   const [item, setItem] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showFullImage, setShowFullImage] = useState(false);
   const html5QrCodeRef = useRef(null);
 
   useEffect(() => { 
@@ -196,9 +197,12 @@ export default function AdminScanPage() {
           {item && !loading && (
             <div style={{ textAlign: 'right', background: '#f8fafc', borderRadius: 12, padding: 16, border: '1px solid #e2e8f0' }}>
               
-              {/* صورة المنتج */}
+              {/* صورة المنتج - قابلة للتكبير */}
               {item.image && (
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                <div 
+                  style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, cursor: 'zoom-in' }} 
+                  onClick={() => setShowFullImage(true)}
+                >
                   <img 
                     src={item.image} 
                     alt={item.name}
@@ -225,7 +229,6 @@ export default function AdminScanPage() {
               <div style={{ fontSize: 13, color: '#475569', display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div><strong>SKU:</strong> <code style={{ background: '#e2e8f0', padding: '2px 4px', borderRadius: 4 }}>{item.sku}</code></div>
                 <div><strong>الباركود:</strong> <code style={{ background: '#e2e8f0', padding: '2px 4px', borderRadius: 4 }}>{item.barcode}</code></div>
-                <div><strong>الرف:</strong> {item.shelf || '-'}</div>
               </div>
               
               <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
@@ -256,6 +259,30 @@ export default function AdminScanPage() {
           )}
         </div>
       </main>
+
+      {/* الصورة المكبرة */}
+      {showFullImage && item?.image && (
+        <div 
+          onClick={() => setShowFullImage(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.85)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20,
+            cursor: 'zoom-out'
+          }}
+        >
+          <img 
+            src={item.image} 
+            alt={item.name}
+            style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 16, objectFit: 'contain' }}
+          />
+        </div>
+      )}
     </div>
   );
 }
