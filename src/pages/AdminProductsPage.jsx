@@ -356,6 +356,8 @@ export default function AdminProductsPage() {
     (selectedCategory === 'all' || p.category === selectedCategory)
   );
 
+  const totalStock = products.reduce((sum, p) => sum + (parseInt(p.stock) || 0), 0);
+
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 100, fontFamily: 'system-ui' }}>
       {notification && (
@@ -416,9 +418,12 @@ export default function AdminProductsPage() {
         )}
 
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14, marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
+          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', alignItems: 'center' }}>
             <button onClick={() => setSelectedCategory('all')} className={`btn ${selectedCategory === 'all' ? 'btn-primary' : 'btn-ghost'} btn-sm`}>الكل ({products.length})</button>
             {CATEGORIES.map(c => <button key={c.key} onClick={() => setSelectedCategory(c.key)} className={`btn ${selectedCategory === c.key ? 'btn-primary' : 'btn-ghost'} btn-sm`}>{c.label}</button>)}
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#059669', whiteSpace: 'nowrap', padding: '4px 8px', background: '#ecfdf5', borderRadius: 8 }}>
+              المخزون: {totalStock}
+            </span>
           </div>
           <div style={{ flex: 1, minWidth: 200, position: 'relative' }}>
             <input className="field-input" placeholder="بحث..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
@@ -475,4 +480,4 @@ export default function AdminProductsPage() {
       </div>
     </div>
   );
-} 
+}
