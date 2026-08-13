@@ -30,6 +30,7 @@ export default function AdminDashboardPage() {
         totalOrders: orders.length,
         pendingOrders: orders.filter(x => x.status === 'pending').length,
         totalProducts: products.length,
+        totalStock: products.reduce((s, p) => s + (p.stock || 0), 0),
         totalRevenue: orders.reduce((s, x) => s + (parseFloat(x.amount)||0) + (parseFloat(x.shipping)||0), 0),
         recentOrders: orders.slice(0, 6),
       });
@@ -52,6 +53,7 @@ export default function AdminDashboardPage() {
             { icon: ShoppingBag, label: 'الطلبات', value: stats?.totalOrders || 0, color: '#d97706', bg: '#fffbeb' },
             { icon: Clock, label: 'معلقة', value: stats?.pendingOrders || 0, color: '#f59e0b', bg: '#fef3c7' },
             { icon: Package, label: 'المنتجات', value: stats?.totalProducts || 0, color: '#10b981', bg: '#ecfdf5' },
+            { icon: Package, label: 'المخزون', value: stats?.totalStock || 0, color: '#6366f1', bg: '#eef2ff' },
             { icon: TrendingUp, label: 'الإيرادات', value: `${(stats?.totalRevenue || 0).toLocaleString('en-US')} دج`, color: '#059669', bg: '#e6fffa' },
           ].map((s, i) => {
             const Icon = s.icon;
