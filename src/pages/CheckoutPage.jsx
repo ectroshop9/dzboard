@@ -128,7 +128,7 @@ export default function CheckoutPage() {
         commune,
         address: address.trim(),
         shipping_type: shippingType,
-        items: cartItems.map(i => ({ id: i.id, quantity: parseInt(i.quantity, 10) }))
+        items: cartItems.map(i => ({ id: i.id, name: i.name || i.title || 'منتج', quantity: parseInt(i.quantity, 10) }))
       });
 
       if (res.success) {
