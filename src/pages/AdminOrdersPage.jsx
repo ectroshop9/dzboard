@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Search, Truck, Eye, Check, X, Loader2, AlertCircle, RefreshCw, Filter, Phone, MapPin
+  Search, Eye, X, Loader2, Trash2, Printer
 } from 'lucide-react';
 
 const STATUS_MAP = {
@@ -42,6 +42,56 @@ export default function AdminOrdersPage() {
       body: JSON.stringify({ status }) 
     });
     fetchOrders();
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm(`هل أنت متأكد من حذف الطلب #${id} نهائياً؟`)) return;
+    
+    try {
+      const res = await fetch(`${API}/orders/${id}`, { 
+        method: 'DELETE', 
+        headers: { Authorization: `Bearer ${token}` } 
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        fetchOrders();
+      } else {
+        alert(data.message || 'فشل الحذف');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+      alert('خطأ في الاتصال');
+    }
+  };
+
+  const handlePrintOrderBarcode = (order) => {
+    const printWindow = window.open('', '_blank', 'width=500,height=500');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html dir="rtl">
+        <head>
+          <title>طلب #${order.id}</title>
+          <style>
+            @page{size:auto;margin:0}
+            body{font-family:system-ui;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#fff}
+            .card{border:2px dashed #000;padding:16px;text-align:center;border-radius:8px;max-width:280px}
+            .title{font-size:16px;font-weight:800;margin-bottom:8px}
+            img{width:150px;height:150px}
+            .code{font-size:12px;font-family:monospace;margin-top:4px}
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="title">طلب #${order.id} - ${order.customer}</div>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ORDER-${order.id}-${order.tracking || 'notrack'}" />
+            <div class="code">${order.tracking || 'No tracking'}</div>
+            <script>setTimeout(()=>{window.print();window.close()},500)</script>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   const filtered = orders.filter(o => {
@@ -94,13 +144,12 @@ export default function AdminOrdersPage() {
           </div>
         ) : (
           <div style={{ overflowX: 'auto', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14 }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 700 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 800 }}>
               <thead>
                 <tr style={{ background: '#f8fafc', color: '#64748b' }}>
                   <th style={{ padding: '12px 14px' }}>#</th>
                   <th style={{ padding: '12px 14px' }}>العميل</th>
                   <th style={{ padding: '12px 14px' }}>الهاتف</th>
-                  <th style={{ padding: '12px 14px' }}>العنوان</th>
                   <th style={{ padding: '12px 14px' }}>المبلغ</th>
                   <th style={{ padding: '12px 14px' }}>الحالة</th>
                   <th style={{ padding: '12px 14px' }}>إجراء</th>
@@ -114,35 +163,42 @@ export default function AdminOrdersPage() {
                       <td style={{ padding: '12px 14px', fontWeight: 800 }}>#{o.id}</td>
                       <td style={{ padding: '12px 14px' }}>{o.customer}</td>
                       <td style={{ padding: '12px 14px', direction: 'ltr', textAlign: 'right' }}>{o.phone}</td>
-                      <td style={{ padding: '12px 14px', fontSize: 12, color: '#64748b' }}>{o.address}</td>
                       <td style={{ padding: '12px 14px', fontWeight: 800, color: '#10b981' }}>
                         {(parseFloat(o.amount||0)+parseFloat(o.shipping||0)).toLocaleString('en-US')} دج
                       </td>
                       <td style={{ padding: '12px 14px' }}>
-                        <span style={{ padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 800, background: st.bg, color: st.color }}>
-                          {st.label}
-                        </span>
+                        <select
+                          value={o.status}
+                          onChange={(e) => handleStatus(o.id, e.target.value)}
+                          style={{ 
+                            padding: '5px 8px', 
+                            borderRadius: 6, 
+                            border: '1px solid #e2e8f0', 
+                            fontSize: 11, 
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            background: st.bg,
+                            color: st.color
+                          }}
+                        >
+                          <option value="pending">قيد الانتظار</option>
+                          <option value="confirmed">مؤكد</option>
+                          <option value="shipped">تم الشحن</option>
+                          <option value="delivered">تم التسليم</option>
+                          <option value="cancelled">ملغى</option>
+                        </select>
                       </td>
                       <td style={{ padding: '12px 14px' }}>
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button onClick={() => setSelectedOrder(o)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer' }}>
+                        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                          <button onClick={() => setSelectedOrder(o)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer' }} title="عرض">
                             <Eye size={14} />
                           </button>
-                          {o.status === 'pending' && (
-                            <button onClick={() => handleStatus(o.id, 'confirmed')} style={{ background: '#dbeafe', border: 'none', color: '#1d4ed8', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', fontSize: 12 }}>
-                              <Check size={14} />
-                            </button>
-                          )}
-                          {o.status === 'confirmed' && (
-                            <button onClick={() => handleStatus(o.id, 'shipped')} style={{ background: '#e0e7ff', border: 'none', color: '#4338ca', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', fontSize: 12 }}>
-                              <Truck size={14} />
-                            </button>
-                          )}
-                          {o.status === 'shipped' && (
-                            <button onClick={() => handleStatus(o.id, 'delivered')} style={{ background: '#d1fae5', border: 'none', color: '#047857', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', fontSize: 12 }}>
-                              <Check size={14} />
-                            </button>
-                          )}
+                          <button onClick={() => handlePrintOrderBarcode(o)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer' }} title="طباعة باركود">
+                            <Printer size={14} />
+                          </button>
+                          <button onClick={() => handleDelete(o.id)} style={{ background: '#fee2e2', border: 'none', color: '#b91c1c', borderRadius: 6, padding: '6px 8px', cursor: 'pointer' }} title="حذف">
+                            <Trash2 size={14} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -164,15 +220,33 @@ export default function AdminOrdersPage() {
               </button>
             </div>
             <div style={{ padding: 16 }}>
+              {/* QR Code */}
+              <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ORDER-${selectedOrder.id}-${selectedOrder.tracking || 'notrack'}`}
+                  alt={`طلب #${selectedOrder.id}`}
+                  style={{ width: 150, height: 150, margin: '0 auto' }}
+                />
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>
+                  امسح الباركود لتتبع الطلب
+                </div>
+              </div>
+              
               <div style={{ marginBottom: 12 }}><strong>العميل:</strong> {selectedOrder.customer}</div>
               <div style={{ marginBottom: 12 }}><strong>الهاتف:</strong> {selectedOrder.phone}</div>
               <div style={{ marginBottom: 12 }}><strong>العنوان:</strong> {selectedOrder.address}</div>
+              <div style={{ marginBottom: 12 }}><strong>البلدية:</strong> {selectedOrder.commune}</div>
               <div style={{ marginBottom: 12 }}>
                 <strong>الإجمالي:</strong> {(parseFloat(selectedOrder.amount||0)+parseFloat(selectedOrder.shipping||0)).toLocaleString('en-US')} دج
               </div>
               <div style={{ marginBottom: 12 }}>
                 <strong>الحالة:</strong> {STATUS_MAP[selectedOrder.status]?.label || selectedOrder.status}
               </div>
+              {selectedOrder.tracking && (
+                <div style={{ marginBottom: 12 }}>
+                  <strong>رقم التتبع:</strong> {selectedOrder.tracking}
+                </div>
+              )}
             </div>
           </div>
         </div>
