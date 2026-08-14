@@ -6,6 +6,8 @@ export default function ThankYouPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { trackingNumber, orderId } = location.state || {};
+  console.log('ThankYou state:', JSON.stringify(location.state));
+  console.log('trackingNumber:', trackingNumber);
   const [copied, setCopied] = useState(false);
 
   // إعادة التوجيه تلقائياً إلى الصفحة الرئيسية في حال الدخول المباشر بدون طلب
