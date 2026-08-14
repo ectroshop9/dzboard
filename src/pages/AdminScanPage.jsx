@@ -1,9 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
-import { Camera, Search, Loader2, AlertCircle } from 'lucide-react';
+import { Camera, Search, Loader2, AlertCircle, Package, ShoppingBag, Trash2 } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'https://dzboard.onrender.com/api';
+
+const ORDER_STATUS_MAP = {
+  pending: { label: 'قيد الانتظار', bg: '#fef3c7', color: '#b45309' },
+  confirmed: { label: 'مؤكد', bg: '#dbeafe', color: '#1d4ed8' },
+  shipped: { label: 'تم الشحن', bg: '#e0e7ff', color: '#4338ca' },
+  delivered: { label: 'تم التسليم', bg: '#d1fae5', color: '#047857' },
+  cancelled: { label: 'ملغى', bg: '#fee2e2', color: '#b91c1c' },
+};
 
 export default function AdminScanPage() {
   const navigate = useNavigate();
@@ -14,6 +22,7 @@ export default function AdminScanPage() {
   const [manualCode, setManualCode] = useState('');
   const [scannedCode, setScannedCode] = useState('');
   const [item, setItem] = useState(null);
+  const [itemType, setItemType] = useState('product'); // 'product' أو 'order'
   const [errorMsg, setErrorMsg] = useState('');
   const [showFullImage, setShowFullImage] = useState(false);
   const html5QrCodeRef = useRef(null);
@@ -73,6 +82,22 @@ export default function AdminScanPage() {
     setItem(null);
     
     try {
+      // 1. إذا كان الرمز يبدأ بـ ORDER أو DHD - ابحث في الطلبات
+      if (searchCode.startsWith('ORDER') || searchCode.startsWith('DHD') || searchCode.startsWith('REQ')) {
+        const orderRes = await fetch(`${API}/orders/search?query=${encodeURIComponent(searchCode)}`, { 
+          headers: { Authorization: `Bearer ${token}` } 
+        });
+        const orderData = await orderRes.json();
+        
+        if (orderData?.success && orderData?.order) {
+          setItem(orderData.order);
+          setItemType('order');
+          setLoading(false);
+          return;
+        }
+      }
+      
+      // 2. ابحث في المنتجات
       const res = await fetch(`${API}/inventory/search?query=${encodeURIComponent(searchCode)}`, { 
         headers: { Authorization: `Bearer ${token}` } 
       });
@@ -80,8 +105,9 @@ export default function AdminScanPage() {
       
       if (data?.success && data?.item) {
         setItem(data.item);
+        setItemType('product');
       } else {
-        setErrorMsg(`لم يتم العثور على منتج برمز: "${searchCode}"`);
+        setErrorMsg(`لم يتم العثور على: "${searchCode}"`);
       }
     } catch (err) {
       console.error('Fetch error:', err);
@@ -130,6 +156,60 @@ export default function AdminScanPage() {
     }
   };
 
+  const updateOrderStatus = async (status) => {
+    if (!item) return;
+    setLoading(true);
+    
+    try {
+      const res = await fetch(`${API}/orders/${item.id}/status`, { 
+        method: 'PUT', 
+        headers: { 
+          'Content-Type': 'application/json', 
+          Authorization: `Bearer ${token}` 
+        }, 
+        body: JSON.stringify({ status }) 
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        setItem(prev => ({ ...prev, status }));
+      } else {
+        setErrorMsg(data.error || 'فشل تعديل الحالة');
+      }
+    } catch (err) {
+      setErrorMsg('خطأ في الاتصال');
+    } finally { 
+      setLoading(false); 
+    }
+  };
+
+  const deleteOrder = async () => {
+    if (!item) return;
+    if (!confirm(`هل أنت متأكد من حذف الطلب #${item.id}؟`)) return;
+    
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/orders/${item.id}`, { 
+        method: 'DELETE', 
+        headers: { Authorization: `Bearer ${token}` } 
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setItem(null);
+        setErrorMsg('');
+        showToast && showToast('تم الحذف بنجاح');
+      } else {
+        setErrorMsg(data.message || 'فشل الحذف');
+      }
+    } catch (err) {
+      setErrorMsg('خطأ في الاتصال');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ background: '#f8fafc', direction: 'rtl', minHeight: '100vh', paddingBottom: 120, fontFamily: 'system-ui' }}>
       <main style={{ padding: 16, maxWidth: 500, margin: '0 auto' }}>
@@ -139,7 +219,7 @@ export default function AdminScanPage() {
           <div style={{ display: 'flex', gap: 8 }}>
             <input 
               type="text" 
-              placeholder="أدخل رمز الباركود أو ID..." 
+              placeholder="باركود منتج أو طلب..." 
               value={manualCode} 
               onChange={e => setManualCode(e.target.value)} 
               style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none' }} 
@@ -194,10 +274,10 @@ export default function AdminScanPage() {
             </div>
           )}
           
-          {item && !loading && (
+          {/* عرض منتج */}
+          {item && itemType === 'product' && !loading && (
             <div style={{ textAlign: 'right', background: '#f8fafc', borderRadius: 12, padding: 16, border: '1px solid #e2e8f0' }}>
               
-              {/* صورة المنتج - قابلة للتكبير */}
               {item.image && (
                 <div 
                   style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, cursor: 'zoom-in' }} 
@@ -246,6 +326,71 @@ export default function AdminScanPage() {
                   }}
                 >
                   {item.status === 'available' ? 'تحديد كمباع' : 'إرجاع للمخزون'}
+                </button>
+                
+                <button 
+                  onClick={() => { setItem(null); setManualCode(''); setScannedCode(''); }} 
+                  style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, padding: '10px 16px', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  مسح جديد
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* عرض طلب */}
+          {item && itemType === 'order' && !loading && (
+            <div style={{ textAlign: 'right', background: '#f8fafc', borderRadius: 12, padding: 16, border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
+                <strong style={{ fontSize: 16 }}>طلب #{item.id} - {item.customer}</strong>
+                {ORDER_STATUS_MAP[item.status] && (
+                  <span style={{ 
+                    padding: '4px 10px', 
+                    borderRadius: 20, 
+                    fontSize: 12,
+                    fontWeight: 'bold',
+                    background: ORDER_STATUS_MAP[item.status].bg, 
+                    color: ORDER_STATUS_MAP[item.status].color 
+                  }}>
+                    {ORDER_STATUS_MAP[item.status].label}
+                  </span>
+                )}
+              </div>
+              
+              <div style={{ fontSize: 13, color: '#475569', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div><strong>الهاتف:</strong> {item.phone}</div>
+                <div><strong>العنوان:</strong> {item.address}</div>
+                <div><strong>البلدية:</strong> {item.commune}</div>
+                <div><strong>المبلغ:</strong> {(parseFloat(item.amount||0)+parseFloat(item.shipping||0)).toLocaleString('en-US')} دج</div>
+                {item.tracking && <div><strong>التتبع:</strong> {item.tracking}</div>}
+              </div>
+              
+              <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+                <select
+                  value={item.status}
+                  onChange={(e) => updateOrderStatus(e.target.value)}
+                  style={{ 
+                    flex: 1, 
+                    padding: '10px', 
+                    borderRadius: 8, 
+                    border: '1px solid #e2e8f0',
+                    fontWeight: 800, 
+                    cursor: 'pointer',
+                    background: '#fff'
+                  }}
+                >
+                  <option value="pending">قيد الانتظار</option>
+                  <option value="confirmed">مؤكد</option>
+                  <option value="shipped">تم الشحن</option>
+                  <option value="delivered">تم التسليم</option>
+                  <option value="cancelled">ملغى</option>
+                </select>
+                
+                <button 
+                  onClick={deleteOrder} 
+                  style={{ background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: 8, padding: '10px 16px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Trash2 size={16} /> حذف
                 </button>
                 
                 <button 
