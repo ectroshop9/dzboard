@@ -75,4 +75,20 @@ router.put('/:id', verifyAdmin, async (req, res) => {
   }
 });
 
+// حذف طلب (محمي للإدمن فقط)
+router.delete('/:id', verifyAdmin, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('special_requests')
+      .delete()
+      .eq('id', parseInt(req.params.id));
+
+    if (error) return res.status(500).json({ success: false, error: error.message });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 export default router;
