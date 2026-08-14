@@ -106,7 +106,7 @@ export default function ThankYouPage() {
               Vous pouvez suivre l'état de votre commande en temps réel en utilisant le tracking
             </p>
             <a
-              href={`https://platform.dhd-dz.com/track?code=${trackingNumber}`}
+              href={`https://platform.dhd-dz.com/suivi?code=${trackingNumber}`}
               target="_blank"
               rel="noopener noreferrer"
               style={{
