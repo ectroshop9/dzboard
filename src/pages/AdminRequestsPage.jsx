@@ -1,23 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, Package, ShoppingBag, 
-  QrCode, CheckCircle2, XCircle, Clock, RefreshCw, Phone, Trash2, Image as ImageIcon, X 
+  CheckCircle2, XCircle, Clock, RefreshCw, Trash2, X 
 } from 'lucide-react';
-
-const MENU = [
-  { path: '/admin/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
-  { path: '/admin/products', label: 'المنتجات', icon: Package },
-  { path: '/admin/orders', label: 'الطلبات', icon: ShoppingBag },
-  { path: '/admin/requests', label: 'خاصة', icon: ShoppingBag },
-  { path: '/admin/scan', label: 'QR', icon: QrCode },
-];
 
 const API = 'https://dzboard.onrender.com/api';
 
 export default function AdminRequestsPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const token = localStorage.getItem('dzboard_admin_token');
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +33,7 @@ export default function AdminRequestsPage() {
   };
 
   const deleteRequest = async (id) => {
-    if (!window.confirm('حذف؟')) return;
+    if (!window.confirm('هل أنت متأكد من حذف هذا الطلب؟')) return;
     await fetch(`${API}/requests/${id}`, { method: 'DELETE', headers: getAuthHeader() });
     load();
   };
@@ -52,7 +42,7 @@ export default function AdminRequestsPage() {
   const pendingCount = requests.filter(r => r.status === 'pending').length;
 
   return (
-    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 70, fontFamily: 'system-ui' }}>
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 120, fontFamily: 'system-ui' }}>
       
       <main style={{ padding: 16, maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
@@ -86,10 +76,24 @@ export default function AdminRequestsPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
             {filtered.map(r => (
               <div key={r.id} className="card" style={{ padding: 14 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center' }}>
                   <span style={{ fontWeight: 800 }}>{r.part_name}</span>
                   <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 20, fontWeight: 700, background: r.status === 'pending' ? '#fef3c7' : r.status === 'fulfilled' ? '#d1fae5' : '#fee2e2', color: r.status === 'pending' ? '#92400e' : r.status === 'fulfilled' ? '#065f46' : '#991b1b' }}>{r.status === 'pending' ? 'جديد' : r.status === 'fulfilled' ? 'متوفر' : 'ملغي'}</span>
                 </div>
+                
+                {/* QR Code */}
+                <div style={{ textAlign: 'center', marginBottom: 10, background: '#fafafa', padding: 8, borderRadius: 8 }}>
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=REQ-${r.id}-${r.phone}`}
+                    alt={`طلب #${r.id}`}
+                    style={{ width: 80, height: 80, borderRadius: 6, cursor: 'pointer' }}
+                    onClick={() => window.open(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=REQ-${r.id}-${r.phone}`, '_blank')}
+                  />
+                  <div style={{ fontSize: 9, color: '#64748b', marginTop: 4 }}>
+                    امسح للتتبع
+                  </div>
+                </div>
+                
                 <div style={{ fontSize: 13, color: '#475569', background: '#f8fafc', padding: 10, borderRadius: 8, marginBottom: 8 }}>
                   <div>👤 {r.customer_name}</div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>📱 {r.phone}</span><a href={`tel:${r.phone}`} style={{ color: '#2563eb', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>اتصل</a></div>
@@ -99,7 +103,7 @@ export default function AdminRequestsPage() {
                 {r.image && <img src={r.image} alt={r.part_name} style={{ width: '100%', height: 130, objectFit: 'cover', borderRadius: 8, marginBottom: 8, cursor: 'pointer' }} onClick={() => setPreviewImage(r.image)} />}
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
-                  <div style={{ display: 'flex', gap: 6 }}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {r.status === 'pending' && (
                       <>
                         <button onClick={() => updateStatus(r.id, 'fulfilled')} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 6, fontWeight: 700, cursor: 'pointer', fontSize: 12 }}><CheckCircle2 size={14} /> توفير</button>
@@ -122,13 +126,6 @@ export default function AdminRequestsPage() {
           <img src={previewImage} alt="معاينة" style={{ maxWidth: '90%', maxHeight: '80vh', borderRadius: 8, objectFit: 'contain' }} />
         </div>
       )}
-
-      <nav style={{ display: 'flex', position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e2e8f0', justifyContent: 'space-around', padding: '8px 0', zIndex: 40 }}>
-        {MENU.map(item => {
-          const Icon = item.icon; const isActive = location.pathname === item.path;
-          return <Link key={item.path} to={item.path} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, textDecoration: 'none', color: isActive ? '#2563eb' : '#64748b', fontWeight: isActive ? 800 : 600, fontSize: 10 }}><Icon size={20} /><span>{item.label}</span></Link>;
-        })}
-      </nav>
     </div>
   );
 }
