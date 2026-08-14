@@ -122,14 +122,16 @@ export default function CheckoutPage() {
 
     try {
       const res = await api.createOrder({
-        full_name: fullName.trim(),
-        phone: phone.replace(/\s+/g, '').trim(),
-        wilaya_id: parseInt(wilayaId, 10),
-        commune,
-        address: address.trim(),
-        shipping_type: shippingType,
-        items: cartItems.map(i => ({ id: i.id, name: i.name || i.title || 'منتج', quantity: parseInt(i.quantity, 10) }))
-      });
+  full_name: fullName.trim(),
+  phone: phone.replace(/\s+/g, '').trim(),
+  wilaya_id: parseInt(wilayaId, 10),
+  commune,
+  address: address.trim(),
+  shipping_type: shippingType,
+  items: cartItems.map(i => ({ id: i.id, name: i.name || i.title || 'منتج', quantity: parseInt(i.quantity, 10) })),
+  total_price: subtotal,
+  shipping_cost: shippingCost
+});
 
       if (res.success) {
         localStorage.removeItem('cartItems');
