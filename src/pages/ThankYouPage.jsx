@@ -6,11 +6,8 @@ export default function ThankYouPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { trackingNumber, orderId } = location.state || {};
-  console.log('ThankYou state:', JSON.stringify(location.state));
-  console.log('trackingNumber:', trackingNumber);
   const [copied, setCopied] = useState(false);
 
-  // إعادة التوجيه تلقائياً إلى الصفحة الرئيسية في حال الدخول المباشر بدون طلب
   useEffect(() => {
     if (!location.state) {
       const timer = setTimeout(() => {
@@ -79,7 +76,7 @@ export default function ThankYouPage() {
 
         {/* Tracking Number */}
         {trackingNumber && (
-          <div style={{ background: '#eff6ff', padding: '14px 12px', borderRadius: 12, marginBottom: 24, border: '1px solid #bfdbfe' }}>
+          <div style={{ background: '#eff6ff', padding: '14px 12px', borderRadius: 12, marginBottom: 16, border: '1px solid #bfdbfe' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 8 }}>
               <Truck size={18} style={{ color: '#2563eb', flexShrink: 0 }} />
               <p style={{ fontWeight: 700, fontSize: 13, color: '#1e40af', margin: 0 }}>رقم تتبع الشحنة:</p>
@@ -95,6 +92,37 @@ export default function ThankYouPage() {
               </button>
             </div>
             {copied && <p style={{ fontSize: 11, color: '#16a34a', marginTop: 6, fontWeight: 700, margin: 0 }}>تم نسخ الرقم إلى الحافظة!</p>}
+          </div>
+        )}
+
+        {/* Ecotrack Tracking Section */}
+        {trackingNumber && (
+          <div style={{ background: '#f0fdf4', padding: '14px 12px', borderRadius: 12, marginBottom: 24, border: '1px solid #bbf7d0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 8 }}>
+              <Truck size={18} style={{ color: '#16a34a', flexShrink: 0 }} />
+              <p style={{ fontWeight: 700, fontSize: 13, color: '#166534', margin: 0 }}>Suivez votre commande</p>
+            </div>
+            <p style={{ fontSize: 11, color: '#166534', margin: '0 0 10px 0' }}>
+              Vous pouvez suivre l'état de votre commande en temps réel en utilisant le tracking
+            </p>
+            <a
+              href={`https://platform.dhd-dz.com/track?code=${trackingNumber}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-block',
+                background: '#16a34a',
+                color: '#fff',
+                padding: '10px 20px',
+                borderRadius: 8,
+                fontWeight: 700,
+                fontSize: 13,
+                textDecoration: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              تتبع الشحنة الآن
+            </a>
           </div>
         )}
 
