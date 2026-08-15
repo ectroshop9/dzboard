@@ -28,6 +28,7 @@ export default function AdminProductsPage() {
   const [notification, setNotification] = useState(null);
   const [saving, setSaving] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState([]);
+  const [zoomedImage, setZoomedImage] = useState(null);
   
   const initialForm = { 
     name: '', 
@@ -351,6 +352,12 @@ export default function AdminProductsPage() {
 
   const getCat = (k) => CATEGORIES.find(c => c.key === k) || { label: k, color: '#94a3b8' };
   
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'غير محدد';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('ar-DZ', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+  
   const filtered = products.filter(p => 
     (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) && 
     (selectedCategory === 'all' || p.category === selectedCategory)
@@ -457,7 +464,12 @@ export default function AdminProductsPage() {
                     {isSelected ? <CheckSquare size={22} /> : <Square size={22} />}
                   </button>
                   <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                    <img src={product.image || 'https://via.placeholder.com/60'} style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }} alt={product.name} />
+                    <img 
+                      src={product.image || 'https://via.placeholder.com/60'} 
+                      style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover', cursor: 'zoom-in' }} 
+                      alt={product.name} 
+                      onClick={() => product.image && setZoomedImage(product.image)}
+                    />
                     <div style={{ flex: 1 }}>
                       <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: `${catObj.color}15`, color: catObj.color, fontWeight: 700 }}>{catObj.label}</span>
                       <h4 style={{ fontSize: 14, fontWeight: 800, margin: '4px 0' }}>{product.name}</h4>
@@ -465,7 +477,10 @@ export default function AdminProductsPage() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
-                    <span style={{ fontSize: 12, color: '#64748b' }}>المخزون: <strong>{product.stock || 0}</strong></span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <span style={{ fontSize: 12, color: '#64748b' }}>المخزون: <strong>{product.stock || 0}</strong></span>
+                      <span style={{ fontSize: 11, color: '#94a3b8' }}>🗓️ {formatDate(product.created_at)}</span>
+                    </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => handlePrintBarcode(product, barcode)} className="btn btn-ghost btn-sm" title="طباعة">🖨️</button>
                       <button onClick={() => handleOpenEdit(product)} className="btn btn-ghost btn-sm" style={{ color: '#2563eb' }}><Edit3 size={14} /></button>
@@ -478,6 +493,30 @@ export default function AdminProductsPage() {
           </div>
         )}
       </div>
+
+      {/* Zoom Modal */}
+      {zoomedImage && (
+        <div 
+          onClick={() => setZoomedImage(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.85)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20,
+            cursor: 'zoom-out'
+          }}
+        >
+          <img 
+            src={zoomedImage} 
+            alt="تكبير"
+            style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 16, objectFit: 'contain' }}
+          />
+        </div>
+      )}
     </div>
   );
 }
