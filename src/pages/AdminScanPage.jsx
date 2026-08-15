@@ -143,13 +143,11 @@ export default function AdminScanPage() {
   const toggleItemStatus = async () => {
     if (!item) return;
     
-    // إذا كان المنتج متوفر → فتح Modal الزبون
     if (item.status === 'available') {
       setShowCustomerModal(true);
       return;
     }
     
-    // إرجاع للمخزون
     setLoading(true);
     try {
       const res = await fetch(`${API}/inventory/items/${item.id}/status`, { 
@@ -175,7 +173,6 @@ export default function AdminScanPage() {
     }
   };
 
-  // حفظ الطلب مع معلومات الزبون
   const handleSaveOrder = async () => {
     if (!customerData.name || !customerData.phone || !customerData.wilaya) {
       setErrorMsg('الاسم والهاتف والولاية مطلوبة');
@@ -185,7 +182,6 @@ export default function AdminScanPage() {
     setSavingOrder(true);
     
     try {
-      // 1. تحديث حالة المنتج إلى مباع
       await fetch(`${API}/inventory/items/${item.id}/status`, { 
         method: 'PUT', 
         headers: { 
@@ -195,7 +191,6 @@ export default function AdminScanPage() {
         body: JSON.stringify({ status: 'sold' }) 
       });
 
-      // 2. إنشاء طلب مع معلومات الزبون
       const orderRes = await fetch(`${API}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -207,12 +202,14 @@ export default function AdminScanPage() {
           address: customerData.address || '',
           shipping_type: 'domicile',
           items: [{ id: item.id, name: item.name, quantity: 1 }],
-          total_price: item.price || 0,
-          shipping_cost: 0
+          total_price: Number(item.price) || 500,
+          shipping_cost: 500
         })
       });
 
       const orderData = await orderRes.json();
+      
+      console.log('Order Response:', orderData);
       
       if (orderData.success) {
         setItem(prev => ({ ...prev, status: 'sold' }));
@@ -223,6 +220,7 @@ export default function AdminScanPage() {
         setErrorMsg(orderData.message || 'فشل إنشاء الطلب');
       }
     } catch (err) {
+      console.error('Save order error:', err);
       setErrorMsg('خطأ في الاتصال');
     } finally {
       setSavingOrder(false);
@@ -233,7 +231,6 @@ export default function AdminScanPage() {
     <div style={{ background: '#f8fafc', direction: 'rtl', minHeight: '100vh', paddingBottom: 120, fontFamily: 'system-ui' }}>
       <main style={{ padding: 16, maxWidth: 500, margin: '0 auto' }}>
         
-        {/* شريط البحث اليدوي */}
         <form onSubmit={handleManualSearch} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 12, marginBottom: 12 }}>
           <div style={{ display: 'flex', gap: 8 }}>
             <input 
@@ -253,7 +250,6 @@ export default function AdminScanPage() {
           </div>
         </form>
 
-        {/* منطقة المسح والنتائج */}
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, textAlign: 'center' }}>
           
           {!scanning && !item && !loading && (
@@ -359,7 +355,6 @@ export default function AdminScanPage() {
         </div>
       </main>
 
-      {/* Zoom Modal - يعمل على الهاتف والكمبيوتر */}
       {showFullImage && item?.image && (
         <div 
           onClick={() => setShowFullImage(false)}
@@ -385,7 +380,6 @@ export default function AdminScanPage() {
         </div>
       )}
 
-      {/* Customer Modal - معلومات الزبون عند البيع */}
       {showCustomerModal && (
         <div style={{
           position: 'fixed',
