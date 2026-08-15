@@ -1,369 +1,503 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Html5Qrcode } from 'html5-qrcode';
-import { Camera, Search, Loader2, AlertCircle, X, User, Phone, MapPin, Home, Save } from 'lucide-react';
+import { 
+  Plus, Trash2, Save, Package, Monitor, Zap, Cpu, 
+  Search, Loader2, Upload, Edit3, X, CheckCircle, AlertCircle,
+  Printer, CheckSquare, Square
+} from 'lucide-react';
 
-const API = import.meta.env.VITE_API_URL || 'https://dzboard.onrender.com/api';
+const CATEGORIES = [
+  { key: 'tcon', label: 'كرت تيكون', icon: Monitor, color: '#3b82f6' },
+  { key: 'alimentation', label: 'اليمونتاسيون', icon: Zap, color: '#f59e0b' },
+  { key: 'main-board', label: 'مين بورد', icon: Cpu, color: '#6366f1' },
+  { key: 'parts', label: 'قطع غيار', icon: Package, color: '#10b981' },
+];
 
-export default function AdminScanPage() {
+const API = 'https://dzboard.onrender.com/api';
+
+export default function AdminProductsPage() {
   const navigate = useNavigate();
-  const token = localStorage.getItem('dzboard_admin_token');
+  const [products, setProducts] = useState([]);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [uploading, setUploading] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [zoomedImage, setZoomedImage] = useState(null);
   
-  const [scanning, setScanning] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [manualCode, setManualCode] = useState('');
-  const [scannedCode, setScannedCode] = useState('');
-  const [item, setItem] = useState(null);
-  const [itemType, setItemType] = useState('product');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [showFullImage, setShowFullImage] = useState(false);
-  const [showCustomerModal, setShowCustomerModal] = useState(false);
-  const [customerData, setCustomerData] = useState({ name: '', phone: '', wilaya: '', commune: '', address: '' });
-  const [savingOrder, setSavingOrder] = useState(false);
-  const html5QrCodeRef = useRef(null);
-
-  const wilayas = [
-    { id: 1, name: 'أدرار' }, { id: 2, name: 'الشلف' }, { id: 3, name: 'الأغواط' },
-    { id: 4, name: 'أم البواقي' }, { id: 5, name: 'باتنة' }, { id: 6, name: 'بجاية' },
-    { id: 7, name: 'بسكرة' }, { id: 8, name: 'بشار' }, { id: 9, name: 'البليدة' },
-    { id: 10, name: 'البويرة' }, { id: 11, name: 'تمنراست' }, { id: 12, name: 'تبسة' },
-    { id: 13, name: 'تلمسان' }, { id: 14, name: 'تيارت' }, { id: 15, name: 'تيزي وزو' },
-    { id: 16, name: 'الجزائر' }, { id: 17, name: 'الجلفة' }, { id: 18, name: 'جيجل' },
-    { id: 19, name: 'سطيف' }, { id: 20, name: 'سعيدة' }, { id: 21, name: 'سكيكدة' },
-    { id: 22, name: 'سيدي بلعباس' }, { id: 23, name: 'عنابة' }, { id: 24, name: 'قالمة' },
-    { id: 25, name: 'قسنطينة' }, { id: 26, name: 'المدية' }, { id: 27, name: 'مستغانم' },
-    { id: 28, name: 'المسيلة' }, { id: 29, name: 'معسكر' }, { id: 30, name: 'ورقلة' },
-    { id: 31, name: 'وهران' }, { id: 32, name: 'البيض' }, { id: 33, name: 'إليزي' },
-    { id: 34, name: 'برج بوعريريج' }, { id: 35, name: 'بومرداس' }, { id: 36, name: 'الطارف' },
-    { id: 37, name: 'تندوف' }, { id: 38, name: 'تيسمسيلت' }, { id: 39, name: 'الوادي' },
-    { id: 40, name: 'خنشلة' }, { id: 41, name: 'سوق أهراس' }, { id: 42, name: 'تيبازة' },
-    { id: 43, name: 'ميلة' }, { id: 44, name: 'عين الدفلى' }, { id: 45, name: 'النعامة' },
-    { id: 46, name: 'عين تموشنت' }, { id: 47, name: 'غرداية' }, { id: 48, name: 'غليزان' },
-    { id: 49, name: 'تيميمون' }, { id: 50, name: 'برج باجي مختار' }, { id: 51, name: 'أولاد جلال' },
-    { id: 52, name: 'بني عباس' }, { id: 53, name: 'عين صالح' }, { id: 54, name: 'عين قزام' },
-    { id: 55, name: 'تقرت' }, { id: 56, name: 'جانت' }, { id: 57, name: 'المغير' }, { id: 58, name: 'المنيعة' },
-  ];
+  const initialForm = { 
+    name: '', 
+    category: 'tcon', 
+    price: '', 
+    stock: '1', 
+    description: '', 
+    image: '', 
+    brand: 'generic',
+    update_url: ''
+  };
+  
+  const [formData, setFormData] = useState(initialForm);
 
   useEffect(() => { 
-    if (!token) navigate('/admin'); 
-    return () => stopScan(); 
-  }, [navigate, token]);
-
-  const stopScan = async () => {
-    if (html5QrCodeRef.current?.isScanning) {
-      try { 
-        await html5QrCodeRef.current.stop(); 
-        html5QrCodeRef.current.clear(); 
-      } catch (err) {
-        console.error('فشل إيقاف الكاميرا:', err);
-      }
+    if (!localStorage.getItem('dzboard_admin_token')) {
+      navigate('/admin');
+    } else {
+      loadAll(); 
     }
-    setScanning(false);
+  }, []);
+
+  const showToast = (m, t = 'success') => { 
+    setNotification({ message: m, type: t }); 
+    setTimeout(() => setNotification(null), 3000); 
+  };
+  
+  const getAuthHeader = () => ({ 
+    'Content-Type': 'application/json', 
+    Authorization: `Bearer ${localStorage.getItem('dzboard_admin_token')}` 
+  });
+
+  const loadAll = () => {
+    setLoading(true);
+    Promise.all([
+      fetch(`${API}/products`).then(r => r.json()), 
+      fetch(`${API}/inventory/items`).then(r => r.json())
+    ])
+      .then(([a, b]) => { 
+        if (a?.success) setProducts(a.products || []); 
+        if (b?.success) setItems(b.items || []); 
+      })
+      .catch((err) => {
+        console.error('Load error:', err);
+        showToast('حدث خطأ أثناء تحميل البيانات', 'error');
+      })
+      .finally(() => setLoading(false));
   };
 
-  const startScan = async () => {
-    setErrorMsg(''); 
-    setItem(null); 
-    setScannedCode(''); 
-    setScanning(true);
-    
-    setTimeout(async () => {
+  const handleImageUpload = async (file) => {
+    if (!file) return; 
+    setUploading(true);
+    const reader = new FileReader(); 
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
       try {
-        const qrScanner = new Html5Qrcode('reader'); 
-        html5QrCodeRef.current = qrScanner;
-        
-        await qrScanner.start(
-          { facingMode: 'environment' }, 
-          { fps: 10, qrbox: { width: 250, height: 250 } },
-          async (text) => { 
-            await stopScan(); 
-            const clean = text?.replace(/\r?\n|\r/g, '').trim() || ''; 
-            setScannedCode(clean); 
-            fetchItemDetails(clean); 
-          }, 
-          () => {}
-        );
-      } catch { 
-        setErrorMsg('تعذر تشغيل الكاميرا. تأكد من منح الصلاحيات.'); 
-        setScanning(false); 
+        const res = await fetch(`${API}/products/upload`, { 
+          method: 'POST', 
+          headers: getAuthHeader(), 
+          body: JSON.stringify({ image: reader.result }) 
+        });
+        const data = await res.json();
+        if (data.success) {
+          setFormData(p => ({ ...p, image: data.url }));
+          showToast('تم رفع الصورة بنجاح');
+        } else {
+          showToast('فشل رفع الصورة', 'error');
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+        showToast('خطأ أثناء رفع الصورة', 'error');
+      } finally {
+        setUploading(false);
       }
-    }, 100);
+    };
   };
 
-  const fetchItemDetails = async (code) => {
-    const searchCode = code?.trim(); 
-    if (!searchCode) return;
+  const handleOpenAdd = () => { 
+    setEditingProduct(null); 
+    setFormData(initialForm); 
+    setShowForm(true); 
+  };
+
+  const handleOpenEdit = (p) => { 
+    setEditingProduct(p); 
+    setFormData({ 
+      name: p.name || '', 
+      category: p.category || 'tcon', 
+      price: p.price || '', 
+      stock: p.stock || '1', 
+      description: p.description || '', 
+      image: p.image || '', 
+      brand: p.brand || 'generic',
+      update_url: p.update_url || ''
+    }); 
+    setShowForm(true); 
+  };
+
+  const handleSave = async () => {
+    if (!formData.name || formData.name.trim() === '') {
+      showToast('الاسم مطلوب', 'error');
+      return;
+    }
     
-    setLoading(true); 
-    setErrorMsg(''); 
-    setItem(null);
-    
+    const priceNum = Number(formData.price);
+    if (isNaN(priceNum) || priceNum < 0) {
+      showToast('السعر يجب أن يكون رقماً صحيحاً', 'error');
+      return;
+    }
+
+    setSaving(true);
+
     try {
-      if (searchCode.startsWith('ORDER') || searchCode.startsWith('DHD')) {
-        const orderRes = await fetch(`${API}/orders/search?query=${encodeURIComponent(searchCode)}`, { 
-          headers: { Authorization: `Bearer ${token}` } 
+      if (editingProduct) {
+        const payload = {
+          name: formData.name.trim(),
+          category: formData.category || 'tcon',
+          price: priceNum,
+          stock: parseInt(formData.stock, 10) || 0,
+          image: formData.image || '',
+          brand: formData.brand || 'generic',
+          description: formData.description || '',
+          update_url: formData.update_url || null
+        };
+
+        const res = await fetch(`${API}/products/${editingProduct.id}`, { 
+          method: 'PUT', 
+          headers: getAuthHeader(), 
+          body: JSON.stringify(payload) 
         });
-        const orderData = await orderRes.json();
         
-        if (orderData?.success && orderData?.order) {
-          setItem(orderData.order);
-          setItemType('order');
-          setLoading(false);
-          return;
+        const data = await res.json();
+        
+        if (!res.ok || !data.success) {
+          throw new Error(data.error?.message || data.error || 'فشل التحديث');
+        }
+      } else {
+        const quantityNum = parseInt(formData.stock, 10);
+        const validQuantity = isNaN(quantityNum) || quantityNum < 1 ? 1 : quantityNum;
+        
+        const payload = {
+          name: formData.name.trim(),
+          category: formData.category || 'tcon',
+          brand: formData.brand || 'generic',
+          price: priceNum,
+          quantity: validQuantity,
+          image: formData.image || '',
+          description: formData.description || '',
+          update_url: formData.update_url || null
+        };
+
+        const res = await fetch(`${API}/inventory/items`, { 
+          method: 'POST', 
+          headers: getAuthHeader(), 
+          body: JSON.stringify(payload) 
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok || !data.success) {
+          throw new Error(data.error?.message || data.error || 'فشل حفظ القطعة');
         }
       }
-      
-      const res = await fetch(`${API}/inventory/search?query=${encodeURIComponent(searchCode)}`, { 
-        headers: { Authorization: `Bearer ${token}` } 
-      });
-      const data = await res.json();
-      
-      if (data?.success && data?.item) {
-        setItem(data.item);
-        setItemType('product');
-      } else {
-        setErrorMsg(`لم يتم العثور على: "${searchCode}"`);
-      }
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setErrorMsg('خطأ في الاتصال بالخادم.');
-    } finally { 
-      setLoading(false); 
-    }
-  };
 
-  const handleManualSearch = (e) => { 
-    e.preventDefault(); 
-    if (manualCode.trim()) { 
-      setScannedCode(manualCode.trim()); 
-      fetchItemDetails(manualCode.trim()); 
-    } 
-  };
-
-  const toggleItemStatus = async () => {
-    if (!item) return;
-    
-    // إذا كان المنتج متوفر → فتح Modal الزبون
-    if (item.status === 'available') {
-      setShowCustomerModal(true);
-      return;
-    }
-    
-    // إرجاع للمخزون
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/inventory/items/${item.id}/status`, { 
-        method: 'PUT', 
-        headers: { 
-          'Content-Type': 'application/json', 
-          Authorization: `Bearer ${token}` 
-        }, 
-        body: JSON.stringify({ status: 'available' }) 
-      });
-      
-      const data = await res.json();
-      
-      if (data.success) {
-        setItem(prev => ({ ...prev, status: 'available' }));
-      } else {
-        setErrorMsg(data.error || 'فشل الإرجاع');
-      }
-    } catch (err) {
-      setErrorMsg('خطأ في الاتصال');
-    } finally { 
-      setLoading(false); 
-    }
-  };
-
-  // حفظ الطلب مع معلومات الزبون
-  const handleSaveOrder = async () => {
-    if (!customerData.name || !customerData.phone || !customerData.wilaya) {
-      setErrorMsg('الاسم والهاتف والولاية مطلوبة');
-      return;
-    }
-
-    setSavingOrder(true);
-    
-    try {
-      // 1. تحديث حالة المنتج إلى مباع
-      await fetch(`${API}/inventory/items/${item.id}/status`, { 
-        method: 'PUT', 
-        headers: { 
-          'Content-Type': 'application/json', 
-          Authorization: `Bearer ${token}` 
-        }, 
-        body: JSON.stringify({ status: 'sold' }) 
-      });
-
-      // 2. إنشاء طلب مع معلومات الزبون
-      const orderRes = await fetch(`${API}/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          full_name: customerData.name,
-          phone: customerData.phone,
-          wilaya_id: parseInt(customerData.wilaya),
-          commune: customerData.commune || '',
-          address: customerData.address || '',
-          shipping_type: 'domicile',
-          items: [{ id: item.id, name: item.name, quantity: 1 }],
-          total_price: item.price || 0,
-          shipping_cost: 0
-        })
-      });
-
-      const orderData = await orderRes.json();
-      
-      if (orderData.success) {
-        setItem(prev => ({ ...prev, status: 'sold' }));
-        setShowCustomerModal(false);
-        setCustomerData({ name: '', phone: '', wilaya: '', commune: '', address: '' });
-        alert(`تم البيع بنجاح! رقم الطلب: #${orderData.orderId}${orderData.trackingNumber ? `\nرقم التتبع: ${orderData.trackingNumber}` : ''}`);
-      } else {
-        setErrorMsg(orderData.message || 'فشل إنشاء الطلب');
-      }
-    } catch (err) {
-      setErrorMsg('خطأ في الاتصال');
+      showToast('تم الحفظ بنجاح'); 
+      setShowForm(false); 
+      setEditingProduct(null); 
+      loadAll();
+    } catch (err) { 
+      console.error('Save error:', err);
+      showToast(err.message || 'حدث خطأ أثناء الحفظ', 'error'); 
     } finally {
-      setSavingOrder(false);
+      setSaving(false);
     }
   };
+
+  const handleDelete = async (id) => { 
+    if (!confirm('هل أنت متأكد من الحذف؟')) return; 
+    try {
+      const res = await fetch(`${API}/products/${id}`, { 
+        method: 'DELETE', 
+        headers: getAuthHeader() 
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('تم الحذف بنجاح');
+        loadAll(); 
+      } else {
+        showToast(data.message || 'فشل عملية الحذف', 'error');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+      showToast('خطأ أثناء الاتصال بالخادم', 'error');
+    }
+  };
+
+  const handlePrintBarcode = (product, barcodeCode) => {
+    const code = barcodeCode || items.find(i => i.product_id === product.id)?.barcode || product.id;
+    const printWindow = window.open('', '_blank', 'width=500,height=500');
+    printWindow.document.write(`<!DOCTYPE html><html dir="rtl"><head><title>${product.name}</title><style>@page{size:auto;margin:0}body{font-family:system-ui;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#fff}.card{border:2px dashed #000;padding:16px;text-align:center;max-width:280px;border-radius:8px}.title{font-size:16px;font-weight:800;margin-bottom:8px;word-break:break-word}img{width:140px;height:140px}.code{font-size:12px;font-family:monospace;margin-top:4px}.price{font-size:15px;font-weight:bold;margin-top:6px;border-top:1px solid #ddd;padding-top:4px}</style></head><body><div class="card"><div class="title">${product.name}</div><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${code}" /><div class="code">Barcode: ${code}</div><div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div></div><script>setTimeout(()=>{window.print();window.close()},500)</script></body></html>`);
+    printWindow.document.close();
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedProducts(prev => 
+      prev.includes(id) 
+        ? prev.filter(p => p !== id) 
+        : [...prev, id]
+    );
+  };
+
+  const handlePrintSelected = () => {
+    if (selectedProducts.length === 0) {
+      showToast('اختر منتجات للطباعة أولاً', 'error');
+      return;
+    }
+    
+    const selected = products.filter(p => selectedProducts.includes(p.id));
+    
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    let barcodesHTML = '';
+    
+    selected.forEach((product) => {
+      const barcode = items.find(i => i.product_id === product.id)?.barcode || product.id;
+      
+      barcodesHTML += `
+        <div class="barcode-item">
+          <div class="title">${product.name}</div>
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${barcode}" />
+          <div class="code">${barcode}</div>
+          <div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div>
+        </div>
+      `;
+    });
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html dir="rtl">
+        <head>
+          <title>طباعة الباركودات المحددة - ${selected.length} منتج</title>
+          <style>
+            @page{size:auto;margin:10mm}
+            body{font-family:system-ui;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px}
+            .barcode-item{border:1px dashed #000;padding:10px;text-align:center;border-radius:8px;page-break-inside:avoid}
+            .title{font-size:12px;font-weight:800;margin-bottom:6px;word-break:break-word}
+            img{width:100px;height:100px}
+            .code{font-size:10px;font-family:monospace;margin-top:4px}
+            .price{font-size:12px;font-weight:bold;margin-top:4px;border-top:1px solid #ddd;padding-top:4px}
+            @media print {
+              body{grid-template-columns:repeat(3,1fr)}
+              .barcode-item{page-break-inside:avoid}
+            }
+          </style>
+        </head>
+        <body>
+          ${barcodesHTML}
+          <script>
+            setTimeout(()=>{window.print();window.close()},1000)
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    
+    setSelectedProducts([]);
+  };
+
+  const handlePrintAllBarcodes = () => {
+    if (!products.length) {
+      showToast('لا توجد منتجات للطباعة', 'error');
+      return;
+    }
+    
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    let barcodesHTML = '';
+    
+    products.forEach((product) => {
+      const barcode = items.find(i => i.product_id === product.id)?.barcode || product.id;
+      
+      barcodesHTML += `
+        <div class="barcode-item">
+          <div class="title">${product.name}</div>
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${barcode}" />
+          <div class="code">${barcode}</div>
+          <div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div>
+        </div>
+      `;
+    });
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html dir="rtl">
+        <head>
+          <title>جميع الباركودات - ${products.length} منتج</title>
+          <style>
+            @page{size:auto;margin:10mm}
+            body{font-family:system-ui;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px}
+            .barcode-item{border:1px dashed #000;padding:10px;text-align:center;border-radius:8px;page-break-inside:avoid}
+            .title{font-size:12px;font-weight:800;margin-bottom:6px;word-break:break-word}
+            img{width:100px;height:100px}
+            .code{font-size:10px;font-family:monospace;margin-top:4px}
+            .price{font-size:12px;font-weight:bold;margin-top:4px;border-top:1px solid #ddd;padding-top:4px}
+            @media print {
+              body{grid-template-columns:repeat(3,1fr)}
+              .barcode-item{page-break-inside:avoid}
+            }
+          </style>
+        </head>
+        <body>
+          ${barcodesHTML}
+          <script>
+            setTimeout(()=>{window.print();window.close()},1000)
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const getCat = (k) => CATEGORIES.find(c => c.key === k) || { label: k, color: '#94a3b8' };
+  
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'غير محدد';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('ar-DZ', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+  
+  const filtered = products.filter(p => 
+    (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) && 
+    (selectedCategory === 'all' || p.category === selectedCategory)
+  );
+
+  const totalStock = products.reduce((sum, p) => sum + (parseInt(p.stock) || 0), 0);
 
   return (
-    <div style={{ background: '#f8fafc', direction: 'rtl', minHeight: '100vh', paddingBottom: 120, fontFamily: 'system-ui' }}>
-      <main style={{ padding: 16, maxWidth: 500, margin: '0 auto' }}>
-        
-        {/* شريط البحث اليدوي */}
-        <form onSubmit={handleManualSearch} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 12, marginBottom: 12 }}>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input 
-              type="text" 
-              placeholder="أدخل رمز الباركود أو ID..." 
-              value={manualCode} 
-              onChange={e => setManualCode(e.target.value)} 
-              style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none' }} 
-            />
-            <button 
-              type="submit" 
-              disabled={loading}
-              style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontWeight: 800, cursor: 'pointer', opacity: loading ? 0.7 : 1 }}
-            >
-              <Search size={16} /> بحث
+    <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 100, fontFamily: 'system-ui' }}>
+      {notification && (
+        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100, background: notification.type === 'error' ? '#ef4444' : '#10b981', color: '#fff', padding: '12px 20px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)', fontSize: 14, fontWeight: 700 }}>
+          {notification.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
+          {notification.message}
+        </div>
+      )}
+
+      <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>المنتجات والمخزون</h1>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {selectedProducts.length > 0 && (
+              <button onClick={handlePrintSelected} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+                <Printer size={16} /> طباعة المحدد ({selectedProducts.length})
+              </button>
+            )}
+            <button onClick={handlePrintAllBarcodes} style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+              <Printer size={16} /> طباعة الكل
+            </button>
+            <button onClick={handleOpenAdd} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+              <Plus size={16} /> إضافة منتج
             </button>
           </div>
-        </form>
-
-        {/* منطقة المسح والنتائج */}
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, textAlign: 'center' }}>
-          
-          {!scanning && !item && !loading && (
-            <div style={{ padding: '20px 0' }}>
-              <Camera size={48} style={{ color: '#2563eb', marginBottom: 12 }} />
-              <h3 style={{ fontSize: 16, margin: '0 0 12px 0' }}>مسح بكاميرا الهاتف</h3>
-              <button 
-                onClick={startScan} 
-                style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 24px', fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}
-              >
-                <Camera size={18} /> بدء الكاميرا
-              </button>
-            </div>
-          )}
-          
-          {scanning && (
-            <div>
-              <div id="reader" style={{ width: '100%', borderRadius: 12, overflow: 'hidden', border: '2px solid #2563eb' }} />
-              <button 
-                onClick={stopScan} 
-                style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: 8, padding: '8px 24px', fontWeight: 700, cursor: 'pointer', marginTop: 12 }}
-              >
-                إلغاء المسح
-              </button>
-            </div>
-          )}
-          
-          {loading && (
-            <div style={{ padding: 40, display: 'flex', justifyContent: 'center' }}>
-              <Loader2 size={36} style={{ animation: 'spin 1s linear infinite', color: '#2563eb' }} />
-            </div>
-          )}
-          
-          {errorMsg && (
-            <div style={{ background: '#fef2f2', color: '#b91c1c', padding: 12, borderRadius: 10, margin: '12px 0', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-              <AlertCircle size={18} /> {errorMsg}
-            </div>
-          )}
-          
-          {item && itemType === 'product' && !loading && (
-            <div style={{ textAlign: 'right', background: '#f8fafc', borderRadius: 12, padding: 16, border: '1px solid #e2e8f0' }}>
-              
-              {item.image && (
-                <div 
-                  style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, cursor: 'zoom-in' }} 
-                  onPointerUp={() => setShowFullImage(true)}
-                  onClick={() => setShowFullImage(true)}
-                >
-                  <img 
-                    src={item.image} 
-                    alt={item.name}
-                    style={{ width: 120, height: 120, borderRadius: 12, objectFit: 'cover', border: '1px solid #e2e8f0', pointerEvents: 'none' }}
-                    onError={(e) => { e.target.style.display = 'none'; }}
-                  />
-                </div>
-              )}
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
-                <strong style={{ fontSize: 16 }}>{item.name}</strong>
-                <span style={{ 
-                  padding: '4px 10px', 
-                  borderRadius: 20, 
-                  fontSize: 12,
-                  fontWeight: 'bold',
-                  background: item.status === 'available' ? '#d1fae5' : '#fee2e2', 
-                  color: item.status === 'available' ? '#047857' : '#b91c1c' 
-                }}>
-                  {item.status === 'available' ? 'متوفر' : 'مباع'}
-                </span>
-              </div>
-              
-              <div style={{ fontSize: 13, color: '#475569', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <div><strong>SKU:</strong> <code style={{ background: '#e2e8f0', padding: '2px 4px', borderRadius: 4 }}>{item.sku}</code></div>
-                <div><strong>الباركود:</strong> <code style={{ background: '#e2e8f0', padding: '2px 4px', borderRadius: 4 }}>{item.barcode}</code></div>
-              </div>
-              
-              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                <button 
-                  onClick={toggleItemStatus} 
-                  style={{ 
-                    flex: 1, 
-                    background: item.status === 'available' ? '#f59e0b' : '#2563eb',
-                    color: '#fff', 
-                    border: 'none', 
-                    borderRadius: 8, 
-                    padding: '10px', 
-                    fontWeight: 800, 
-                    cursor: 'pointer' 
-                  }}
-                >
-                  {item.status === 'available' ? 'تحديد كمباع' : 'إرجاع للمخزون'}
-                </button>
-                
-                <button 
-                  onClick={() => { setItem(null); setManualCode(''); setScannedCode(''); }} 
-                  style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, padding: '10px 16px', fontWeight: 700, cursor: 'pointer' }}
-                >
-                  مسح جديد
-                </button>
-              </div>
-            </div>
-          )}
         </div>
-      </main>
+      </div>
 
-      {/* Zoom Modal - يعمل على الهاتف والكمبيوتر */}
-      {showFullImage && item?.image && (
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: 16 }}>
+        {showForm && (
+          <div style={{ background: '#fff', border: '1px solid #3b82f6', borderRadius: 14, padding: 20, marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 800 }}>{editingProduct ? 'تعديل منتج' : 'إضافة منتج'}</h3>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}><X size={20} /></button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+              <input className="field-input" placeholder="اسم المنتج *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+              <select className="field-input" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+              </select>
+              <input className="field-input" type="number" placeholder="السعر *" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
+              <input className="field-input" type="number" placeholder="المخزون *" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
+              <input className="field-input" placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
+              <input className="field-input" placeholder="رابط التحديث (اختياري)" value={formData.update_url} onChange={e => setFormData({...formData, update_url: e.target.value})} />
+              <textarea className="field-input" placeholder="وصف المنتج (اختياري)" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} rows={2} style={{ gridColumn: '1 / -1' }} />
+              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', background: '#f1f5f9', borderRadius: 8, fontWeight: 600, fontSize: 13, width: 'fit-content' }}>
+                <Upload size={14} /> {uploading ? 'جاري...' : 'رفع صورة'}
+                <input type="file" accept="image/*" hidden onChange={e => handleImageUpload(e.target.files[0])} />
+              </label>
+            </div>
+            <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <button onClick={() => setShowForm(false)} className="btn btn-ghost btn-sm">إلغاء</button>
+              <button onClick={handleSave} className="btn btn-accent btn-sm" disabled={saving}>
+                <Save size={14} /> {saving ? 'جاري...' : 'حفظ'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14, marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', alignItems: 'center' }}>
+            <button onClick={() => setSelectedCategory('all')} className={`btn ${selectedCategory === 'all' ? 'btn-primary' : 'btn-ghost'} btn-sm`}>الكل ({products.length})</button>
+            {CATEGORIES.map(c => <button key={c.key} onClick={() => setSelectedCategory(c.key)} className={`btn ${selectedCategory === c.key ? 'btn-primary' : 'btn-ghost'} btn-sm`}>{c.label}</button>)}
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#059669', whiteSpace: 'nowrap', padding: '4px 8px', background: '#ecfdf5', borderRadius: 8 }}>
+              المخزون: {totalStock}
+            </span>
+          </div>
+          <div style={{ flex: 1, minWidth: 200, position: 'relative' }}>
+            <input className="field-input" placeholder="بحث..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            <Search size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+          </div>
+        </div>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 60 }}><Loader2 size={32} className="spin" /></div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
+            {filtered.map(product => {
+              const catObj = getCat(product.category);
+              const barcode = items.find(i => i.product_id === product.id)?.barcode;
+              const isSelected = selectedProducts.includes(product.id);
+              return (
+                <div key={product.id} className="card" style={{ padding: 16, position: 'relative', border: isSelected ? '2px solid #3b82f6' : '1px solid #e2e8f0' }}>
+                  <button 
+                    onClick={() => toggleSelect(product.id)}
+                    style={{ 
+                      position: 'absolute', 
+                      top: 10, 
+                      left: 10, 
+                      background: 'none', 
+                      border: 'none', 
+                      cursor: 'pointer',
+                      color: isSelected ? '#3b82f6' : '#94a3b8',
+                      zIndex: 2
+                    }}
+                  >
+                    {isSelected ? <CheckSquare size={22} /> : <Square size={22} />}
+                  </button>
+                  <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                    <img 
+                      src={product.image || 'https://via.placeholder.com/60'} 
+                      style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover', cursor: 'zoom-in' }} 
+                      alt={product.name} 
+                      onClick={() => product.image && setZoomedImage(product.image)}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: `${catObj.color}15`, color: catObj.color, fontWeight: 700 }}>{catObj.label}</span>
+                      <h4 style={{ fontSize: 14, fontWeight: 800, margin: '4px 0' }}>{product.name}</h4>
+                      <div style={{ fontSize: 16, fontWeight: 900, color: '#d97706' }}>{(parseFloat(product.price) || 0).toLocaleString('en-US')} دج</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <span style={{ fontSize: 12, color: '#64748b' }}>المخزون: <strong>{product.stock || 0}</strong></span>
+                      <span style={{ fontSize: 11, color: '#94a3b8' }}>🗓️ {formatDate(product.created_at)}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => handlePrintBarcode(product, barcode)} className="btn btn-ghost btn-sm" title="طباعة">🖨️</button>
+                      <button onClick={() => handleOpenEdit(product)} className="btn btn-ghost btn-sm" style={{ color: '#2563eb' }}><Edit3 size={14} /></button>
+                      <button onClick={() => handleDelete(product.id)} className="btn btn-ghost btn-sm" style={{ color: '#ef4444' }}><Trash2 size={14} /></button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Zoom Modal */}
+      {zoomedImage && (
         <div 
-          onClick={() => setShowFullImage(false)}
-          onPointerUp={() => setShowFullImage(false)}
+          onClick={() => setZoomedImage(null)}
           style={{
             position: 'fixed',
             inset: 0,
@@ -373,139 +507,14 @@ export default function AdminScanPage() {
             alignItems: 'center',
             justifyContent: 'center',
             padding: 20,
-            cursor: 'zoom-out',
-            touchAction: 'manipulation'
+            cursor: 'zoom-out'
           }}
         >
           <img 
-            src={item.image} 
-            alt={item.name}
-            style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 16, objectFit: 'contain', pointerEvents: 'none' }}
+            src={zoomedImage} 
+            alt="تكبير"
+            style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 16, objectFit: 'contain' }}
           />
-        </div>
-      )}
-
-      {/* Customer Modal - معلومات الزبون عند البيع */}
-      {showCustomerModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.6)',
-          zIndex: 999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 16,
-        }}>
-          <div style={{
-            background: '#fff',
-            borderRadius: 16,
-            padding: 20,
-            width: '100%',
-            maxWidth: 450,
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            direction: 'rtl',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 900 }}>معلومات الزبون</h3>
-              <button onClick={() => setShowCustomerModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                <X size={20} />
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>اسم الزبون *</label>
-                <div style={{ position: 'relative' }}>
-                  <User size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input 
-                    style={{ width: '100%', padding: '10px 35px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }}
-                    placeholder="الاسم الكامل"
-                    value={customerData.name}
-                    onChange={e => setCustomerData({...customerData, name: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>الهاتف *</label>
-                <div style={{ position: 'relative' }}>
-                  <Phone size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input 
-                    style={{ width: '100%', padding: '10px 35px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', direction: 'ltr', textAlign: 'right' }}
-                    placeholder="06XXXXXXXX"
-                    value={customerData.phone}
-                    onChange={e => setCustomerData({...customerData, phone: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>الولاية *</label>
-                <div style={{ position: 'relative' }}>
-                  <MapPin size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <select 
-                    style={{ width: '100%', padding: '10px 35px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', background: '#fff' }}
-                    value={customerData.wilaya}
-                    onChange={e => setCustomerData({...customerData, wilaya: e.target.value})}
-                  >
-                    <option value="">اختر الولاية</option>
-                    {wilayas.map(w => (
-                      <option key={w.id} value={w.id}>{w.id} - {w.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>البلدية</label>
-                <input 
-                  style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }}
-                  placeholder="البلدية"
-                  value={customerData.commune}
-                  onChange={e => setCustomerData({...customerData, commune: e.target.value})}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>العنوان</label>
-                <div style={{ position: 'relative' }}>
-                  <Home size={16} style={{ position: 'absolute', right: 10, top: 12, color: '#94a3b8' }} />
-                  <textarea 
-                    style={{ width: '100%', padding: '10px 35px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', resize: 'vertical', minHeight: 60 }}
-                    placeholder="العنوان التفصيلي"
-                    value={customerData.address}
-                    onChange={e => setCustomerData({...customerData, address: e.target.value})}
-                    rows={2}
-                  />
-                </div>
-              </div>
-
-              <button 
-                onClick={handleSaveOrder}
-                disabled={savingOrder}
-                style={{
-                  width: '100%',
-                  padding: 12,
-                  background: '#f59e0b',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 10,
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  opacity: savingOrder ? 0.7 : 1,
-                }}
-              >
-                {savingOrder ? <Loader2 size={18} className="spin" /> : <Save size={18} />}
-                {savingOrder ? 'جاري الحفظ...' : 'تأكيد البيع وإرسال للشحن'}
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

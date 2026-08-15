@@ -1,17 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
-import { Camera, Search, Loader2, AlertCircle, Package, ShoppingBag, Trash2 } from 'lucide-react';
+import { Camera, Search, Loader2, AlertCircle, X, User, Phone, MapPin, Home, Save } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'https://dzboard.onrender.com/api';
-
-const ORDER_STATUS_MAP = {
-  pending: { label: 'قيد الانتظار', bg: '#fef3c7', color: '#b45309' },
-  confirmed: { label: 'مؤكد', bg: '#dbeafe', color: '#1d4ed8' },
-  shipped: { label: 'تم الشحن', bg: '#e0e7ff', color: '#4338ca' },
-  delivered: { label: 'تم التسليم', bg: '#d1fae5', color: '#047857' },
-  cancelled: { label: 'ملغى', bg: '#fee2e2', color: '#b91c1c' },
-};
 
 export default function AdminScanPage() {
   const navigate = useNavigate();
@@ -22,10 +14,35 @@ export default function AdminScanPage() {
   const [manualCode, setManualCode] = useState('');
   const [scannedCode, setScannedCode] = useState('');
   const [item, setItem] = useState(null);
-  const [itemType, setItemType] = useState('product'); // 'product' أو 'order'
+  const [itemType, setItemType] = useState('product');
   const [errorMsg, setErrorMsg] = useState('');
   const [showFullImage, setShowFullImage] = useState(false);
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [customerData, setCustomerData] = useState({ name: '', phone: '', wilaya: '', commune: '', address: '' });
+  const [savingOrder, setSavingOrder] = useState(false);
   const html5QrCodeRef = useRef(null);
+
+  const wilayas = [
+    { id: 1, name: 'أدرار' }, { id: 2, name: 'الشلف' }, { id: 3, name: 'الأغواط' },
+    { id: 4, name: 'أم البواقي' }, { id: 5, name: 'باتنة' }, { id: 6, name: 'بجاية' },
+    { id: 7, name: 'بسكرة' }, { id: 8, name: 'بشار' }, { id: 9, name: 'البليدة' },
+    { id: 10, name: 'البويرة' }, { id: 11, name: 'تمنراست' }, { id: 12, name: 'تبسة' },
+    { id: 13, name: 'تلمسان' }, { id: 14, name: 'تيارت' }, { id: 15, name: 'تيزي وزو' },
+    { id: 16, name: 'الجزائر' }, { id: 17, name: 'الجلفة' }, { id: 18, name: 'جيجل' },
+    { id: 19, name: 'سطيف' }, { id: 20, name: 'سعيدة' }, { id: 21, name: 'سكيكدة' },
+    { id: 22, name: 'سيدي بلعباس' }, { id: 23, name: 'عنابة' }, { id: 24, name: 'قالمة' },
+    { id: 25, name: 'قسنطينة' }, { id: 26, name: 'المدية' }, { id: 27, name: 'مستغانم' },
+    { id: 28, name: 'المسيلة' }, { id: 29, name: 'معسكر' }, { id: 30, name: 'ورقلة' },
+    { id: 31, name: 'وهران' }, { id: 32, name: 'البيض' }, { id: 33, name: 'إليزي' },
+    { id: 34, name: 'برج بوعريريج' }, { id: 35, name: 'بومرداس' }, { id: 36, name: 'الطارف' },
+    { id: 37, name: 'تندوف' }, { id: 38, name: 'تيسمسيلت' }, { id: 39, name: 'الوادي' },
+    { id: 40, name: 'خنشلة' }, { id: 41, name: 'سوق أهراس' }, { id: 42, name: 'تيبازة' },
+    { id: 43, name: 'ميلة' }, { id: 44, name: 'عين الدفلى' }, { id: 45, name: 'النعامة' },
+    { id: 46, name: 'عين تموشنت' }, { id: 47, name: 'غرداية' }, { id: 48, name: 'غليزان' },
+    { id: 49, name: 'تيميمون' }, { id: 50, name: 'برج باجي مختار' }, { id: 51, name: 'أولاد جلال' },
+    { id: 52, name: 'بني عباس' }, { id: 53, name: 'عين صالح' }, { id: 54, name: 'عين قزام' },
+    { id: 55, name: 'تقرت' }, { id: 56, name: 'جانت' }, { id: 57, name: 'المغير' }, { id: 58, name: 'المنيعة' },
+  ];
 
   useEffect(() => { 
     if (!token) navigate('/admin'); 
@@ -82,8 +99,7 @@ export default function AdminScanPage() {
     setItem(null);
     
     try {
-      // 1. إذا كان الرمز يبدأ بـ ORDER أو DHD - ابحث في الطلبات
-      if (searchCode.startsWith('ORDER') || searchCode.startsWith('DHD') || searchCode.startsWith('REQ')) {
+      if (searchCode.startsWith('ORDER') || searchCode.startsWith('DHD')) {
         const orderRes = await fetch(`${API}/orders/search?query=${encodeURIComponent(searchCode)}`, { 
           headers: { Authorization: `Bearer ${token}` } 
         });
@@ -97,7 +113,6 @@ export default function AdminScanPage() {
         }
       }
       
-      // 2. ابحث في المنتجات
       const res = await fetch(`${API}/inventory/search?query=${encodeURIComponent(searchCode)}`, { 
         headers: { Authorization: `Bearer ${token}` } 
       });
@@ -126,11 +141,16 @@ export default function AdminScanPage() {
   };
 
   const toggleItemStatus = async () => {
-    if (!item) return; 
+    if (!item) return;
+    
+    // إذا كان المنتج متوفر → فتح Modal الزبون
+    if (item.status === 'available') {
+      setShowCustomerModal(true);
+      return;
+    }
+    
+    // إرجاع للمخزون
     setLoading(true);
-    
-    const newStatus = item.status === 'available' ? 'sold' : 'available';
-    
     try {
       const res = await fetch(`${API}/inventory/items/${item.id}/status`, { 
         method: 'PUT', 
@@ -138,75 +158,74 @@ export default function AdminScanPage() {
           'Content-Type': 'application/json', 
           Authorization: `Bearer ${token}` 
         }, 
-        body: JSON.stringify({ status: newStatus }) 
+        body: JSON.stringify({ status: 'available' }) 
       });
       
       const data = await res.json();
       
       if (data.success) {
-        setItem(prev => ({ ...prev, status: newStatus }));
+        setItem(prev => ({ ...prev, status: 'available' }));
       } else {
-        setErrorMsg(data.error || 'فشل تعديل حالة المنتج');
+        setErrorMsg(data.error || 'فشل الإرجاع');
       }
     } catch (err) {
-      console.error('Toggle error:', err);
-      setErrorMsg('حدث خطأ أثناء الاتصال بالخادم.');
+      setErrorMsg('خطأ في الاتصال');
     } finally { 
       setLoading(false); 
     }
   };
 
-  const updateOrderStatus = async (status) => {
-    if (!item) return;
-    setLoading(true);
+  // حفظ الطلب مع معلومات الزبون
+  const handleSaveOrder = async () => {
+    if (!customerData.name || !customerData.phone || !customerData.wilaya) {
+      setErrorMsg('الاسم والهاتف والولاية مطلوبة');
+      return;
+    }
+
+    setSavingOrder(true);
     
     try {
-      const res = await fetch(`${API}/orders/${item.id}/status`, { 
+      // 1. تحديث حالة المنتج إلى مباع
+      await fetch(`${API}/inventory/items/${item.id}/status`, { 
         method: 'PUT', 
         headers: { 
           'Content-Type': 'application/json', 
           Authorization: `Bearer ${token}` 
         }, 
-        body: JSON.stringify({ status }) 
+        body: JSON.stringify({ status: 'sold' }) 
       });
-      
-      const data = await res.json();
-      
-      if (data.success) {
-        setItem(prev => ({ ...prev, status }));
-      } else {
-        setErrorMsg(data.error || 'فشل تعديل الحالة');
-      }
-    } catch (err) {
-      setErrorMsg('خطأ في الاتصال');
-    } finally { 
-      setLoading(false); 
-    }
-  };
 
-  const deleteOrder = async () => {
-    if (!item) return;
-    if (!confirm(`هل أنت متأكد من حذف الطلب #${item.id}؟`)) return;
-    
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/orders/${item.id}`, { 
-        method: 'DELETE', 
-        headers: { Authorization: `Bearer ${token}` } 
+      // 2. إنشاء طلب مع معلومات الزبون
+      const orderRes = await fetch(`${API}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: customerData.name,
+          phone: customerData.phone,
+          wilaya_id: parseInt(customerData.wilaya),
+          commune: customerData.commune || '',
+          address: customerData.address || '',
+          shipping_type: 'domicile',
+          items: [{ id: item.id, name: item.name, quantity: 1 }],
+          total_price: item.price || 0,
+          shipping_cost: 0
+        })
       });
-      const data = await res.json();
+
+      const orderData = await orderRes.json();
       
-      if (data.success) {
-        setItem(null);
-        setErrorMsg('');
-        showToast && showToast('تم الحذف بنجاح');
+      if (orderData.success) {
+        setItem(prev => ({ ...prev, status: 'sold' }));
+        setShowCustomerModal(false);
+        setCustomerData({ name: '', phone: '', wilaya: '', commune: '', address: '' });
+        alert(`تم البيع بنجاح! رقم الطلب: #${orderData.orderId}${orderData.trackingNumber ? `\nرقم التتبع: ${orderData.trackingNumber}` : ''}`);
       } else {
-        setErrorMsg(data.message || 'فشل الحذف');
+        setErrorMsg(orderData.message || 'فشل إنشاء الطلب');
       }
     } catch (err) {
       setErrorMsg('خطأ في الاتصال');
     } finally {
-      setLoading(false);
+      setSavingOrder(false);
     }
   };
 
@@ -219,7 +238,7 @@ export default function AdminScanPage() {
           <div style={{ display: 'flex', gap: 8 }}>
             <input 
               type="text" 
-              placeholder="باركود منتج أو طلب..." 
+              placeholder="أدخل رمز الباركود أو ID..." 
               value={manualCode} 
               onChange={e => setManualCode(e.target.value)} 
               style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none' }} 
@@ -274,19 +293,19 @@ export default function AdminScanPage() {
             </div>
           )}
           
-          {/* عرض منتج */}
           {item && itemType === 'product' && !loading && (
             <div style={{ textAlign: 'right', background: '#f8fafc', borderRadius: 12, padding: 16, border: '1px solid #e2e8f0' }}>
               
               {item.image && (
                 <div 
                   style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, cursor: 'zoom-in' }} 
+                  onPointerUp={() => setShowFullImage(true)}
                   onClick={() => setShowFullImage(true)}
                 >
                   <img 
                     src={item.image} 
                     alt={item.name}
-                    style={{ width: 120, height: 120, borderRadius: 12, objectFit: 'cover', border: '1px solid #e2e8f0' }}
+                    style={{ width: 120, height: 120, borderRadius: 12, objectFit: 'cover', border: '1px solid #e2e8f0', pointerEvents: 'none' }}
                     onError={(e) => { e.target.style.display = 'none'; }}
                   />
                 </div>
@@ -337,78 +356,14 @@ export default function AdminScanPage() {
               </div>
             </div>
           )}
-
-          {/* عرض طلب */}
-          {item && itemType === 'order' && !loading && (
-            <div style={{ textAlign: 'right', background: '#f8fafc', borderRadius: 12, padding: 16, border: '1px solid #e2e8f0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
-                <strong style={{ fontSize: 16 }}>طلب #{item.id} - {item.customer}</strong>
-                {ORDER_STATUS_MAP[item.status] && (
-                  <span style={{ 
-                    padding: '4px 10px', 
-                    borderRadius: 20, 
-                    fontSize: 12,
-                    fontWeight: 'bold',
-                    background: ORDER_STATUS_MAP[item.status].bg, 
-                    color: ORDER_STATUS_MAP[item.status].color 
-                  }}>
-                    {ORDER_STATUS_MAP[item.status].label}
-                  </span>
-                )}
-              </div>
-              
-              <div style={{ fontSize: 13, color: '#475569', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <div><strong>الهاتف:</strong> {item.phone}</div>
-                <div><strong>العنوان:</strong> {item.address}</div>
-                <div><strong>البلدية:</strong> {item.commune}</div>
-                <div><strong>المبلغ:</strong> {(parseFloat(item.amount||0)+parseFloat(item.shipping||0)).toLocaleString('en-US')} دج</div>
-                {item.tracking && <div><strong>التتبع:</strong> {item.tracking}</div>}
-              </div>
-              
-              <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
-                <select
-                  value={item.status}
-                  onChange={(e) => updateOrderStatus(e.target.value)}
-                  style={{ 
-                    flex: 1, 
-                    padding: '10px', 
-                    borderRadius: 8, 
-                    border: '1px solid #e2e8f0',
-                    fontWeight: 800, 
-                    cursor: 'pointer',
-                    background: '#fff'
-                  }}
-                >
-                  <option value="pending">قيد الانتظار</option>
-                  <option value="confirmed">مؤكد</option>
-                  <option value="shipped">تم الشحن</option>
-                  <option value="delivered">تم التسليم</option>
-                  <option value="cancelled">ملغى</option>
-                </select>
-                
-                <button 
-                  onClick={deleteOrder} 
-                  style={{ background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: 8, padding: '10px 16px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
-                >
-                  <Trash2 size={16} /> حذف
-                </button>
-                
-                <button 
-                  onClick={() => { setItem(null); setManualCode(''); setScannedCode(''); }} 
-                  style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, padding: '10px 16px', fontWeight: 700, cursor: 'pointer' }}
-                >
-                  مسح جديد
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </main>
 
-      {/* الصورة المكبرة */}
+      {/* Zoom Modal - يعمل على الهاتف والكمبيوتر */}
       {showFullImage && item?.image && (
         <div 
           onClick={() => setShowFullImage(false)}
+          onPointerUp={() => setShowFullImage(false)}
           style={{
             position: 'fixed',
             inset: 0,
@@ -418,14 +373,139 @@ export default function AdminScanPage() {
             alignItems: 'center',
             justifyContent: 'center',
             padding: 20,
-            cursor: 'zoom-out'
+            cursor: 'zoom-out',
+            touchAction: 'manipulation'
           }}
         >
           <img 
             src={item.image} 
             alt={item.name}
-            style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 16, objectFit: 'contain' }}
+            style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 16, objectFit: 'contain', pointerEvents: 'none' }}
           />
+        </div>
+      )}
+
+      {/* Customer Modal - معلومات الزبون عند البيع */}
+      {showCustomerModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.6)',
+          zIndex: 999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 16,
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 16,
+            padding: 20,
+            width: '100%',
+            maxWidth: 450,
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            direction: 'rtl',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 900 }}>معلومات الزبون</h3>
+              <button onClick={() => setShowCustomerModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>اسم الزبون *</label>
+                <div style={{ position: 'relative' }}>
+                  <User size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                  <input 
+                    style={{ width: '100%', padding: '10px 35px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }}
+                    placeholder="الاسم الكامل"
+                    value={customerData.name}
+                    onChange={e => setCustomerData({...customerData, name: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>الهاتف *</label>
+                <div style={{ position: 'relative' }}>
+                  <Phone size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                  <input 
+                    style={{ width: '100%', padding: '10px 35px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', direction: 'ltr', textAlign: 'right' }}
+                    placeholder="06XXXXXXXX"
+                    value={customerData.phone}
+                    onChange={e => setCustomerData({...customerData, phone: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>الولاية *</label>
+                <div style={{ position: 'relative' }}>
+                  <MapPin size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                  <select 
+                    style={{ width: '100%', padding: '10px 35px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', background: '#fff' }}
+                    value={customerData.wilaya}
+                    onChange={e => setCustomerData({...customerData, wilaya: e.target.value})}
+                  >
+                    <option value="">اختر الولاية</option>
+                    {wilayas.map(w => (
+                      <option key={w.id} value={w.id}>{w.id} - {w.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>البلدية</label>
+                <input 
+                  style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }}
+                  placeholder="البلدية"
+                  value={customerData.commune}
+                  onChange={e => setCustomerData({...customerData, commune: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>العنوان</label>
+                <div style={{ position: 'relative' }}>
+                  <Home size={16} style={{ position: 'absolute', right: 10, top: 12, color: '#94a3b8' }} />
+                  <textarea 
+                    style={{ width: '100%', padding: '10px 35px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', resize: 'vertical', minHeight: 60 }}
+                    placeholder="العنوان التفصيلي"
+                    value={customerData.address}
+                    onChange={e => setCustomerData({...customerData, address: e.target.value})}
+                    rows={2}
+                  />
+                </div>
+              </div>
+
+              <button 
+                onClick={handleSaveOrder}
+                disabled={savingOrder}
+                style={{
+                  width: '100%',
+                  padding: 12,
+                  background: '#f59e0b',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 10,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  opacity: savingOrder ? 0.7 : 1,
+                }}
+              >
+                {savingOrder ? <Loader2 size={18} className="spin" /> : <Save size={18} />}
+                {savingOrder ? 'جاري الحفظ...' : 'تأكيد البيع وإرسال للشحن'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
