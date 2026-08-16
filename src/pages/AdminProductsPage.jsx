@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Plus, Trash2, Save, Package, Monitor, Zap, Cpu, 
   Search, Loader2, Upload, Edit3, X, CheckCircle, AlertCircle,
-  Printer, CheckSquare, Square
+  Printer, CheckSquare, Square, FileSpreadsheet
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 const CATEGORIES = [
   { key: 'tcon', label: 'كرت تيكون', icon: Monitor, color: '#3b82f6' },
@@ -350,6 +351,42 @@ export default function AdminProductsPage() {
     printWindow.document.close();
   };
 
+  // تصدير Excel
+  const handleExportExcel = () => {
+    if (!products.length) {
+      showToast('لا توجد منتجات للتصدير', 'error');
+      return;
+    }
+    
+    const data = products.map(p => ({
+      'ID': p.id,
+      'الاسم': p.name,
+      'التصنيف': getCat(p.category).label,
+      'السعر (دج)': parseFloat(p.price) || 0,
+      'المخزون': parseInt(p.stock) || 0,
+      'الباركود': items.find(i => i.product_id === p.id)?.barcode || '-',
+      'تاريخ الإضافة': formatDate(p.created_at),
+    }));
+    
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'المنتجات');
+    
+    // تنسيق عرض الأعمدة
+    ws['!cols'] = [
+      { wch: 5 },
+      { wch: 25 },
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 15 },
+      { wch: 20 },
+    ];
+    
+    XLSX.writeFile(wb, `products_${new Date().toISOString().split('T')[0]}.xlsx`);
+    showToast('تم تصدير المنتجات بنجاح');
+  };
+
   const getCat = (k) => CATEGORIES.find(c => c.key === k) || { label: k, color: '#94a3b8' };
   
   const formatDate = (dateStr) => {
@@ -375,9 +412,12 @@ export default function AdminProductsPage() {
       )}
 
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 30 }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <h1 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>المنتجات والمخزون</h1>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button onClick={handleExportExcel} style={{ background: '#8b5cf6', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+              <FileSpreadsheet size={16} /> تصدير Excel
+            </button>
             {selectedProducts.length > 0 && (
               <button onClick={handlePrintSelected} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
                 <Printer size={16} /> طباعة المحدد ({selectedProducts.length})
@@ -469,6 +509,7 @@ export default function AdminProductsPage() {
                       style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover', cursor: 'zoom-in' }} 
                       alt={product.name} 
                       onClick={() => product.image && setZoomedImage(product.image)}
+                      onPointerUp={() => product.image && setZoomedImage(product.image)}
                     />
                     <div style={{ flex: 1 }}>
                       <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: `${catObj.color}15`, color: catObj.color, fontWeight: 700 }}>{catObj.label}</span>
@@ -498,6 +539,7 @@ export default function AdminProductsPage() {
       {zoomedImage && (
         <div 
           onClick={() => setZoomedImage(null)}
+          onPointerUp={() => setZoomedImage(null)}
           style={{
             position: 'fixed',
             inset: 0,
@@ -507,13 +549,14 @@ export default function AdminProductsPage() {
             alignItems: 'center',
             justifyContent: 'center',
             padding: 20,
-            cursor: 'zoom-out'
+            cursor: 'zoom-out',
+            touchAction: 'manipulation'
           }}
         >
           <img 
             src={zoomedImage} 
             alt="تكبير"
-            style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 16, objectFit: 'contain' }}
+            style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 16, objectFit: 'contain', pointerEvents: 'none' }}
           />
         </div>
       )}
