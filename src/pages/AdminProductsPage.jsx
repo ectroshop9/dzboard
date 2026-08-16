@@ -168,7 +168,7 @@ export default function AdminProductsPage() {
         }
       } else {
         const quantityNum = parseInt(formData.stock, 10);
-        const validQuantity = isNaN(quantityNum) || quantityNum < 1 ? 1 : quantityNum;
+        const validQuantity = isNaN(quantityNum) ? 0 : Math.max(0, quantityNum);
         
         const payload = {
           name: formData.name.trim(),

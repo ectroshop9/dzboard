@@ -141,7 +141,7 @@ router.post('/items', async (req, res) => {
     
     const cleanName = String(name || '').trim();
     const cleanPrice = Number(price) || 0;
-    const cleanQuantity = Math.max(1, Number(quantity) || 1);
+    const cleanQuantity = Math.max(0, Number(quantity) || 0);
     
     if (!cleanName) {
       return res.status(400).json({ 
