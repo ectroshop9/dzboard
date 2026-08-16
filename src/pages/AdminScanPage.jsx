@@ -20,6 +20,9 @@ export default function AdminScanPage() {
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [customerData, setCustomerData] = useState({ name: '', phone: '', wilaya: '', commune: '', address: '' });
   const [savingOrder, setSavingOrder] = useState(false);
+  const [shippingType, setShippingType] = useState('domicile');
+  const [communes, setCommunes] = useState([]);
+  const [loadingCommunes, setLoadingCommunes] = useState(false);
   const html5QrCodeRef = useRef(null);
 
   const wilayas = [
@@ -48,6 +51,23 @@ export default function AdminScanPage() {
     if (!token) navigate('/admin'); 
     return () => stopScan(); 
   }, [navigate, token]);
+
+  useEffect(() => {
+    if (!customerData.wilaya) {
+      setCommunes([]);
+      setCustomerData(prev => ({ ...prev, commune: '' }));
+      return;
+    }
+    
+    setLoadingCommunes(true);
+    fetch(`${API}/shipping/communes?wilaya_id=${customerData.wilaya}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) setCommunes(data.communes || []);
+      })
+      .catch(() => setCommunes([]))
+      .finally(() => setLoadingCommunes(false));
+  }, [customerData.wilaya]);
 
   const stopScan = async () => {
     if (html5QrCodeRef.current?.isScanning) {
@@ -178,6 +198,11 @@ export default function AdminScanPage() {
       setErrorMsg('الاسم والهاتف والولاية مطلوبة');
       return;
     }
+    
+    if (!customerData.commune) {
+      setErrorMsg('اختر البلدية');
+      return;
+    }
 
     setSavingOrder(true);
     
@@ -198,9 +223,9 @@ export default function AdminScanPage() {
           full_name: customerData.name,
           phone: customerData.phone,
           wilaya_id: parseInt(customerData.wilaya),
-          commune: customerData.commune || '',
+          commune: customerData.commune,
           address: customerData.address || '',
-          shipping_type: 'domicile',
+          shipping_type: shippingType,
           items: [{ id: item.id, name: item.name, quantity: 1 }],
           total_price: Number(item.price) || 500,
           shipping_cost: 500
@@ -215,6 +240,7 @@ export default function AdminScanPage() {
         setItem(prev => ({ ...prev, status: 'sold' }));
         setShowCustomerModal(false);
         setCustomerData({ name: '', phone: '', wilaya: '', commune: '', address: '' });
+        setShippingType('domicile');
         alert(`تم البيع بنجاح! رقم الطلب: #${orderData.orderId}${orderData.trackingNumber ? `\nرقم التتبع: ${orderData.trackingNumber}` : ''}`);
       } else {
         setErrorMsg(orderData.message || 'فشل إنشاء الطلب');
@@ -453,13 +479,66 @@ export default function AdminScanPage() {
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>البلدية</label>
-                <input 
-                  style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }}
-                  placeholder="البلدية"
+                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>البلدية *</label>
+                <select 
+                  style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', background: '#fff' }}
                   value={customerData.commune}
                   onChange={e => setCustomerData({...customerData, commune: e.target.value})}
-                />
+                  disabled={!customerData.wilaya || loadingCommunes}
+                >
+                  <option value="">
+                    {!customerData.wilaya ? 'اختر الولاية أولاً' : loadingCommunes ? 'جاري تحميل البلديات...' : communes.length === 0 ? 'لا توجد بلديات' : 'اختر البلدية'}
+                  </option>
+                  {communes.map(c => (
+                    <option key={c.id || c.name_ar || c.name_fr} value={c.name_ar || c.name_fr}>
+                      {c.name_ar || c.name_fr}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>نوع التوصيل</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => setShippingType('domicile')}
+                    style={{
+                      padding: '10px',
+                      borderRadius: 8,
+                      border: shippingType === 'domicile' ? '2px solid #f59e0b' : '1px solid #cbd5e1',
+                      background: shippingType === 'domicile' ? '#fff9f0' : '#fff',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                      fontSize: 12,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <Home size={16} /> منزل
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShippingType('stopdesk')}
+                    style={{
+                      padding: '10px',
+                      borderRadius: 8,
+                      border: shippingType === 'stopdesk' ? '2px solid #f59e0b' : '1px solid #cbd5e1',
+                      background: shippingType === 'stopdesk' ? '#fff9f0' : '#fff',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                      fontSize: 12,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <MapPin size={16} /> مكتب
+                  </button>
+                </div>
               </div>
 
               <div>
