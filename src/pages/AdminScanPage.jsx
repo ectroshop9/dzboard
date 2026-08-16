@@ -49,7 +49,7 @@ export default function AdminScanPage() {
 
   useEffect(() => { 
     if (!token) navigate('/admin'); 
-    return () => stopScan(); 
+    return () => { stopScan(); }; 
   }, [navigate, token]);
 
   useEffect(() => {
@@ -70,12 +70,16 @@ export default function AdminScanPage() {
   }, [customerData.wilaya]);
 
   const stopScan = async () => {
-    if (html5QrCodeRef.current?.isScanning) {
-      try { 
-        await html5QrCodeRef.current.stop(); 
-        html5QrCodeRef.current.clear(); 
+    if (html5QrCodeRef.current) {
+      try {
+        if (html5QrCodeRef.current.isScanning) {
+          await html5QrCodeRef.current.stop();
+        }
+        html5QrCodeRef.current.clear();
       } catch (err) {
         console.error('فشل إيقاف الكاميرا:', err);
+      } finally {
+        html5QrCodeRef.current = null;
       }
     }
     setScanning(false);
@@ -96,6 +100,7 @@ export default function AdminScanPage() {
           { facingMode: 'environment' }, 
           { fps: 10, qrbox: { width: 250, height: 250 } },
           async (text) => { 
+            if (navigator.vibrate) navigator.vibrate(150);
             await stopScan(); 
             const clean = text?.replace(/\r?\n|\r/g, '').trim() || ''; 
             setScannedCode(clean); 
@@ -234,8 +239,6 @@ export default function AdminScanPage() {
 
       const orderData = await orderRes.json();
       
-      console.log('Order Response:', orderData);
-      
       if (orderData.success) {
         setItem(prev => ({ ...prev, status: 'sold' }));
         setShowCustomerModal(false);
@@ -254,7 +257,7 @@ export default function AdminScanPage() {
   };
 
   return (
-    <div style={{ background: '#f8fafc', direction: 'rtl', minHeight: '100vh', paddingBottom: 120, fontFamily: 'system-ui' }}>
+    <div style={{ background: '#f8fafc', direction: 'rtl', minHeight: '100vh', paddingBottom: 120, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <main style={{ padding: 16, maxWidth: 500, margin: '0 auto' }}>
         
         <form onSubmit={handleManualSearch} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 12, marginBottom: 12 }}>
@@ -269,7 +272,7 @@ export default function AdminScanPage() {
             <button 
               type="submit" 
               disabled={loading}
-              style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontWeight: 800, cursor: 'pointer', opacity: loading ? 0.7 : 1 }}
+              style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontWeight: 800, cursor: 'pointer', opacity: loading ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 4 }}
             >
               <Search size={16} /> بحث
             </button>
@@ -381,6 +384,7 @@ export default function AdminScanPage() {
         </div>
       </main>
 
+      {/* Modal الصورة المكبرة */}
       {showFullImage && item?.image && (
         <div 
           onClick={() => setShowFullImage(false)}
@@ -406,6 +410,7 @@ export default function AdminScanPage() {
         </div>
       )}
 
+      {/* Modal أدخال بيانات الزبون - محسن للهواتف */}
       {showCustomerModal && (
         <div style={{
           position: 'fixed',
@@ -413,34 +418,38 @@ export default function AdminScanPage() {
           background: 'rgba(0,0,0,0.6)',
           zIndex: 999,
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-end', // تثبيت أسفل الشاشة على الهاتف (Bottom Sheet)
           justifyContent: 'center',
-          padding: 16,
         }}>
           <div style={{
             background: '#fff',
-            borderRadius: 16,
-            padding: 20,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            padding: '16px 16px 20px 16px',
             width: '100%',
-            maxWidth: 450,
-            maxHeight: '90vh',
-            overflowY: 'auto',
+            maxWidth: 500,
+            maxHeight: '88vh',
+            display: 'flex',
+            flexDirection: 'column',
             direction: 'rtl',
+            boxShadow: '0 -4px 20px rgba(0,0,0,0.15)'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 900 }}>معلومات الزبون</h3>
-              <button onClick={() => setShowCustomerModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+            {/* الهيدر - ثابت */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f1f5f9' }}>
+              <h3 style={{ fontSize: 16, fontWeight: 900, margin: 0 }}>معلومات الزبون</h3>
+              <button onClick={() => setShowCustomerModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
                 <X size={20} />
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* الجسم - قابل للتمرير مع حفظ المكان للزر */}
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, paddingLeft: 4, paddingRight: 4 }}>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>اسم الزبون *</label>
                 <div style={{ position: 'relative' }}>
                   <User size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                   <input 
-                    style={{ width: '100%', padding: '10px 35px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none' }}
+                    style={{ width: '100%', padding: '10px 35px 10px 10px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' }}
                     placeholder="الاسم الكامل"
                     value={customerData.name}
                     onChange={e => setCustomerData({...customerData, name: e.target.value})}
@@ -453,7 +462,9 @@ export default function AdminScanPage() {
                 <div style={{ position: 'relative' }}>
                   <Phone size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                   <input 
-                    style={{ width: '100%', padding: '10px 35px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', direction: 'ltr', textAlign: 'right' }}
+                    type="tel"
+                    inputMode="tel"
+                    style={{ width: '100%', padding: '10px 35px 10px 10px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', direction: 'ltr', textAlign: 'right', boxSizing: 'border-box' }}
                     placeholder="06XXXXXXXX"
                     value={customerData.phone}
                     onChange={e => setCustomerData({...customerData, phone: e.target.value})}
@@ -466,7 +477,7 @@ export default function AdminScanPage() {
                 <div style={{ position: 'relative' }}>
                   <MapPin size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                   <select 
-                    style={{ width: '100%', padding: '10px 35px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', background: '#fff' }}
+                    style={{ width: '100%', padding: '10px 35px 10px 10px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', background: '#fff', boxSizing: 'border-box' }}
                     value={customerData.wilaya}
                     onChange={e => setCustomerData({...customerData, wilaya: e.target.value})}
                   >
@@ -481,7 +492,7 @@ export default function AdminScanPage() {
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>البلدية *</label>
                 <select 
-                  style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', background: '#fff' }}
+                  style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', background: '#fff', boxSizing: 'border-box' }}
                   value={customerData.commune}
                   onChange={e => setCustomerData({...customerData, commune: e.target.value})}
                   disabled={!customerData.wilaya || loadingCommunes}
@@ -546,7 +557,7 @@ export default function AdminScanPage() {
                 <div style={{ position: 'relative' }}>
                   <Home size={16} style={{ position: 'absolute', right: 10, top: 12, color: '#94a3b8' }} />
                   <textarea 
-                    style={{ width: '100%', padding: '10px 35px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', resize: 'vertical', minHeight: 60 }}
+                    style={{ width: '100%', padding: '10px 35px 10px 10px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', resize: 'none', minHeight: 45, boxSizing: 'border-box' }}
                     placeholder="العنوان التفصيلي"
                     value={customerData.address}
                     onChange={e => setCustomerData({...customerData, address: e.target.value})}
@@ -554,30 +565,36 @@ export default function AdminScanPage() {
                   />
                 </div>
               </div>
+            </div>
 
+            {/* الزر المثبت - Sticky Footer (يبقى ظاهراً دائمًا حتى مع فتح الكيبورد) */}
+            <div style={{ paddingTop: 12, marginTop: 8, borderTop: '1px solid #f1f5f9', background: '#fff' }}>
               <button 
                 onClick={handleSaveOrder}
                 disabled={savingOrder}
                 style={{
                   width: '100%',
-                  padding: 12,
+                  padding: 13,
                   background: '#f59e0b',
                   color: '#fff',
                   border: 'none',
                   borderRadius: 10,
                   fontWeight: 800,
+                  fontSize: 14,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 8,
                   opacity: savingOrder ? 0.7 : 1,
+                  boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
                 }}
               >
-                {savingOrder ? <Loader2 size={18} className="spin" /> : <Save size={18} />}
+                {savingOrder ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={18} />}
                 {savingOrder ? 'جاري الحفظ...' : 'تأكيد البيع وإرسال للشحن'}
               </button>
             </div>
+
           </div>
         </div>
       )}
