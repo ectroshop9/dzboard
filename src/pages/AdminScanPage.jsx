@@ -169,7 +169,7 @@ export default function AdminScanPage() {
     if (!item) return;
     
     if (item.status === 'available') {
-      setShowCustomerModal(true);
+      navigate('/admin/checkout-form', { state: { item } });
       return;
     }
     
