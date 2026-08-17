@@ -2,7 +2,10 @@ import Product from '../models/Product.js';
 
 export const getAll = async (req, res) => {
   try {
-    const products = await Product.getAll();
+    const includeInactive = req.query.include_inactive === 'true';
+    const products = includeInactive 
+      ? await Product.getAllIncludingInactive()
+      : await Product.getAll();
     res.json({ success: true, products: products || [] });
   } catch (e) {
     res.json({ success: true, products: [] });

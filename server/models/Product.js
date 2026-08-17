@@ -5,6 +5,10 @@ export default {
     const { data } = await supabase.from('products').select('*').eq('active', true).order('id', { ascending: false })
     return data || []
   },
+  getAllIncludingInactive: async () => {
+    const { data } = await supabase.from('products').select('*').order('id', { ascending: false })
+    return data || []
+  },
   getById: async (id) => {
     const { data } = await supabase.from('products').select('*').eq('id', id).single()
     return data

@@ -65,7 +65,7 @@ export default function AdminProductsPage() {
   const loadAll = () => {
     setLoading(true);
     Promise.all([
-      fetch(`${API}/products`).then(r => r.json()), 
+      fetch(`${API}/products?include_inactive=true`).then(r => r.json()), 
       fetch(`${API}/inventory/items`).then(r => r.json())
     ])
       .then(([a, b]) => { 
