@@ -42,7 +42,6 @@ export default function CheckoutPage() {
             const p = data.product;
             const item = { id: p.id, name: p.name, price: p.price, image: p.image, quantity: 1 };
             localStorage.setItem('cartItems', JSON.stringify([item]));
-            window.location.reload();
           }
         });
     }
