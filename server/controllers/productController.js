@@ -48,16 +48,19 @@ export const update = async (req, res) => {
   try {
     const { name, category, brand, price, stock, image, description, active, update_url } = req.body;
     
+    // جلب المنتج الحالي للحفاظ على القيم غير المرسلة
+    const existing = await Product.getById(parseInt(req.params.id));
+    
     const p = await Product.update(parseInt(req.params.id), {
-      name,
-      category: category || 'parts',
-      brand: brand || 'generic',
-      price: Number(price) || 0,
-      stock: Number(stock) || 0,
-      image: image || '',
-      description: description || '',
-      active: active !== undefined ? active : true,
-      update_url: update_url || null
+      name: name !== undefined ? name : existing?.name,
+      category: category !== undefined ? (category || 'parts') : existing?.category,
+      brand: brand !== undefined ? (brand || 'generic') : existing?.brand,
+      price: price !== undefined ? (Number(price) || 0) : existing?.price,
+      stock: stock !== undefined ? (Number(stock) || 0) : existing?.stock,
+      image: image !== undefined ? (image || '') : existing?.image,
+      description: description !== undefined ? (description || '') : existing?.description,
+      active: active !== undefined ? active : existing?.active,
+      update_url: update_url !== undefined ? (update_url || null) : existing?.update_url
     });
     
     res.json({ success: true, product: p });
