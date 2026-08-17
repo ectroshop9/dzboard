@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Plus, Trash2, Save, Package, Monitor, Zap, Cpu, 
   Search, Loader2, Upload, Edit3, X, CheckCircle, AlertCircle,
-  Printer, CheckSquare, Square, FileSpreadsheet
+  Printer, CheckSquare, Square, FileSpreadsheet, Eye, EyeOff
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -226,6 +226,24 @@ export default function AdminProductsPage() {
     }
   };
 
+  // إخفاء/إظهار المنتج
+  const toggleVisibility = async (product) => {
+    try {
+      const res = await fetch(`${API}/products/${product.id}`, { 
+        method: 'PUT', 
+        headers: getAuthHeader(), 
+        body: JSON.stringify({ active: !product.active }) 
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(product.active ? 'تم إخفاء المنتج' : 'تم إظهار المنتج');
+        loadAll();
+      }
+    } catch (err) {
+      showToast('خطأ في الاتصال', 'error');
+    }
+  };
+
   const handlePrintBarcode = (product, barcodeCode) => {
     const code = barcodeCode || items.find(i => i.product_id === product.id)?.barcode || product.id;
     const printWindow = window.open('', '_blank', 'width=500,height=500');
@@ -351,7 +369,6 @@ export default function AdminProductsPage() {
     printWindow.document.close();
   };
 
-  // تصدير Excel
   const handleExportExcel = () => {
     if (!products.length) {
       showToast('لا توجد منتجات للتصدير', 'error');
@@ -365,6 +382,7 @@ export default function AdminProductsPage() {
       'السعر (دج)': parseFloat(p.price) || 0,
       'المخزون': parseInt(p.stock) || 0,
       'الباركود': items.find(i => i.product_id === p.id)?.barcode || '-',
+      'الحالة': p.active !== false ? 'ظاهر' : 'مخفي',
       'تاريخ الإضافة': formatDate(p.created_at),
     }));
     
@@ -372,7 +390,6 @@ export default function AdminProductsPage() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'المنتجات');
     
-    // تنسيق عرض الأعمدة
     ws['!cols'] = [
       { wch: 5 },
       { wch: 25 },
@@ -380,6 +397,7 @@ export default function AdminProductsPage() {
       { wch: 12 },
       { wch: 10 },
       { wch: 15 },
+      { wch: 10 },
       { wch: 20 },
     ];
     
@@ -486,8 +504,9 @@ export default function AdminProductsPage() {
               const catObj = getCat(product.category);
               const barcode = items.find(i => i.product_id === product.id)?.barcode;
               const isSelected = selectedProducts.includes(product.id);
+              const isVisible = product.active !== false;
               return (
-                <div key={product.id} className="card" style={{ padding: 16, position: 'relative', border: isSelected ? '2px solid #3b82f6' : '1px solid #e2e8f0' }}>
+                <div key={product.id} className="card" style={{ padding: 16, position: 'relative', border: isSelected ? '2px solid #3b82f6' : '1px solid #e2e8f0', opacity: isVisible ? 1 : 0.6 }}>
                   <button 
                     onClick={() => toggleSelect(product.id)}
                     style={{ 
@@ -523,6 +542,9 @@ export default function AdminProductsPage() {
                       <span style={{ fontSize: 11, color: '#94a3b8' }}>🗓️ {formatDate(product.created_at)}</span>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => toggleVisibility(product)} className="btn btn-ghost btn-sm" title={isVisible ? 'إخفاء' : 'إظهار'} style={{ color: isVisible ? '#10b981' : '#f59e0b' }}>
+                        {isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
+                      </button>
                       <button onClick={() => handlePrintBarcode(product, barcode)} className="btn btn-ghost btn-sm" title="طباعة">🖨️</button>
                       <button onClick={() => handleOpenEdit(product)} className="btn btn-ghost btn-sm" style={{ color: '#2563eb' }}><Edit3 size={14} /></button>
                       <button onClick={() => handleDelete(product.id)} className="btn btn-ghost btn-sm" style={{ color: '#ef4444' }}><Trash2 size={14} /></button>
