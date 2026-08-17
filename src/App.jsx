@@ -12,6 +12,7 @@ import AdminProductsPage from './pages/AdminProductsPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 import AdminScanPage from './pages/AdminScanPage';
+import CheckoutFormPage from './pages/CheckoutFormPage';
 import AdminRequestsPage from './pages/AdminRequestsPage';
 import AdminOrdersMenuPage from './pages/AdminOrdersMenuPage'; // ← أضف هذا
 
@@ -52,6 +53,7 @@ function App() {
           <Route path="/admin/orders-menu" element={<AdminOrdersMenuPage />} /> {/* ← أضف هذا */}
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
           <Route path="/admin/scan" element={<AdminScanPage />} />
+          <Route path="/admin/checkout-form" element={<CheckoutFormPage />} />
           <Route path="/admin/requests" element={<AdminRequestsPage />} />
         </Routes>
       </LayoutWrapper>
