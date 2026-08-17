@@ -226,17 +226,19 @@ export default function AdminProductsPage() {
     }
   };
 
-  // إخفاء/إظهار المنتج
+  // إخفاء/إظهار المنتج - تم الإصلاح
   const toggleVisibility = async (product) => {
+    const newActive = product.active === false ? true : false;
+    
     try {
       const res = await fetch(`${API}/products/${product.id}`, { 
         method: 'PUT', 
         headers: getAuthHeader(), 
-        body: JSON.stringify({ active: !product.active }) 
+        body: JSON.stringify({ active: newActive }) 
       });
       const data = await res.json();
       if (data.success) {
-        showToast(product.active ? 'تم إخفاء المنتج' : 'تم إظهار المنتج');
+        showToast(newActive ? 'تم إظهار المنتج' : 'تم إخفاء المنتج');
         loadAll();
       }
     } catch (err) {
@@ -247,7 +249,7 @@ export default function AdminProductsPage() {
   const handlePrintBarcode = (product, barcodeCode) => {
     const code = barcodeCode || items.find(i => i.product_id === product.id)?.barcode || product.id;
     const printWindow = window.open('', '_blank', 'width=500,height=500');
-    printWindow.document.write(`<!DOCTYPE html><html dir="rtl"><head><title>${product.name}</title><style>@page{size:auto;margin:0}body{font-family:system-ui;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#fff}.card{border:2px dashed #000;padding:16px;text-align:center;max-width:280px;border-radius:8px}.title{font-size:16px;font-weight:800;margin-bottom:8px;word-break:break-word}img{width:140px;height:140px}.code{font-size:12px;font-family:monospace;margin-top:4px}.price{font-size:15px;font-weight:bold;margin-top:6px;border-top:1px solid #ddd;padding-top:4px}</style></head><body><div class="card"><div class="title">${product.name}</div><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${code}" /><div class="code">Barcode: ${code}</div><div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div></div><script>setTimeout(()=>{window.print();window.close()},500)</script></body></html>`);
+    printWindow.document.write(`<!DOCTYPE html><html dir="rtl"><head><title>${product.name}</title><style>@page{size:auto;margin:0}body{font-family:system-ui;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#fff}.card{border:2px dashed #000;padding:16px;text-align:center;max-width:280px;border-radius:8px}.title{font-size:16px;font-weight:800;margin-bottom:8px;word-break:break-word}img{width:140px;height:140px}.code{font-size:12px;font-family:monospace;margin-top:4px}.price{font-size:15px;font-weight:700;margin-top:6px;border-top:1px solid #ddd;padding-top:4px}</style></head><body><div class="card"><div class="title">${product.name}</div><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${code}" /><div class="code">Barcode: ${code}</div><div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div></div><script>setTimeout(()=>{window.print();window.close()},500)</script></body></html>`);
     printWindow.document.close();
   };
 
@@ -382,7 +384,7 @@ export default function AdminProductsPage() {
       'السعر (دج)': parseFloat(p.price) || 0,
       'المخزون': parseInt(p.stock) || 0,
       'الباركود': items.find(i => i.product_id === p.id)?.barcode || '-',
-      'الحالة': p.active !== false ? 'ظاهر' : 'مخفي',
+      'الحالة': p.active === false ? 'مخفي' : 'ظاهر',
       'تاريخ الإضافة': formatDate(p.created_at),
     }));
     
@@ -504,9 +506,9 @@ export default function AdminProductsPage() {
               const catObj = getCat(product.category);
               const barcode = items.find(i => i.product_id === product.id)?.barcode;
               const isSelected = selectedProducts.includes(product.id);
-              const isVisible = product.active !== false;
+              const isVisible = product.active === false ? false : true;
               return (
-                <div key={product.id} className="card" style={{ padding: 16, position: 'relative', border: isSelected ? '2px solid #3b82f6' : '1px solid #e2e8f0', opacity: isVisible ? 1 : 0.6 }}>
+                <div key={product.id} className="card" style={{ padding: 16, position: 'relative', border: isSelected ? '2px solid #3b82f6' : '1px solid #e2e8f0', opacity: isVisible ? 1 : 0.5 }}>
                   <button 
                     onClick={() => toggleSelect(product.id)}
                     style={{ 
@@ -539,7 +541,9 @@ export default function AdminProductsPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <span style={{ fontSize: 12, color: '#64748b' }}>المخزون: <strong>{product.stock || 0}</strong></span>
-                      <span style={{ fontSize: 11, color: '#94a3b8' }}>🗓️ {formatDate(product.created_at)}</span>
+                      <span style={{ fontSize: 11, color: isVisible ? '#10b981' : '#ef4444', fontWeight: 700 }}>
+                        {isVisible ? '👁️ ظاهر' : '🚫 مخفي'}
+                      </span>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => toggleVisibility(product)} className="btn btn-ghost btn-sm" title={isVisible ? 'إخفاء' : 'إظهار'} style={{ color: isVisible ? '#10b981' : '#f59e0b' }}>
