@@ -22,7 +22,7 @@ export default {
     return data
   },
   delete: async (id) => {
-    await supabase.from('products').update({ active: false }).eq('id', id)
+    await supabase.from('products').delete().eq('id', id)
     return true
   },
 }
