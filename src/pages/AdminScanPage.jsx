@@ -384,7 +384,6 @@ export default function AdminScanPage() {
         </div>
       </main>
 
-      {/* Modal الصورة المكبرة */}
       {showFullImage && item?.image && (
         <div 
           onClick={() => setShowFullImage(false)}
@@ -410,7 +409,6 @@ export default function AdminScanPage() {
         </div>
       )}
 
-      {/* Modal أدخال بيانات الزبون - محسن للهواتف */}
       {showCustomerModal && (
         <div style={{
           position: 'fixed',
@@ -418,7 +416,7 @@ export default function AdminScanPage() {
           background: 'rgba(0,0,0,0.6)',
           zIndex: 999,
           display: 'flex',
-          alignItems: 'flex-end', // تثبيت أسفل الشاشة على الهاتف (Bottom Sheet)
+          alignItems: 'flex-end',
           justifyContent: 'center',
         }}>
           <div style={{
@@ -434,7 +432,6 @@ export default function AdminScanPage() {
             direction: 'rtl',
             boxShadow: '0 -4px 20px rgba(0,0,0,0.15)'
           }}>
-            {/* الهيدر - ثابت */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f1f5f9' }}>
               <h3 style={{ fontSize: 16, fontWeight: 900, margin: 0 }}>معلومات الزبون</h3>
               <button onClick={() => setShowCustomerModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
@@ -442,7 +439,6 @@ export default function AdminScanPage() {
               </button>
             </div>
 
-            {/* الجسم - قابل للتمرير مع حفظ المكان للزر */}
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, paddingLeft: 4, paddingRight: 4 }}>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>اسم الزبون *</label>
@@ -567,7 +563,6 @@ export default function AdminScanPage() {
               </div>
             </div>
 
-            {/* الزر المثبت - Sticky Footer (يبقى ظاهراً دائمًا حتى مع فتح الكيبورد) */}
             <div style={{ paddingTop: 12, marginTop: 8, borderTop: '1px solid #f1f5f9', background: '#fff' }}>
               <button 
                 onClick={handleSaveOrder}
