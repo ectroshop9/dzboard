@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingBag, QrCode, TrendingUp, Clock, Loader2, AlertCircle } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, QrCode, TrendingUp, Clock, Loader2, AlertCircle, Users, Truck, Bot, Percent } from 'lucide-react';
 
 const API = 'https://dzboard.onrender.com/api';
 
@@ -23,9 +23,21 @@ export default function AdminDashboardPage() {
     Promise.all([
       fetch(`${API}/products`).then(r => r.json()),
       fetch(`${API}/orders`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
-    ]).then(([p, o]) => {
+      fetch(`${API}/bot-orders`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+    ]).then(([p, o, b]) => {
       const products = p.products || []; 
       const orders = o.orders || [];
+      const botOrders = b.orders || [];
+      
+      // حساب الإحصائيات
+      const deliveredOrders = orders.filter(x => x.status === 'delivered').length;
+      const deliveryRate = orders.length > 0 ? Math.round((deliveredOrders / orders.length) * 100) : 0;
+      
+      // عدد العملاء الفريدين (من الطلبات العادية + طلبات البوت)
+      const regularCustomers = [...new Set(orders.map(x => x.phone || x.customer).filter(Boolean))];
+      const botCustomers = botOrders.map(x => x.phone).filter(Boolean);
+      const allCustomers = new Set([...regularCustomers, ...botCustomers]);
+
       setStats({
         totalOrders: orders.length,
         pendingOrders: orders.filter(x => x.status === 'pending').length,
@@ -33,7 +45,12 @@ export default function AdminDashboardPage() {
         totalStock: products.reduce((s, p) => s + (p.stock || 0), 0),
         totalRevenue: orders.reduce((s, x) => s + (parseFloat(x.amount)||0) + (parseFloat(x.shipping)||0), 0),
         recentOrders: orders.slice(0, 6),
+        botOrdersCount: botOrders.length,
+        totalCustomers: allCustomers.size,
+        deliveryRate,
       });
+    }).catch(err => {
+      console.error('Error loading data:', err);
     }).finally(() => setLoading(false));
   };
 
@@ -46,7 +63,20 @@ export default function AdminDashboardPage() {
   return (
     <div style={{ background: '#f8fafc', fontFamily: 'system-ui', direction: 'rtl', minHeight: '100vh', paddingBottom: 120 }}>
       <main style={{ padding: 16, maxWidth: 1200, margin: '0 auto' }}>
-        <h1 style={{ fontSize: 20, fontWeight: 900, marginBottom: 16, color: '#0f172a' }}>لوحة التحكم</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 900, color: '#0f172a' }}>لوحة التحكم</h1>
+          <button 
+            onClick={loadData}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: 6, 
+              padding: '8px 16px', background: '#3b82f6', color: '#fff', 
+              border: 'none', borderRadius: 8, cursor: 'pointer', 
+              fontSize: 13, fontWeight: 700 
+            }}
+          >
+            <QrCode size={16} /> تحديث
+          </button>
+        </div>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
           {[
@@ -55,6 +85,9 @@ export default function AdminDashboardPage() {
             { icon: Package, label: 'المنتجات', value: stats?.totalProducts || 0, color: '#10b981', bg: '#ecfdf5' },
             { icon: Package, label: 'المخزون', value: stats?.totalStock || 0, color: '#6366f1', bg: '#eef2ff' },
             { icon: TrendingUp, label: 'الإيرادات', value: `${(stats?.totalRevenue || 0).toLocaleString('en-US')} دج`, color: '#059669', bg: '#e6fffa' },
+            { icon: Truck, label: 'نسبة التوصيل', value: `${stats?.deliveryRate || 0}%`, color: '#8b5cf6', bg: '#f5f3ff' },
+            { icon: Users, label: 'العملاء', value: stats?.totalCustomers || 0, color: '#ec4899', bg: '#fdf2f8' },
+            { icon: Bot, label: 'طلبات البوت', value: stats?.botOrdersCount || 0, color: '#06b6d4', bg: '#ecfeff' },
           ].map((s, i) => {
             const Icon = s.icon;
             return (
@@ -87,13 +120,14 @@ export default function AdminDashboardPage() {
               </thead>
               <tbody>
                 {stats?.recentOrders?.map(o => {
-                  const st = { 
-                    pending: { bg: '#fef3c7', color: '#b45309' }, 
-                    confirmed: { bg: '#dbeafe', color: '#1d4ed8' }, 
-                    shipped: { bg: '#e0e7ff', color: '#4338ca' }, 
-                    delivered: { bg: '#d1fae5', color: '#047857' }, 
-                    cancelled: { bg: '#fee2e2', color: '#b91c1c' } 
-                  }[o.status] || { bg: '#f1f5f9', color: '#475569' };
+                  const statusMap = {
+                    pending: { label: 'معلقة', bg: '#fef3c7', color: '#b45309' },
+                    confirmed: { label: 'مؤكدة', bg: '#dbeafe', color: '#1d4ed8' },
+                    shipped: { label: 'تم الشحن', bg: '#e0e7ff', color: '#4338ca' },
+                    delivered: { label: 'تم التسليم', bg: '#d1fae5', color: '#047857' },
+                    cancelled: { label: 'ملغية', bg: '#fee2e2', color: '#b91c1c' }
+                  };
+                  const st = statusMap[o.status] || { label: o.status, bg: '#f1f5f9', color: '#475569' };
                   
                   return (
                     <tr key={o.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
@@ -104,7 +138,7 @@ export default function AdminDashboardPage() {
                       </td>
                       <td style={{ padding: '10px 14px' }}>
                         <span style={{ padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 800, background: st.bg, color: st.color }}>
-                          {o.status}
+                          {st.label}
                         </span>
                       </td>
                     </tr>
