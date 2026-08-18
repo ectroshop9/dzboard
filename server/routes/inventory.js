@@ -187,10 +187,11 @@ router.post('/items', async (req, res) => {
     let currentCount = count || 0;
     const newItems = [];
 
+    const timestamp = Date.now().toString().slice(-6);
     for (let i = 0; i < cleanQuantity; i++) {
       currentCount++;
-      const sku = `DZB-${String(currentCount).padStart(3, '0')}`;
-      const barcode = `613${String(currentCount).padStart(6, '0')}`;
+      const sku = `DZB-${String(currentCount).padStart(3, '0')}-${timestamp}`;
+      const barcode = `613${timestamp}${String(i).padStart(2, '0')}`;
 
       newItems.push({
         sku,
