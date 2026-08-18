@@ -295,7 +295,7 @@ export default function HomePage() {
       </footer>
 
       {/* زر التواصل العائم */}
-      <a href="https://m.me/dzboard" target="_blank" rel="noopener noreferrer" aria-label="تواصل معنا عبر ماسنجر" style={{ position: 'fixed', bottom: 20, left: 20, width: 48, height: 48, borderRadius: '50%', background: '#0084FF', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,132,255,0.4)', zIndex: 40, color: '#fff', textDecoration: 'none' }}>
+      <a href="https://m.me/61593351994312" target="_blank" rel="noopener noreferrer" aria-label="تواصل معنا عبر ماسنجر" style={{ position: 'fixed', bottom: 20, left: 20, width: 48, height: 48, borderRadius: '50%', background: '#0084FF', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,132,255,0.4)', zIndex: 40, color: '#fff', textDecoration: 'none' }}>
         <MessageCircle size={24} />
       </a>
 
