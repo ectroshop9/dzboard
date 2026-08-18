@@ -11,7 +11,8 @@ export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [brokenBrands, setBrokenBrands] = useState({});
-  const [showChat, setShowChat] = useState(false);
+
+  const PAGE_ID = "1267521149779991"; // ضع هنا رقم ID الخاص بصفحتك على فيسبوك
 
   const slides = [
     { image: '/hero/tcon.jpg' },
@@ -27,32 +28,39 @@ export default function HomePage() {
     return () => { isMounted = false; };
   }, []);
 
-  // ✅ Facebook Chat Plugin
+  // ✅ تحميل وتنسيق إدراج Facebook Customer Chat Plugin
   useEffect(() => {
-    const script = document.createElement('script');
-    script.innerHTML = `
-      var chatbox = document.getElementById('fb-customer-chat');
-      chatbox.setAttribute("page_id", "1267521149779991");
+    // التأكد من إعداد عنصر الشات قبل تحميل السكريبت
+    const chatbox = document.getElementById('fb-customer-chat');
+    if (chatbox) {
+      chatbox.setAttribute("page_id", PAGE_ID);
       chatbox.setAttribute("attribution", "biz_inbox");
-    `;
-    document.body.appendChild(script);
+    }
 
-    const script2 = document.createElement('script');
-    script2.src = "https://connect.facebook.net/ar_AR/sdk/xfbml.customerchat.js";
-    script2.async = true;
-    document.body.appendChild(script2);
+    // إضافة سكريبت فيسبوك إذا لم يكن موجوداً مسبقاً
+    if (!document.getElementById('facebook-jssdk')) {
+      window.fbAsyncInit = function() {
+        window.FB.init({
+          xfbml: true,
+          version: 'v18.0'
+        });
+      };
 
-    return () => {
-      document.body.removeChild(script);
-      document.body.removeChild(script2);
-    };
+      const js = document.createElement('script');
+      js.id = 'facebook-jssdk';
+      js.src = 'https://connect.facebook.net/ar_AR/sdk/xfbml.customerchat.js';
+      js.async = true;
+      document.body.appendChild(js);
+    }
   }, []);
 
+  // سلايدر الصور
   useEffect(() => {
     const interval = setInterval(() => setCurrentSlide((prev) => (prev + 1) % slides.length), 4500);
     return () => clearInterval(interval);
   }, [slides.length]);
 
+  // انيميشن الظهور (Reveal effect)
   useEffect(() => {
     const elements = Array.from(document.querySelectorAll('[data-reveal]'));
     if (!elements.length) return;
@@ -64,6 +72,7 @@ export default function HomePage() {
         } 
       });
     }, { threshold: 0.1 });
+
     elements.forEach(el => { 
       if (el.getBoundingClientRect().top < window.innerHeight * 0.9) {
         el.classList.add('is-visible');
@@ -71,6 +80,7 @@ export default function HomePage() {
         observer.observe(el);
       }
     });
+
     return () => observer.disconnect();
   }, [featuredProducts, loadingProducts]);
 
@@ -130,27 +140,27 @@ export default function HomePage() {
       <header className="hero-banner" style={{ position: 'relative', overflow: 'hidden', background: '#0f172a' }}>
         {slides.map((slide, index) => (
           <div key={index} style={{ position: 'absolute', inset: 0, backgroundImage: `url(${slide.image})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: currentSlide === index ? 1 : 0, transition: 'opacity 1s ease-in-out' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.15)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.25)' }} />
           </div>
         ))}
       </header>
 
       {/* صندوق البحث */}
-      <section style={{ maxWidth: 850, margin: '-50px auto 0', padding: '0 16px', position: 'relative', zIndex: 20 }}>
+      <section style={{ maxWidth: 850, margin: '-40px auto 0', padding: '0 16px', position: 'relative', zIndex: 20 }}>
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: '14px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)' }}>
-          <form onSubmit={handleSearchSubmit} className="search-form-grid" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <select value={searchBrand} onChange={e => setSearchBrand(e.target.value)} style={{ padding: '12px 14px', border: '1px solid #e2e8f0', borderRadius: 10, background: '#f8fafc', outline: 'none', fontSize: 13, color: '#334155', cursor: 'pointer' }} className="search-brand-select">
+          <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <select value={searchBrand} onChange={e => setSearchBrand(e.target.value)} style={{ padding: '12px 14px', border: '1px solid #e2e8f0', borderRadius: 10, background: '#f8fafc', outline: 'none', fontSize: 13, color: '#334155', cursor: 'pointer', flex: '1 1 120px' }}>
               <option value="ALL">كل الماركات</option>
               {brands.map(b => <option key={b.code} value={b.code}>{b.name}</option>)}
             </select>
             
-            <div className="search-input-wrapper" style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', flex: '2 1 200px' }}>
               <input type="text" placeholder="ابحث برقم البوردة، الموديل..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ width: '100%', padding: '12px 36px 12px 36px', border: '1px solid #e2e8f0', borderRadius: 10, background: '#f8fafc', outline: 'none', boxSizing: 'border-box', fontSize: 13 }} />
               <Search size={18} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
               {searchQuery && <button type="button" onClick={() => setSearchQuery('')} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2 }}><X size={16} /></button>}
             </div>
             
-            <button type="submit" className="search-btn" style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: 10, fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>بحث</button>
+            <button type="submit" style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: 10, fontWeight: 700, cursor: 'pointer', fontSize: 14, flex: '0 1 auto' }}>بحث</button>
           </form>
         </div>
       </section>
@@ -234,15 +244,15 @@ export default function HomePage() {
       <section style={{ padding: '24px 16px 20px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 'clamp(17px, 3.5vw, 20px)', fontWeight: 900, textAlign: 'center', marginBottom: 16 }} className="reveal-item">قطع متوافقة مع جميع الماركات</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: 10 }}>
             {brands.map((brand, i) => (
-              <button key={i} data-reveal onClick={() => navigate(`/store?brand=${brand.code}`)} className="reveal-item" style={{ padding: '10px 6px', textAlign: 'center', cursor: 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 70, transition: 'all 0.2s', fontWeight: 700, fontSize: 12, color: '#334155' }}
+              <button key={i} data-reveal onClick={() => navigate(`/store?brand=${brand.code}`)} className="reveal-item" style={{ padding: '10px 6px', textAlign: 'center', cursor: 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 65, transition: 'all 0.2s', fontWeight: 700, fontSize: 12, color: '#334155' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                 {brokenBrands[brand.code] ? (
                   brand.name
                 ) : (
-                  <img src={brand.image} alt={brand.name} style={{ maxWidth: 80, maxHeight: 40, objectFit: 'contain' }} onError={() => setBrokenBrands(prev => ({ ...prev, [brand.code]: true }))} />
+                  <img src={brand.image} alt={brand.name} style={{ maxWidth: 70, maxHeight: 35, objectFit: 'contain' }} onError={() => setBrokenBrands(prev => ({ ...prev, [brand.code]: true }))} />
                 )}
               </button>
             ))}
@@ -276,7 +286,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Facebook Chat Plugin */}
+      {/* Facebook Chat Plugin Container */}
       <div id="fb-root"></div>
       <div id="fb-customer-chat" className="fb-customerchat"></div>
 
@@ -288,31 +298,13 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {/* زر ماسنجر عائم مع حركة */}
+      {/* زر ماسنجر عائم للموبايل والدعم السريع */}
       <a 
-        href="https://m.me/1267521149779991" 
+        href={`https://m.me/${PAGE_ID}`} 
         target="_blank" 
         rel="noopener noreferrer" 
-        style={{ 
-          position: 'fixed', 
-          bottom: 20, 
-          left: 20, 
-          width: 56, 
-          height: 56, 
-          borderRadius: '50%', 
-          background: 'linear-gradient(135deg, #0084FF 0%, #00C6FF 100%)', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          boxShadow: '0 4px 20px rgba(0,132,255,0.5)', 
-          zIndex: 40, 
-          color: '#fff', 
-          textDecoration: 'none',
-          animation: 'bounce 2s infinite',
-          transition: 'all 0.3s ease'
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+        className="floating-messenger-btn"
+        aria-label="Contact on Messenger"
       >
         <MessageCircle size={28} />
       </a>
@@ -322,8 +314,35 @@ export default function HomePage() {
         @media (min-width: 640px) { .hero-banner { height: 350px; } }
         .reveal-item { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
         .reveal-item.is-visible { opacity: 1 !important; transform: translateY(0) !important; }
+        
+        .floating-messenger-btn {
+          position: fixed;
+          bottom: 20px;
+          left: 20px;
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #0084FF 0%, #00C6FF 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 20px rgba(0,132,255,0.4);
+          z-index: 40;
+          color: #fff;
+          text-decoration: none;
+          animation: pulse-bounce 2.5s infinite;
+          transition: transform 0.2s ease;
+        }
+
+        .floating-messenger-btn:hover {
+          transform: scale(1.1);
+        }
+
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes pulse-bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
       `}</style>
     </div>
   );
