@@ -12,7 +12,8 @@ export default function HomePage() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [brokenBrands, setBrokenBrands] = useState({});
 
-  const PAGE_ID = "1267521149779991"; // ضع هنا رقم ID الخاص بصفحتك على فيسبوك
+  // ✅ رقم ID الخاص بصفحتك الفعلية
+  const PAGE_ID = "61593351994312"; 
 
   const slides = [
     { image: '/hero/tcon.jpg' },
@@ -28,16 +29,14 @@ export default function HomePage() {
     return () => { isMounted = false; };
   }, []);
 
-  // ✅ تحميل وتنسيق إدراج Facebook Customer Chat Plugin
+  // ✅ إعداد Facebook Chat Plugin للمتصفح
   useEffect(() => {
-    // التأكد من إعداد عنصر الشات قبل تحميل السكريبت
     const chatbox = document.getElementById('fb-customer-chat');
     if (chatbox) {
       chatbox.setAttribute("page_id", PAGE_ID);
       chatbox.setAttribute("attribution", "biz_inbox");
     }
 
-    // إضافة سكريبت فيسبوك إذا لم يكن موجوداً مسبقاً
     if (!document.getElementById('facebook-jssdk')) {
       window.fbAsyncInit = function() {
         window.FB.init({
@@ -52,7 +51,7 @@ export default function HomePage() {
       js.async = true;
       document.body.appendChild(js);
     }
-  }, []);
+  }, [PAGE_ID]);
 
   // سلايدر الصور
   useEffect(() => {
@@ -83,6 +82,21 @@ export default function HomePage() {
 
     return () => observer.disconnect();
   }, [featuredProducts, loadingProducts]);
+
+  // دالة فتح تطبيق ميسنجر المباشر للهواتف
+  const openMessenger = (e) => {
+    e.preventDefault();
+    const appUrl = `fb-messenger://user-thread/${PAGE_ID}`;
+    const webUrl = `https://m.me/${PAGE_ID}`;
+
+    // محاولة فتح التطبيق المباشر
+    window.location.href = appUrl;
+
+    // توجيه احتياطي للمتصفح إذا لم يُفتح التطبيق خلال نصف ثانية
+    setTimeout(() => {
+      window.location.href = webUrl;
+    }, 500);
+  };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -298,11 +312,10 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {/* زر ماسنجر عائم للموبايل والدعم السريع */}
+      {/* ✅ زر ماسنجر عائم مُعدَّل مع دالة فتح التطبيق المباشر */}
       <a 
         href={`https://m.me/${PAGE_ID}`} 
-        target="_blank" 
-        rel="noopener noreferrer" 
+        onClick={openMessenger}
         className="floating-messenger-btn"
         aria-label="Contact on Messenger"
       >
