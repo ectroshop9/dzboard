@@ -15,7 +15,8 @@ import AdminSettingsPage from './pages/AdminSettingsPage';
 import AdminScanPage from './pages/AdminScanPage';
 import CheckoutFormPage from './pages/CheckoutFormPage';
 import AdminRequestsPage from './pages/AdminRequestsPage';
-import AdminOrdersMenuPage from './pages/AdminOrdersMenuPage'; // ← أضف هذا
+import AdminOrdersMenuPage from './pages/AdminOrdersMenuPage';
+import AdminBotOrdersPage from './pages/AdminBotOrdersPage'; // ← أضف هذا
 
 // استيراد الشريط السفلي
 import MobileBottomNav from './components/MobileBottomNav';
@@ -52,7 +53,8 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/products" element={<AdminProductsPage />} />
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
-          <Route path="/admin/orders-menu" element={<AdminOrdersMenuPage />} /> {/* ← أضف هذا */}
+          <Route path="/admin/orders-menu" element={<AdminOrdersMenuPage />} />
+          <Route path="/admin/bot-orders" element={<AdminBotOrdersPage />} /> {/* ← أضف هذا */}
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
           <Route path="/admin/scan" element={<AdminScanPage />} />
           <Route path="/admin/checkout-form" element={<CheckoutFormPage />} />

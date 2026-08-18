@@ -11,6 +11,7 @@ import shippingRoutes from './routes/shipping.js';
 import requestRoutes from './routes/requests.js';
 import inventoryRoutes from './routes/inventory.js';
 import backupRoutes from './routes/backup.js';
+import botOrdersRoutes from './routes/botOrders.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,6 +27,7 @@ app.use('/api/shipping', shippingRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/backup', backupRoutes);
+app.use('/api/bot-orders', botOrdersRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
