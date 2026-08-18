@@ -11,6 +11,7 @@ export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [brokenBrands, setBrokenBrands] = useState({});
+  const [showChat, setShowChat] = useState(false);
 
   const slides = [
     { image: '/hero/tcon.jpg' },
@@ -26,27 +27,25 @@ export default function HomePage() {
     return () => { isMounted = false; };
   }, []);
 
-  // ✅ Facebook Chat Plugin - يبقى الزائر في الصفحة
+  // ✅ Facebook Chat Plugin
   useEffect(() => {
-    if (window.FB) {
-      window.FB.XFBML.parse();
-      return;
-    }
+    const script = document.createElement('script');
+    script.innerHTML = `
+      var chatbox = document.getElementById('fb-customer-chat');
+      chatbox.setAttribute("page_id", "1267521149779991");
+      chatbox.setAttribute("attribution", "biz_inbox");
+    `;
+    document.body.appendChild(script);
 
-    window.fbAsyncInit = function() {
-      window.FB.init({
-        xfbml: true,
-        version: 'v18.0'
-      });
+    const script2 = document.createElement('script');
+    script2.src = "https://connect.facebook.net/ar_AR/sdk/xfbml.customerchat.js";
+    script2.async = true;
+    document.body.appendChild(script2);
+
+    return () => {
+      document.body.removeChild(script);
+      document.body.removeChild(script2);
     };
-
-    (function(d, s, id) {
-      var js, fjs = d.getElementsByTagName(s)[0];
-      if (d.getElementById(id)) return;
-      js = d.createElement(s); js.id = id;
-      js.src = 'https://connect.facebook.net/ar_AR/sdk.js';
-      fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
   }, []);
 
   useEffect(() => {
@@ -136,7 +135,7 @@ export default function HomePage() {
         ))}
       </header>
 
-      {/* صندوق البحث المتجاوب */}
+      {/* صندوق البحث */}
       <section style={{ maxWidth: 850, margin: '-50px auto 0', padding: '0 16px', position: 'relative', zIndex: 20 }}>
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: '14px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)' }}>
           <form onSubmit={handleSearchSubmit} className="search-form-grid" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -176,7 +175,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* أحدث القطع المتوفرة */}
+      {/* أحدث القطع */}
       <section style={{ padding: '20px 16px 30px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 16 }}>
@@ -185,7 +184,7 @@ export default function HomePage() {
           </div>
           {loadingProducts ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12 }}>
-              {[1, 2, 3, 4].map(n => <div key={n} style={{ background: '#fff', height: 220, borderRadius: 12, border: '1px solid #e2e8f0', animation: 'pulse 1.5s infinite ease-in-out' }} />)}
+              {[1, 2, 3, 4, 5].map(n => <div key={n} style={{ background: '#fff', height: 220, borderRadius: 12, border: '1px solid #e2e8f0', animation: 'pulse 1.5s infinite ease-in-out' }} />)}
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12 }}>
@@ -251,62 +250,29 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* قسم طلب قطعة خاصة */}
+      {/* طلب قطعة خاصة */}
       <section style={{ padding: '16px 16px 10px' }}>
-        <div data-reveal className="reveal-item custom-part-card" style={{ 
-          maxWidth: 850, 
-          margin: '0 auto', 
-          background: '#ffffff', 
-          border: '2px dashed #3b82f6', 
-          borderRadius: 16, 
-          padding: '20px 16px', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justify: 'space-between', 
-          flexWrap: 'wrap', 
-          gap: 14 
-        }}>
+        <div data-reveal className="reveal-item custom-part-card" style={{ maxWidth: 850, margin: '0 auto', background: '#ffffff', border: '2px dashed #3b82f6', borderRadius: 16, padding: '20px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
           <div style={{ flex: '1 1 240px' }}>
-            <h3 style={{ fontSize: 16, fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0' }}>
-              لم تجد القطعة التي تبحث عنها؟
-            </h3>
-            <p style={{ fontSize: 12, color: '#64748b', margin: 0, lineHeight: 1.5 }}>
-              أرسل لنا تفاصيل وموديل القطعة وسنقوم بالبحث عنها وتوفيرها لك في أقرب وقت.
-            </p>
+            <h3 style={{ fontSize: 16, fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0' }}>لم تجد القطعة التي تبحث عنها؟</h3>
+            <p style={{ fontSize: 12, color: '#64748b', margin: 0, lineHeight: 1.5 }}>أرسل لنا تفاصيل وموديل القطعة وسنقوم بالبحث عنها وتوفيرها لك في أقرب وقت.</p>
           </div>
-          
-          <Link to="/request-part" style={{ 
-            background: '#3b82f6', 
-            color: '#fff', 
-            padding: '10px 18px', 
-            borderRadius: 10, 
-            textDecoration: 'none', 
-            fontWeight: 800, 
-            fontSize: 13, 
-            display: 'inline-flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            gap: 6, 
-            whiteSpace: 'nowrap',
-            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
-          }}>
+          <Link to="/request-part" style={{ background: '#3b82f6', color: '#fff', padding: '10px 18px', borderRadius: 10, textDecoration: 'none', fontWeight: 800, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)' }}>
             <span>اطلب قطعة خاصة</span>
             <ArrowRight size={15} style={{ transform: 'rotate(180deg)' }} />
           </Link>
         </div>
       </section>
 
-      {/* قسم الدعوة للشراء */}
+      {/* دعوة للشراء */}
       <section style={{ padding: '24px 16px 30px' }}>
-        <div data-reveal className="reveal-item" style={{ maxWidth: 850, margin: '0 auto', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: 16, padding: '28px 18px', textAlign: 'center', color: '#fff', boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.25)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'relative', zIndex: 2 }}>
-            <h2 style={{ fontSize: 'clamp(18px, 4vw, 22px)', fontWeight: 900, color: '#f59e0b', marginBottom: 8 }}>هل تبحث عن قطعة غيار نادرة؟</h2>
-            <p style={{ color: '#94a3b8', marginBottom: 20, fontSize: 13, maxWidth: 500, margin: '0 auto 20px', lineHeight: 1.5 }}>نوفر لك البوردات الأصلية لمختلف الشاشات والماركات مع إمكانية التوصيل والدفع عند الاستلام.</p>
-            <Link to="/store" style={{ background: '#3b82f6', color: '#fff', padding: '10px 24px', borderRadius: 10, textDecoration: 'none', fontWeight: 800, fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all 0.2s ease', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)' }}>
-              <span>تصفح المتجر الآن</span>
-              <ArrowRight size={15} style={{ transform: 'rotate(180deg)' }} />
-            </Link>
-          </div>
+        <div data-reveal className="reveal-item" style={{ maxWidth: 850, margin: '0 auto', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: 16, padding: '28px 18px', textAlign: 'center', color: '#fff' }}>
+          <h2 style={{ fontSize: 'clamp(18px, 4vw, 22px)', fontWeight: 900, color: '#f59e0b', marginBottom: 8 }}>هل تبحث عن قطعة غيار نادرة؟</h2>
+          <p style={{ color: '#94a3b8', marginBottom: 20, fontSize: 13 }}>نوفر لك البوردات الأصلية لمختلف الشاشات والماركات.</p>
+          <Link to="/store" style={{ background: '#3b82f6', color: '#fff', padding: '10px 24px', borderRadius: 10, textDecoration: 'none', fontWeight: 800, fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <span>تصفح المتجر الآن</span>
+            <ArrowRight size={15} style={{ transform: 'rotate(180deg)' }} />
+          </Link>
         </div>
       </section>
 
@@ -318,46 +284,46 @@ export default function HomePage() {
       <footer style={{ background: '#fff', borderTop: '1px solid #e2e8f0', padding: '24px 16px 32px', textAlign: 'center' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <div style={{ fontSize: 18, fontWeight: 900, marginBottom: 4 }}>DZ<span style={{ color: '#f59e0b' }}>Board</span></div>
-          <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 12px 0' }}>متجر قطع غيار الشاشات الأول في الجزائر</p>
-          <div style={{ fontSize: 11, color: '#94a3b8', borderTop: '1px dashed #f1f5f9', paddingTop: 12 }}>&copy; {new Date().getFullYear()} DZBoard. جميع الحقوق محفوظة.</div>
+          <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>متجر قطع غيار الشاشات الأول في الجزائر</p>
         </div>
       </footer>
 
-      {/* زر التواصل العائم */}
-
-
-      {/* استعلامات التجاوب والأنماط */}
-      <script dangerouslySetInnerHTML={{ __html: `
-        var chatbox = document.getElementById('fb-customer-chat');
-        chatbox.setAttribute("page_id", "1267521149779991");
-        chatbox.setAttribute("attribution", "biz_inbox");
-      `}} />
-      <script dangerouslySetInnerHTML={{ __html: `
-        window.fbAsyncInit = function() {
-          FB.init({ xfbml: true, version: 'v18.0' });
-        };
-      `}} />
+      {/* زر ماسنجر عائم مع حركة */}
+      <a 
+        href="https://m.me/1267521149779991" 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        style={{ 
+          position: 'fixed', 
+          bottom: 20, 
+          left: 20, 
+          width: 56, 
+          height: 56, 
+          borderRadius: '50%', 
+          background: 'linear-gradient(135deg, #0084FF 0%, #00C6FF 100%)', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          boxShadow: '0 4px 20px rgba(0,132,255,0.5)', 
+          zIndex: 40, 
+          color: '#fff', 
+          textDecoration: 'none',
+          animation: 'bounce 2s infinite',
+          transition: 'all 0.3s ease'
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+      >
+        <MessageCircle size={28} />
+      </a>
 
       <style>{`
         .hero-banner { height: 240px; }
-        .search-brand-select { flex: 1 1 120px; }
-        .search-input-wrapper { flex: 2 1 200px; }
-        .search-btn { flex: 1 1 90px; }
-
-        @media (min-width: 640px) {
-          .hero-banner { height: 350px; }
-          .custom-part-card { padding: 24px 20px !important; }
-        }
-
-        @media (max-width: 480px) {
-          .search-brand-select { flex: 1 1 100% !important; }
-          .search-input-wrapper { flex: 1 1 100% !important; }
-          .search-btn { flex: 1 1 100% !important; }
-        }
-
+        @media (min-width: 640px) { .hero-banner { height: 350px; } }
         .reveal-item { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
         .reveal-item.is-visible { opacity: 1 !important; transform: translateY(0) !important; }
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
       `}</style>
     </div>
   );
