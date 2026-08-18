@@ -26,6 +26,29 @@ export default function HomePage() {
     return () => { isMounted = false; };
   }, []);
 
+  // ✅ Facebook Chat Plugin - يبقى الزائر في الصفحة
+  useEffect(() => {
+    if (window.FB) {
+      window.FB.XFBML.parse();
+      return;
+    }
+
+    window.fbAsyncInit = function() {
+      window.FB.init({
+        xfbml: true,
+        version: 'v18.0'
+      });
+    };
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = 'https://connect.facebook.net/ar_AR/sdk.js';
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  }, []);
+
   useEffect(() => {
     const interval = setInterval(() => setCurrentSlide((prev) => (prev + 1) % slides.length), 4500);
     return () => clearInterval(interval);
@@ -287,6 +310,10 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Facebook Chat Plugin */}
+      <div id="fb-root"></div>
+      <div id="fb-customer-chat" className="fb-customerchat"></div>
+
       {/* الفوتر */}
       <footer style={{ background: '#fff', borderTop: '1px solid #e2e8f0', padding: '24px 16px 32px', textAlign: 'center' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
@@ -297,11 +324,20 @@ export default function HomePage() {
       </footer>
 
       {/* زر التواصل العائم */}
-      <a href="https://m.me/61593351994312" target="_blank" rel="noopener noreferrer" aria-label="تواصل معنا عبر ماسنجر" style={{ position: 'fixed', bottom: 20, left: 20, width: 48, height: 48, borderRadius: '50%', background: '#0084FF', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,132,255,0.4)', zIndex: 40, color: '#fff', textDecoration: 'none' }}>
-        <MessageCircle size={24} />
-      </a>
+
 
       {/* استعلامات التجاوب والأنماط */}
+      <script dangerouslySetInnerHTML={{ __html: `
+        var chatbox = document.getElementById('fb-customer-chat');
+        chatbox.setAttribute("page_id", "1267521149779991");
+        chatbox.setAttribute("attribution", "biz_inbox");
+      `}} />
+      <script dangerouslySetInnerHTML={{ __html: `
+        window.fbAsyncInit = function() {
+          FB.init({ xfbml: true, version: 'v18.0' });
+        };
+      `}} />
+
       <style>{`
         .hero-banner { height: 240px; }
         .search-brand-select { flex: 1 1 120px; }
