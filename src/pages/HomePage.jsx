@@ -21,7 +21,7 @@ export default function HomePage() {
   useEffect(() => {
     let isMounted = true;
     api.getProducts().then(data => {
-      if (isMounted && data?.success) setFeaturedProducts((data.products || []).slice(0, 4));
+      if (isMounted && data?.success) setFeaturedProducts((data.products || []).slice(0, 5));
     }).finally(() => { if (isMounted) setLoadingProducts(false); });
     return () => { isMounted = false; };
   }, []);
@@ -74,6 +74,8 @@ export default function HomePage() {
     { icon: Star, title: 'الدفع عند الاستلام', description: 'ادفع عند معاينة واستلام طلبك.' },
     { icon: Zap, title: 'سرعة التوصيل', description: 'توصيل خلال 24-72 ساعة.' }, 
     { icon: TrendingUp, title: 'أسعار تنافسية', description: 'أفضل الأسعار في السوق.' },
+    { icon: Package, title: 'تشكيلة واسعة', description: 'آلاف القطع المتوفرة.' },
+    { icon: Search, title: 'بحث سريع', description: 'ابحث برقم البوردة فوراً.' },
   ];
 
   const brands = [
@@ -210,15 +212,15 @@ export default function HomePage() {
       <section style={{ padding: '24px 16px 20px' }}>
         <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <h2 data-reveal style={{ fontSize: 'clamp(17px, 3.5vw, 20px)', fontWeight: 900, textAlign: 'center', marginBottom: 16 }} className="reveal-item">قطع متوافقة مع جميع الماركات</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(95px, 1fr))', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
             {brands.map((brand, i) => (
-              <button key={i} data-reveal onClick={() => navigate(`/store?brand=${brand.code}`)} className="reveal-item" style={{ padding: '10px 6px', textAlign: 'center', cursor: 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 52, transition: 'all 0.2s', fontWeight: 700, fontSize: 12, color: '#334155' }}
+              <button key={i} data-reveal onClick={() => navigate(`/store?brand=${brand.code}`)} className="reveal-item" style={{ padding: '10px 6px', textAlign: 'center', cursor: 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 70, transition: 'all 0.2s', fontWeight: 700, fontSize: 12, color: '#334155' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                 {brokenBrands[brand.code] ? (
                   brand.name
                 ) : (
-                  <img src={brand.image} alt={brand.name} style={{ maxWidth: 60, maxHeight: 30, objectFit: 'contain' }} onError={() => setBrokenBrands(prev => ({ ...prev, [brand.code]: true }))} />
+                  <img src={brand.image} alt={brand.name} style={{ maxWidth: 80, maxHeight: 40, objectFit: 'contain' }} onError={() => setBrokenBrands(prev => ({ ...prev, [brand.code]: true }))} />
                 )}
               </button>
             ))}
