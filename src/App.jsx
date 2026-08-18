@@ -17,7 +17,6 @@ import CheckoutFormPage from './pages/CheckoutFormPage';
 import AdminRequestsPage from './pages/AdminRequestsPage';
 import AdminOrdersMenuPage from './pages/AdminOrdersMenuPage';
 import AdminBotOrdersPage from './pages/AdminBotOrdersPage';
-import AdminBotOrdersPage from './pages/AdminBotOrdersPage'; // ← أضف هذا
 
 // استيراد الشريط السفلي
 import MobileBottomNav from './components/MobileBottomNav';
