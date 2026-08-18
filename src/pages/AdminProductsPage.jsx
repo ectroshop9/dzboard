@@ -541,6 +541,7 @@ export default function AdminProductsPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <span style={{ fontSize: 12, color: '#64748b' }}>المخزون: <strong>{product.stock || 0}</strong></span>
+                      <span style={{ fontSize: 11, color: '#94a3b8' }}>🗓️ {formatDate(product.created_at)}</span>
                       <span style={{ fontSize: 11, color: isVisible ? '#10b981' : '#ef4444', fontWeight: 700 }}>
                         {isVisible ? '👁️ ظاهر' : '🚫 مخفي'}
                       </span>
