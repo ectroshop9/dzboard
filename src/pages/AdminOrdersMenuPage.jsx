@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { 
-  ShoppingBag, FileText, ArrowLeft, ChevronLeft
+  ShoppingBag, FileText, Bot, ArrowLeft, ChevronLeft
 } from 'lucide-react';
 
 export default function AdminOrdersMenuPage() {
@@ -56,7 +56,7 @@ export default function AdminOrdersMenuPage() {
         flexDirection: 'column',
         justifyContent: 'center',
         padding: 20,
-        gap: 20,
+        gap: 16,
         maxWidth: 500,
         margin: '0 auto',
         width: '100%'
@@ -68,39 +68,73 @@ export default function AdminOrdersMenuPage() {
             display: 'flex',
             alignItems: 'center',
             gap: 16,
-            padding: 24,
+            padding: 20,
             background: '#fff',
             border: '2px solid #3b82f6',
             borderRadius: 20,
             cursor: 'pointer',
-            transition: 'all 0.3s',
-            boxShadow: '0 4px 15px rgba(59, 130, 246, 0.1)',
             width: '100%',
             textAlign: 'right'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
         >
           <div style={{
             background: '#3b82f6',
-            borderRadius: 16,
-            padding: 16,
+            borderRadius: 14,
+            padding: 14,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0
           }}>
-            <ShoppingBag size={32} color="#fff" />
+            <ShoppingBag size={28} color="#fff" />
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
               طلبات المتجر
             </div>
-            <div style={{ fontSize: 13, color: '#64748b' }}>
+            <div style={{ fontSize: 12, color: '#64748b' }}>
               عرض الطلبات القادمة من المتجر الإلكتروني
             </div>
           </div>
-          <ChevronLeft size={24} color="#94a3b8" />
+          <ChevronLeft size={20} color="#94a3b8" />
+        </button>
+
+        {/* بطاقة طلبات البوت */}
+        <button
+          onClick={() => navigate('/admin/bot-orders')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+            padding: 20,
+            background: '#fff',
+            border: '2px solid #8b5cf6',
+            borderRadius: 20,
+            cursor: 'pointer',
+            width: '100%',
+            textAlign: 'right'
+          }}
+        >
+          <div style={{
+            background: '#8b5cf6',
+            borderRadius: 14,
+            padding: 14,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <Bot size={28} color="#fff" />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
+              طلبات البوت 🤖
+            </div>
+            <div style={{ fontSize: 12, color: '#64748b' }}>
+              عرض الطلبات القادمة من بوت ماسنجر
+            </div>
+          </div>
+          <ChevronLeft size={20} color="#94a3b8" />
         </button>
 
         {/* بطاقة الطلبات الخاصة */}
@@ -110,39 +144,35 @@ export default function AdminOrdersMenuPage() {
             display: 'flex',
             alignItems: 'center',
             gap: 16,
-            padding: 24,
+            padding: 20,
             background: '#fff',
             border: '2px solid #f59e0b',
             borderRadius: 20,
             cursor: 'pointer',
-            transition: 'all 0.3s',
-            boxShadow: '0 4px 15px rgba(245, 158, 11, 0.1)',
             width: '100%',
             textAlign: 'right'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
         >
           <div style={{
             background: '#f59e0b',
-            borderRadius: 16,
-            padding: 16,
+            borderRadius: 14,
+            padding: 14,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0
           }}>
-            <FileText size={32} color="#fff" />
+            <FileText size={28} color="#fff" />
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
               الطلبات الخاصة
             </div>
-            <div style={{ fontSize: 13, color: '#64748b' }}>
+            <div style={{ fontSize: 12, color: '#64748b' }}>
               عرض الطلبات المخصصة من العملاء
             </div>
           </div>
-          <ChevronLeft size={24} color="#94a3b8" />
+          <ChevronLeft size={20} color="#94a3b8" />
         </button>
       </div>
     </div>
