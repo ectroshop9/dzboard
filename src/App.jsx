@@ -6,6 +6,7 @@ import StorePage from './pages/StorePage';
 import CheckoutPage from './pages/CheckoutPage';
 import ThankYouPage from './pages/ThankYouPage';
 import RequestPartPage from './pages/RequestPartPage';
+import PrivacyPage from './pages/PrivacyPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminProductsPage from './pages/AdminProductsPage';
@@ -43,6 +44,7 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/thank-you" element={<ThankYouPage />} />
           <Route path="/request-part" element={<RequestPartPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
 
           {/* صفحات لوحة التحكم الأدمن */}
           <Route path="/admin" element={<AdminLoginPage />} />
