@@ -27,7 +27,7 @@ app.use(cors({ origin: ['https://dzboard.vercel.app', 'http://localhost:5173'], 
 app.use(express.json({ limit: '10mb' }));
 app.use(morgan('combined'));
 
-// API Routes
+// ✅ API Routes - كلها قبل static
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
@@ -36,15 +36,15 @@ app.use('/api/requests', requestRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/backup', backupRoutes);
 app.use('/api/bot-orders', botOrdersRoutes);
-
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
-
-// Serve static files from dist
-app.use(express.static(path.join(__dirname, '../dist')));
 app.use('/api/chat-logs', chatLogsRoutes);
 app.use('/api/live-chat', liveChatRoutes);
 
-// Catch-all route for SPA
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
+// ✅ Serve static files from dist - بعد API routes
+app.use(express.static(path.join(__dirname, '../dist')));
+
+// ✅ Catch-all route for SPA - أخيراً
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
