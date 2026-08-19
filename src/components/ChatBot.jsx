@@ -7,12 +7,13 @@ const API = 'https://dzboard.onrender.com/api';
 export default function ChatBot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { type: 'bot', text: '👋 أهلاً بك في DZBoard! كيف يمكنني مساعدتك؟', buttons: ['🛍️ تصفح المنتجات', '🔍 البحث عن قطعة', '📦 تتبع طلبك', '📞 اتصل بنا'] }
+    { type: 'bot', text: '👋 أهلاً بك في DZBoard! كيف يمكنني مساعدتك؟', buttons: ['🛍️ تصفح المنتجات', '🔍 البحث عن قطعة', '📦 تتبع طلبك', '📍 حساب التوصيل', '📞 اتصل بنا'] }
   ]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
   const [awaitingTrack, setAwaitingTrack] = useState(false);
   const [awaitingSearch, setAwaitingSearch] = useState(false);
+  const [awaitingWilaya, setAwaitingWilaya] = useState(false);
   const messagesEndRef = useRef(null);
 
   // Auto scroll
@@ -54,7 +55,7 @@ export default function ChatBot() {
     await botTyping();
     addMessage('bot', `🛍️ وجدت ${products.length} منتج:`);
     
-    const chunk = products.slice(0, 5); // عرض أول 5
+    const chunk = products.slice(0, 5);
     chunk.forEach((p, i) => {
       setTimeout(() => {
         addMessage('bot', null, {
@@ -67,9 +68,8 @@ export default function ChatBot() {
       }, (i + 1) * 600);
     });
 
-    // إضافة أزرار بعد عرض المنتجات
     setTimeout(() => {
-      addMessage('bot', 'هل تريد شيئاً آخر؟', null, ['🔍 البحث عن قطعة', '📦 تتبع طلبك', '🔙 القائمة الرئيسية']);
+      addMessage('bot', 'هل تريد شيئاً آخر؟', null, ['🔍 البحث عن قطعة', '📍 حساب التوصيل', '🔙 القائمة الرئيسية']);
     }, (chunk.length + 1) * 600);
   };
 
@@ -87,19 +87,63 @@ export default function ChatBot() {
     await showProducts(found);
   };
 
+  // تتبع طلب DHD
+  const trackDHD = async (trackingNumber) => {
+    await botTyping();
+    try {
+      const res = await fetch(`${API}/shipping/track?tracking=${trackingNumber}`);
+      const data = await res.json();
+      
+      if (data.success && data.shipment) {
+        const s = data.shipment;
+        addMessage('bot', `📦 حالة الشحنة: ${trackingNumber}\n\n📊 الحالة: ${s.status || 'غير معروف'}\n📍 الموقع: ${s.location || 'غير متوفر'}`, null, ['🔙 القائمة الرئيسية']);
+      } else {
+        addMessage('bot', `🔗 يمكنك تتبع شحنتك من هنا:\n${window.location.origin}/track/${trackingNumber}`, null, ['🔙 القائمة الرئيسية']);
+      }
+    } catch (error) {
+      addMessage('bot', '❌ تعذر تتبع الشحنة حالياً.', null, ['🔙 القائمة الرئيسية']);
+    }
+  };
+
   // تتبع طلب
   const trackOrder = async (orderId) => {
     await botTyping();
+    
+    // إذا كان رقم تتبع DHD
+    if (orderId.startsWith('DHD') || orderId.startsWith('dhd') || orderId.length > 10) {
+      await trackDHD(orderId);
+      return;
+    }
+    
+    // رقم طلب عادي
     addMessage('bot', `📦 رقم الطلب: #${orderId}`);
     addMessage('bot', `🔗 يمكنك تتبع طلبك من هنا: ${window.location.origin}/track/${orderId}`, null, ['🔙 القائمة الرئيسية']);
+  };
+
+  // حساب تكلفة التوصيل
+  const calculateShipping = async (wilayaId) => {
+    await botTyping();
+    try {
+      const res = await fetch(`${API}/shipping/fee?wilaya_id=${wilayaId}`);
+      const data = await res.json();
+      
+      if (data.success && data.fees) {
+        addMessage('bot', `📍 تكلفة التوصيل للولاية ${wilayaId}:\n\n🏠 للمنزل: ${data.fees.domicile} دج\n🏢 للمكتب: ${data.fees.stopdesk} دج`, null, ['🔙 القائمة الرئيسية']);
+      } else {
+        addMessage('bot', '❌ عذراً، لم نتمكن من حساب التكلفة.', null, ['🔙 القائمة الرئيسية']);
+      }
+    } catch (error) {
+      addMessage('bot', '❌ حدث خطأ في الاتصال.', null, ['🔙 القائمة الرئيسية']);
+    }
   };
 
   // القائمة الرئيسية
   const showMainMenu = async () => {
     setAwaitingTrack(false);
     setAwaitingSearch(false);
+    setAwaitingWilaya(false);
     await botTyping(500);
-    addMessage('bot', '👋 كيف يمكنني مساعدتك؟', null, ['🛍️ تصفح المنتجات', '🔍 البحث عن قطعة', '📦 تتبع طلبك', '📞 اتصل بنا']);
+    addMessage('bot', '👋 كيف يمكنني مساعدتك؟', null, ['🛍️ تصفح المنتجات', '🔍 البحث عن قطعة', '📦 تتبع طلبك', '📍 حساب التوصيل', '📞 اتصل بنا']);
   };
 
   // معالجة الرسالة أو الزر
@@ -127,6 +171,18 @@ export default function ChatBot() {
       return;
     }
 
+    // حالة انتظار الولاية
+    if (awaitingWilaya) {
+      setAwaitingWilaya(false);
+      const wilayaId = parseInt(messageText);
+      if (wilayaId > 0 && wilayaId <= 58) {
+        await calculateShipping(wilayaId);
+      } else {
+        addMessage('bot', '❌ رقم الولاية غير صحيح. جرب من 1 إلى 58', null, ['🔙 القائمة الرئيسية']);
+      }
+      return;
+    }
+
     // الأزرار السريعة
     if (messageText.includes('تصفح المنتجات')) {
       const products = await fetchProducts();
@@ -141,10 +197,17 @@ export default function ChatBot() {
       return;
     }
 
+    if (messageText.includes('حساب التوصيل')) {
+      setAwaitingWilaya(true);
+      await botTyping();
+      addMessage('bot', '📍 من فضلك أرسل رقم الولاية (مثال: 16 للجزائر العاصمة):');
+      return;
+    }
+
     if (messageText.includes('تتبع طلبك') || messageText.includes('تتبع')) {
       setAwaitingTrack(true);
       await botTyping();
-      addMessage('bot', '📦 من فضلك أرسل رقم الطلب الخاص بك:');
+      addMessage('bot', '📦 من فضلك أرسل رقم الطلب أو رقم التتبع (DHD):');
       return;
     }
 

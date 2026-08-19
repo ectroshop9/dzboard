@@ -90,6 +90,28 @@ router.get('/communes', async (req, res) => {
   }
 });
 
+// Track shipment from DHD/Ecotrack - public
+router.get('/track', async (req, res) => {
+  try {
+    const { tracking } = req.query;
+    
+    if (!tracking) {
+      return res.status(400).json({ success: false, message: 'رقم التتبع مطلوب' });
+    }
+    
+    const shipment = await ecotrackService.trackShipment(tracking);
+    
+    if (shipment && shipment.orders && shipment.orders.length > 0) {
+      res.json({ success: true, shipment: shipment.orders[0] });
+    } else {
+      res.json({ success: false, message: 'لم يتم العثور على الشحنة' });
+    }
+  } catch (error) {
+    console.error('Track error:', error);
+    res.status(500).json({ success: false, message: 'خطأ في تتبع الشحنة' });
+  }
+});
+
 // Sync communes from Ecotrack - admin only
 router.post('/sync-communes', verifyAdmin, async (req, res) => {
   try {
