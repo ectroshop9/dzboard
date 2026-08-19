@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bot, X, Send, Package, Search, Truck, Phone, ShoppingBag, Wrench } from 'lucide-react';
+import { Bot, X, Send, Package, Search, Truck, Phone, ShoppingBag, Wrench, CreditCard, Shield, RotateCcw, Clock } from 'lucide-react';
 import './ChatBot.css';
 
 const API = 'https://dzboard.onrender.com/api';
@@ -7,7 +7,11 @@ const API = 'https://dzboard.onrender.com/api';
 export default function ChatBot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { type: 'bot', text: '👋 أهلاً بك في DZBoard! كيف يمكنني مساعدتك؟', buttons: ['🛍️ تصفح المنتجات', '🔍 البحث عن قطعة', '📦 تتبع طلبك', '📍 حساب التوصيل', '🔧 طلب قطعة', '📞 اتصل بنا'] }
+    { type: 'bot', text: '👋 أهلاً بك في DZBoard! كيف يمكنني مساعدتك؟', buttons: [
+      '🛍️ تصفح المنتجات', '🔍 البحث عن قطعة', '📦 تتبع طلبك', '📍 حساب التوصيل', 
+      '🚚 مدة التوصيل', '💳 طرق الدفع', '🔄 سياسة الإرجاع', '🛡️ الضمان',
+      '🔧 طلب قطعة', '📞 اتصل بنا'
+    ] }
   ]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
@@ -136,6 +140,10 @@ export default function ChatBot() {
       '🔍 البحث عن قطعة',
       '📦 تتبع طلبك',
       '📍 حساب التوصيل',
+      '🚚 مدة التوصيل',
+      '💳 طرق الدفع',
+      '🔄 سياسة الإرجاع',
+      '🛡️ الضمان',
       '🔧 طلب قطعة',
       '📞 اتصل بنا'
     ]);
@@ -150,6 +158,7 @@ export default function ChatBot() {
 
     const lower = messageText.toLowerCase();
 
+    // حالات الانتظار
     if (awaitingTrack) {
       setAwaitingTrack(false);
       await trackOrder(messageText.replace('#', ''));
@@ -174,12 +183,14 @@ export default function ChatBot() {
       return;
     }
 
+    // تصفح المنتجات
     if (messageText.includes('تصفح المنتجات')) {
       const products = await fetchProducts();
       await showProducts(products);
       return;
     }
 
+    // البحث عن قطعة
     if (messageText.includes('البحث عن قطعة')) {
       setAwaitingSearch(true);
       await botTyping();
@@ -187,6 +198,7 @@ export default function ChatBot() {
       return;
     }
 
+    // حساب التوصيل
     if (messageText.includes('حساب التوصيل')) {
       setAwaitingWilaya(true);
       await botTyping();
@@ -194,6 +206,35 @@ export default function ChatBot() {
       return;
     }
 
+    // مدة التوصيل
+    if (messageText.includes('مدة التوصيل') || messageText.includes('مدة') && lower.includes('توصيل')) {
+      await botTyping();
+      addMessage('bot', '🚚 مدة التوصيل:\n\n📍 الولايات الشمالية: 1-2 يوم\n📍 الولايات الوسطى: 2-3 أيام\n📍 الولايات الصحراوية وأقصى الجنوب: 2-4 أيام\n\n⚠️ قد تتأخر الشحنات في أوقات الذروة أو الأحوال الجوية السيئة.', null, ['📍 حساب التوصيل', '🔙 القائمة الرئيسية']);
+      return;
+    }
+
+    // طرق الدفع
+    if (messageText.includes('طرق الدفع') || messageText.includes('الدفع') || messageText.includes('بريدي') || messageText.includes('موب')) {
+      await botTyping();
+      addMessage('bot', '💳 طرق الدفع المتاحة:\n\n1️⃣ الدفع عند الاستلام 💵\n   - ادفع للموزع عند وصول طلبك\n\n2️⃣ بريدي موب 📱\n   - الدفع الإلكتروني عبر تطبيق بريدي موب\n\n✅ نضمن لك عملية دفع آمنة وموثوقة.', null, ['🛍️ تصفح المنتجات', '🔙 القائمة الرئيسية']);
+      return;
+    }
+
+    // سياسة الإرجاع
+    if (messageText.includes('سياسة الإرجاع') || messageText.includes('ارجاع') || messageText.includes('إرجاع') || messageText.includes('استبدال')) {
+      await botTyping();
+      addMessage('bot', '🔄 سياسة الإرجاع:\n\n✅ يمكنك إرجاع المنتج خلال 7 أيام من الاستلام\n✅ يجب أن يكون المنتج في حالته الأصلية\n✅ مع التغليف الأصلي وجميع الملحقات\n\n❌ لا يمكن إرجاع:\n- المنتجات التي تم استخدامها\n- المنتجات المتضررة من سوء الاستخدام\n\n📞 للإرجاع، تواصل معنا وسنرشدك للخطوات.', null, ['📞 اتصل بنا', '🔙 القائمة الرئيسية']);
+      return;
+    }
+
+    // الضمان
+    if (messageText.includes('الضمان') || messageText.includes('ضمان')) {
+      await botTyping();
+      addMessage('bot', '🛡️ الضمان:\n\n✅ جميع منتجاتنا مضمونة\n\n📋 مدة الضمان:\n- الكروت الإلكترونية: 6 أشهر\n- لوحات التغذية: 6 أشهر\n- القطع الأخرى: حسب المنتج\n\n⚠️ الضمان لا يشمل:\n- التلف الناتج عن سوء الاستخدام\n- الكسر أو الحرق\n- العبث بالمنتج\n\n📞 للاستفادة من الضمان، تواصل معنا.', null, ['📞 اتصل بنا', '🔙 القائمة الرئيسية']);
+      return;
+    }
+
+    // طلب قطعة
     if (messageText.includes('طلب قطعة')) {
       await botTyping();
       addMessage('bot', '🔧 لطلب قطعة غير متوفرة، اضغط على الزر التالي:');
@@ -205,6 +246,7 @@ export default function ChatBot() {
       return;
     }
 
+    // تتبع طلب
     if (messageText.includes('تتبع طلبك') || messageText.includes('تتبع')) {
       setAwaitingTrack(true);
       await botTyping();
@@ -212,28 +254,33 @@ export default function ChatBot() {
       return;
     }
 
+    // اتصل بنا
     if (messageText.includes('اتصل بنا')) {
       await botTyping();
       addMessage('bot', '📞 للتواصل معنا:\n📱 الهاتف: 0673310066\n📧 الإيميل: contact@dzboard.com', null, ['🔙 القائمة الرئيسية']);
       return;
     }
 
+    // القائمة الرئيسية
     if (messageText.includes('القائمة الرئيسية')) {
       await showMainMenu();
       return;
     }
 
+    // الترحيب
     if (['سلام', 'مرحبا', 'اهلا', 'السلام عليكم', 'صباح الخير', 'مساء الخير', 'hi', 'hello', 'salut', 'bonjour'].some(g => lower.includes(g))) {
       await showMainMenu();
       return;
     }
 
+    // عرض المنتجات
     if (lower.includes('منتج') || lower.includes('قطع') || lower.includes('كارت') || lower.includes('لوحة') || lower.includes('تغذية') || lower.includes('produit') || lower.includes('product')) {
       const products = await fetchProducts();
       await showProducts(products);
       return;
     }
 
+    // بحث افتراضي
     await botTyping();
     await searchProducts(messageText);
   };
@@ -372,7 +419,6 @@ export default function ChatBot() {
                   </div>
                 )}
 
-                {/* زر خاص */}
                 {msg.specialButton && (
                   <button
                     onClick={msg.specialButton.action}
