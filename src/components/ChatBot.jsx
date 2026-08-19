@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bot, X, Send, Package, Search, Truck, Phone, ShoppingBag } from 'lucide-react';
+import { Bot, X, Send, Package, Search, Truck, Phone, ShoppingBag, Wrench } from 'lucide-react';
 import './ChatBot.css';
 
 const API = 'https://dzboard.onrender.com/api';
@@ -7,7 +7,7 @@ const API = 'https://dzboard.onrender.com/api';
 export default function ChatBot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { type: 'bot', text: '👋 أهلاً بك في DZBoard! كيف يمكنني مساعدتك؟', buttons: ['🛍️ تصفح المنتجات', '🔍 البحث عن قطعة', '📦 تتبع طلبك', '📍 حساب التوصيل', '📞 اتصل بنا'] }
+    { type: 'bot', text: '👋 أهلاً بك في DZBoard! كيف يمكنني مساعدتك؟', buttons: ['🛍️ تصفح المنتجات', '🔍 البحث عن قطعة', '📦 تتبع طلبك', '📍 حساب التوصيل', '🔧 طلب قطعة', '📞 اتصل بنا'] }
   ]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
@@ -16,12 +16,10 @@ export default function ChatBot() {
   const [awaitingWilaya, setAwaitingWilaya] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // جلب المنتجات
   const fetchProducts = async () => {
     try {
       const res = await fetch(`${API}/products`);
@@ -32,19 +30,16 @@ export default function ChatBot() {
     }
   };
 
-  // إضافة رسالة
-  const addMessage = (type, text, extra = null, buttons = null) => {
-    setMessages(prev => [...prev, { type, text, extra, buttons }]);
+  const addMessage = (type, text, extra = null, buttons = null, specialButton = null) => {
+    setMessages(prev => [...prev, { type, text, extra, buttons, specialButton }]);
   };
 
-  // محاكاة الكتابة
   const botTyping = async (delay = 800) => {
     setTyping(true);
     await new Promise(r => setTimeout(r, delay));
     setTyping(false);
   };
 
-  // عرض المنتجات
   const showProducts = async (products) => {
     if (products.length === 0) {
       await botTyping();
@@ -73,7 +68,6 @@ export default function ChatBot() {
     }, (chunk.length + 1) * 600);
   };
 
-  // البحث عن منتج
   const searchProducts = async (query) => {
     const products = await fetchProducts();
     const normalized = query.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -87,7 +81,6 @@ export default function ChatBot() {
     await showProducts(found);
   };
 
-  // تتبع طلب DHD
   const trackDHD = async (trackingNumber) => {
     await botTyping();
     try {
@@ -105,22 +98,18 @@ export default function ChatBot() {
     }
   };
 
-  // تتبع طلب
   const trackOrder = async (orderId) => {
     await botTyping();
     
-    // إذا كان رقم تتبع DHD
     if (orderId.startsWith('DHD') || orderId.startsWith('dhd') || orderId.length > 10) {
       await trackDHD(orderId);
       return;
     }
     
-    // رقم طلب عادي
     addMessage('bot', `📦 رقم الطلب: #${orderId}`);
     addMessage('bot', `🔗 يمكنك تتبع طلبك من هنا: ${window.location.origin}/track/${orderId}`, null, ['🔙 القائمة الرئيسية']);
   };
 
-  // حساب تكلفة التوصيل
   const calculateShipping = async (wilayaId) => {
     await botTyping();
     try {
@@ -137,16 +126,21 @@ export default function ChatBot() {
     }
   };
 
-  // القائمة الرئيسية
   const showMainMenu = async () => {
     setAwaitingTrack(false);
     setAwaitingSearch(false);
     setAwaitingWilaya(false);
     await botTyping(500);
-    addMessage('bot', '👋 كيف يمكنني مساعدتك؟', null, ['🛍️ تصفح المنتجات', '🔍 البحث عن قطعة', '📦 تتبع طلبك', '📍 حساب التوصيل', '📞 اتصل بنا']);
+    addMessage('bot', '👋 كيف يمكنني مساعدتك؟', null, [
+      '🛍️ تصفح المنتجات',
+      '🔍 البحث عن قطعة',
+      '📦 تتبع طلبك',
+      '📍 حساب التوصيل',
+      '🔧 طلب قطعة',
+      '📞 اتصل بنا'
+    ]);
   };
 
-  // معالجة الرسالة أو الزر
   const handleSend = async (text) => {
     const messageText = text || input.trim();
     if (!messageText) return;
@@ -156,14 +150,12 @@ export default function ChatBot() {
 
     const lower = messageText.toLowerCase();
 
-    // حالة انتظار رقم التتبع
     if (awaitingTrack) {
       setAwaitingTrack(false);
       await trackOrder(messageText.replace('#', ''));
       return;
     }
 
-    // حالة انتظار البحث
     if (awaitingSearch) {
       setAwaitingSearch(false);
       await botTyping();
@@ -171,7 +163,6 @@ export default function ChatBot() {
       return;
     }
 
-    // حالة انتظار الولاية
     if (awaitingWilaya) {
       setAwaitingWilaya(false);
       const wilayaId = parseInt(messageText);
@@ -183,7 +174,6 @@ export default function ChatBot() {
       return;
     }
 
-    // الأزرار السريعة
     if (messageText.includes('تصفح المنتجات')) {
       const products = await fetchProducts();
       await showProducts(products);
@@ -201,6 +191,17 @@ export default function ChatBot() {
       setAwaitingWilaya(true);
       await botTyping();
       addMessage('bot', '📍 من فضلك أرسل رقم الولاية (مثال: 16 للجزائر العاصمة):');
+      return;
+    }
+
+    if (messageText.includes('طلب قطعة')) {
+      await botTyping();
+      addMessage('bot', '🔧 لطلب قطعة غير متوفرة، اضغط على الزر التالي:');
+      addMessage('bot', null, null, null, {
+        label: '🔧 اطلب قطعتك الآن',
+        action: () => window.open('/request-part', '_blank')
+      });
+      addMessage('bot', '📝 سنتحقق من توفر القطعة ونتواصل معك في أقرب وقت.', null, ['🔙 القائمة الرئيسية']);
       return;
     }
 
@@ -222,32 +223,27 @@ export default function ChatBot() {
       return;
     }
 
-    // الترحيب
     if (['سلام', 'مرحبا', 'اهلا', 'السلام عليكم', 'صباح الخير', 'مساء الخير', 'hi', 'hello', 'salut', 'bonjour'].some(g => lower.includes(g))) {
       await showMainMenu();
       return;
     }
 
-    // طلب عرض المنتجات
     if (lower.includes('منتج') || lower.includes('قطع') || lower.includes('كارت') || lower.includes('لوحة') || lower.includes('تغذية') || lower.includes('produit') || lower.includes('product')) {
       const products = await fetchProducts();
       await showProducts(products);
       return;
     }
 
-    // بحث افتراضي
     await botTyping();
     await searchProducts(messageText);
   };
 
-  // فتح رابط المنتج
   const openProduct = (productId) => {
     window.open(`/checkout?product=${productId}`, '_blank');
   };
 
   return (
     <>
-      {/* زر البوت العائم */}
       <button
         onClick={() => setOpen(!open)}
         className="chatbot-toggle"
@@ -273,7 +269,6 @@ export default function ChatBot() {
         {open ? <X size={28} /> : <Bot size={28} />}
       </button>
 
-      {/* نافذة المحادثة */}
       {open && (
         <div className="chatbot-window" style={{
           position: 'fixed',
@@ -292,7 +287,6 @@ export default function ChatBot() {
           overflow: 'hidden',
           animation: 'slideUp 0.3s ease'
         }}>
-          {/* Header */}
           <div style={{
             background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
             color: '#fff',
@@ -308,7 +302,6 @@ export default function ChatBot() {
             </div>
           </div>
 
-          {/* Messages */}
           <div style={{
             flex: 1,
             overflowY: 'auto',
@@ -379,7 +372,31 @@ export default function ChatBot() {
                   </div>
                 )}
 
-                {/* أزرار سريعة */}
+                {/* زر خاص */}
+                {msg.specialButton && (
+                  <button
+                    onClick={msg.specialButton.action}
+                    style={{
+                      padding: '12px 20px',
+                      background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 20,
+                      fontSize: 14,
+                      cursor: 'pointer',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      marginTop: 4,
+                      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+                    }}
+                  >
+                    <Wrench size={18} />
+                    {msg.specialButton.label}
+                  </button>
+                )}
+
                 {msg.buttons && msg.buttons.length > 0 && (
                   <div style={{
                     display: 'flex',
@@ -402,8 +419,6 @@ export default function ChatBot() {
                           fontWeight: 700,
                           transition: 'all 0.2s'
                         }}
-                        onMouseEnter={(e) => e.target.style.background = '#1d4ed8'}
-                        onMouseLeave={(e) => e.target.style.background = '#3b82f6'}
                       >
                         {btn}
                       </button>
@@ -444,7 +459,6 @@ export default function ChatBot() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
           <div style={{
             padding: 12,
             borderTop: '1px solid #e2e8f0',
