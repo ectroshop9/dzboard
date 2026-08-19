@@ -13,6 +13,15 @@ export default {
     const { data } = await supabase.from('products').select('*').eq('id', id).single()
     return data
   },
+  // ✅ دالة فحص التكرار - أضفتها فقط
+  getByName: async (name) => {
+    const { data } = await supabase
+      .from('products')
+      .select('*')
+      .ilike('name', name)
+      .single();
+    return data;
+  },
   create: async (product) => {
     const { data } = await supabase.from('products').insert(product).select().single()
     return data

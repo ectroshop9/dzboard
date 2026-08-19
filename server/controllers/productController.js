@@ -25,6 +25,14 @@ export const create = async (req, res) => {
   try {
     const { name, category, brand, price, stock, image, description, active, update_url } = req.body;
     
+    // ✅ فحص التكرار - فقط يمنع إضافة نفس الاسم
+    if (name && name.trim()) {
+      const existing = await Product.getByName(name.trim());
+      if (existing) {
+        return res.json({ success: false, message: `⚠️ المنتج "${name}" موجود مسبقاً برقم #${existing.id}` });
+      }
+    }
+    
     const p = await Product.create({
       name,
       category: category || 'parts',
@@ -47,6 +55,14 @@ export const create = async (req, res) => {
 export const update = async (req, res) => {
   try {
     const { name, category, brand, price, stock, image, description, active, update_url } = req.body;
+    
+    // ✅ فحص التكرار عند التحديث - فقط إذا تغير الاسم
+    if (name && name.trim()) {
+      const existing = await Product.getByName(name.trim());
+      if (existing && existing.id !== parseInt(req.params.id)) {
+        return res.json({ success: false, message: `⚠️ المنتج "${name}" موجود مسبقاً برقم #${existing.id}` });
+      }
+    }
     
     // جلب المنتج الحالي للحفاظ على القيم غير المرسلة
     const existing = await Product.getById(parseInt(req.params.id));
