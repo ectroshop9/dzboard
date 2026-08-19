@@ -15,6 +15,19 @@ router.get('/messages', verifyAdmin, async (req, res) => {
   res.json({ success: true, messages: (data || []).reverse() });
 });
 
+// ✅ جلب ردود الأدمن - عام (للعميل)
+router.get('/admin-replies', async (req, res) => {
+  const { data, error } = await supabase
+    .from('live_chats')
+    .select('*')
+    .eq('sender', 'admin')
+    .order('id', { ascending: false })
+    .limit(10);
+  
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  res.json({ success: true, replies: data || [] });
+});
+
 // إرسال رسالة - عام (بدون verifyAdmin)
 router.post('/messages', async (req, res) => {
   const { message, sender } = req.body;

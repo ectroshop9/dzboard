@@ -51,6 +51,7 @@ export default function ChatBot() {
   const [typing, setTyping] = useState(false);
   const [awaitingState, setAwaitingState] = useState(null);
   const [pendingPartName, setPendingPartName] = useState('');
+  const [shownReplies, setShownReplies] = useState([]);
 
   const messagesEndRef = useRef(null);
   const timeoutsRef = useRef([]);
@@ -87,6 +88,36 @@ export default function ChatBot() {
   }, [messages, typing]);
 
   useEffect(() => () => clearAllTimeouts(), [clearAllTimeouts]);
+
+  // ✅ جلب ردود الأدمن كل 5 ثواني
+  useEffect(() => {
+    const fetchAdminReplies = async () => {
+      try {
+        const res = await fetch(`${API}/live-chat/admin-replies`);
+        const data = await res.json();
+        
+        if (data.success && data.replies && data.replies.length > 0) {
+          data.replies.forEach(reply => {
+            // تحقق إذا كان الرد غير معروض مسبقاً
+            if (!shownReplies.includes(reply.id)) {
+              addMessage('bot', `👨‍💼 الدعم: ${reply.message}`);
+              setShownReplies(prev => [...prev, reply.id]);
+            }
+          });
+        }
+      } catch (error) {
+        // تجاهل الأخطاء
+      }
+    };
+
+    // جلب فوري عند فتح البوت
+    fetchAdminReplies();
+    
+    // جلب كل 5 ثواني
+    const interval = setInterval(fetchAdminReplies, 5000);
+    
+    return () => clearInterval(interval);
+  }, [shownReplies]);
 
   const playNotificationSound = () => {
     try {
@@ -425,6 +456,7 @@ export default function ChatBot() {
     setAwaitingState(null);
     setPendingPartName('');
     setMessages([WELCOME_MESSAGE]);
+    setShownReplies([]);
     localStorage.removeItem('dzboard_chat_history');
   };
 
