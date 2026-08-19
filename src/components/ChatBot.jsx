@@ -17,6 +17,7 @@ const BUTTON_STYLES = [
   { prefix: '🔧', bg: '#f3e8ff', color: '#7e22ce', border: '1px solid #d8b4fe' },
   { prefix: '📞', bg: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' },
   { prefix: '💬', bg: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5' },
+  { prefix: '📘', bg: '#dbeafe', color: '#1d4ed8', border: '1px solid #93c5fd' },
   { prefix: '🔙', bg: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }
 ];
 
@@ -40,6 +41,7 @@ const WELCOME_MESSAGE = {
     '🛡️ الضمان',
     '🔧 طلب قطعة',
     '💬 دردشة مباشرة',
+    '📘 صفحتنا على فيسبوك',
     '📞 اتصل بنا'
   ]
 };
@@ -89,7 +91,7 @@ export default function ChatBot() {
 
   useEffect(() => () => clearAllTimeouts(), [clearAllTimeouts]);
 
-  // ✅ جلب ردود الأدمن كل 5 ثواني
+  // جلب ردود الأدمن كل 5 ثواني
   useEffect(() => {
     const fetchAdminReplies = async () => {
       try {
@@ -98,24 +100,17 @@ export default function ChatBot() {
         
         if (data.success && data.replies && data.replies.length > 0) {
           data.replies.forEach(reply => {
-            // تحقق إذا كان الرد غير معروض مسبقاً
             if (!shownReplies.includes(reply.id)) {
               addMessage('bot', `👨‍💼 الدعم: ${reply.message}`);
               setShownReplies(prev => [...prev, reply.id]);
             }
           });
         }
-      } catch (error) {
-        // تجاهل الأخطاء
-      }
+      } catch (error) {}
     };
 
-    // جلب فوري عند فتح البوت
     fetchAdminReplies();
-    
-    // جلب كل 5 ثواني
     const interval = setInterval(fetchAdminReplies, 5000);
-    
     return () => clearInterval(interval);
   }, [shownReplies]);
 
@@ -153,7 +148,6 @@ export default function ChatBot() {
     }
   };
 
-  // حفظ طلب قطعة في قاعدة البيانات
   const savePartRequest = async (partName, phone) => {
     try {
       const res = await fetch(`${API}/requests`, {
@@ -172,7 +166,6 @@ export default function ChatBot() {
     }
   };
 
-  // حفظ رسالة الدردشة المباشرة
   const saveLiveChatMessage = async (message) => {
     try {
       await fetch(`${API}/live-chat/messages`, {
@@ -361,6 +354,13 @@ export default function ChatBot() {
       return;
     }
 
+    // ✅ فيسبوك
+    if (messageText.includes('فيسبوك') || messageText.includes('facebook')) {
+      await botTyping();
+      addMessage('bot', '📘 تابعنا على فيسبوك:\nhttps://www.facebook.com/DZBord', null, ['🔙 القائمة الرئيسية']);
+      return;
+    }
+
     // تتبع طلب
     if (messageText.includes('تتبع')) {
       setAwaitingState('track');
@@ -472,7 +472,6 @@ export default function ChatBot() {
 
       {open && (
         <div className="chatbot-window">
-          {/* Header */}
           <div className="chatbot-header">
             <Bot size={24} />
             <div className="header-info">
@@ -484,7 +483,6 @@ export default function ChatBot() {
             </button>
           </div>
 
-          {/* Messages Body */}
           <div className="chatbot-body">
             {messages.map((msg) => (
               <div key={msg.id || Math.random()} className="message-row">
@@ -552,7 +550,6 @@ export default function ChatBot() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Footer Input */}
           <div className="chatbot-footer">
             <input
               value={input}
