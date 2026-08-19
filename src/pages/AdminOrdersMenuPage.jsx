@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { 
-  ShoppingBag, FileText, Bot, ArrowLeft, ChevronLeft, MessageSquare
+  ShoppingBag, FileText, ArrowLeft, MessageSquare
 } from 'lucide-react';
 
 export default function AdminOrdersMenuPage() {
@@ -13,13 +13,6 @@ export default function AdminOrdersMenuPage() {
       desc: 'طلبات المتجر الإلكتروني',
       color: '#3b82f6',
       path: '/admin/orders'
-    },
-    {
-      icon: Bot,
-      title: 'طلبات البوت',
-      desc: 'طلبات بوت ماسنجر',
-      color: '#8b5cf6',
-      path: '/admin/bot-orders'
     },
     {
       icon: FileText,
@@ -86,7 +79,7 @@ export default function AdminOrdersMenuPage() {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
         gap: 10,
-        maxWidth: 600,
+        maxWidth: 500,
         margin: '0 auto',
         width: '100%'
       }}>
