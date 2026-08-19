@@ -21,6 +21,9 @@ import AdminBotOrdersPage from './pages/AdminBotOrdersPage';
 // استيراد الشريط السفلي
 import MobileBottomNav from './components/MobileBottomNav';
 
+// استيراد البوت
+import ChatBot from './components/ChatBot';
+
 // مكون فرعي لإظهار الشريط السفلي فقط في صفحات الأدمن (باستثناء صفحة التسجيل)
 function LayoutWrapper({ children }) {
   const location = useLocation();
@@ -30,6 +33,7 @@ function LayoutWrapper({ children }) {
     <>
       {children}
       {isAdminRoute && <MobileBottomNav />}
+      <ChatBot />
     </>
   );
 }
@@ -55,7 +59,6 @@ function App() {
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
           <Route path="/admin/orders-menu" element={<AdminOrdersMenuPage />} />
           <Route path="/admin/bot-orders" element={<AdminBotOrdersPage />} />
-          <Route path="/admin/bot-orders" element={<AdminBotOrdersPage />} /> {/* ← أضف هذا */}
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
           <Route path="/admin/scan" element={<AdminScanPage />} />
           <Route path="/admin/checkout-form" element={<CheckoutFormPage />} />

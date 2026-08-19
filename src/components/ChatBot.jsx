@@ -1,0 +1,360 @@
+import { useState, useEffect, useRef } from 'react';
+import { Bot, X, Send, Package, Search, Truck, Phone, ShoppingBag } from 'lucide-react';
+import './ChatBot.css';
+
+const API = 'https://dzboard.onrender.com/api';
+
+export default function ChatBot() {
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    { type: 'bot', text: '👋 أهلاً بك في DZBoard! كيف يمكنني مساعدتك؟' }
+  ]);
+  const [input, setInput] = useState('');
+  const [typing, setTyping] = useState(false);
+  const [awaitingTrack, setAwaitingTrack] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  // Auto scroll
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // جلب المنتجات
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch(`${API}/products`);
+      const data = await res.json();
+      return data.products || [];
+    } catch (error) {
+      return [];
+    }
+  };
+
+  // إضافة رسالة
+  const addMessage = (type, text, extra = null) => {
+    setMessages(prev => [...prev, { type, text, extra }]);
+  };
+
+  // محاكاة الكتابة
+  const botTyping = async (delay = 800) => {
+    setTyping(true);
+    await new Promise(r => setTimeout(r, delay));
+    setTyping(false);
+  };
+
+  // عرض المنتجات
+  const showProducts = async (products) => {
+    if (products.length === 0) {
+      await botTyping();
+      addMessage('bot', '❌ عذراً، لا توجد منتجات متاحة حالياً.');
+      return;
+    }
+
+    await botTyping();
+    addMessage('bot', `🛍️ وجدت ${products.length} منتج:`);
+    
+    const chunk = products.slice(0, 5); // عرض أول 5
+    chunk.forEach((p, i) => {
+      setTimeout(() => {
+        addMessage('bot', null, {
+          name: p.name,
+          price: p.price,
+          stock: p.stock,
+          image: p.image,
+          id: p.id
+        });
+      }, (i + 1) * 600);
+    });
+  };
+
+  // البحث عن منتج
+  const searchProducts = async (query) => {
+    const products = await fetchProducts();
+    const normalized = query.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    const found = products.filter(p => {
+      const name = (p.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const category = (p.category || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      return name.includes(normalized) || category.includes(normalized);
+    });
+
+    await showProducts(found);
+  };
+
+  // تتبع طلب
+  const trackOrder = async (orderId) => {
+    await botTyping();
+    addMessage('bot', `📦 رقم الطلب: #${orderId}`);
+    addMessage('bot', `🔗 يمكنك تتبع طلبك من هنا: ${window.location.origin}/track/${orderId}`);
+  };
+
+  // معالجة الرسالة
+  const handleSend = async () => {
+    const text = input.trim();
+    if (!text) return;
+
+    addMessage('user', text);
+    setInput('');
+
+    const lower = text.toLowerCase();
+
+    // حالة انتظار رقم التتبع
+    if (awaitingTrack) {
+      setAwaitingTrack(false);
+      await trackOrder(text.replace('#', ''));
+      return;
+    }
+
+    // الترحيب
+    if (['سلام', 'مرحبا', 'اهلا', 'السلام عليكم', 'صباح الخير', 'مساء الخير', 'hi', 'hello', 'salut', 'bonjour'].some(g => lower.includes(g))) {
+      await botTyping();
+      addMessage('bot', '👋 أهلاً بك! أنا بوت DZBoard المساعد.');
+      addMessage('bot', 'يمكنني مساعدتك في:');
+      addMessage('bot', '🔍 البحث عن قطعة\n📦 تتبع طلبك\n🛍️ تصفح المنتجات\n📞 معلومات التواصل');
+      return;
+    }
+
+    // الأوامر
+    if (lower.includes('منتج') || lower.includes('قطع') || lower.includes('كارت') || lower.includes('لوحة') || lower.includes('تغذية') || lower.includes('produit') || lower.includes('product')) {
+      const products = await fetchProducts();
+      await showProducts(products);
+      return;
+    }
+
+    // تتبع طلب
+    if (lower.includes('تتبع') || lower.includes('طلب') || lower.includes('track') || lower.includes('commande')) {
+      setAwaitingTrack(true);
+      await botTyping();
+      addMessage('bot', '📦 من فضلك أرسل رقم الطلب الخاص بك:');
+      return;
+    }
+
+    // اتصال
+    if (lower.includes('اتصال') || lower.includes('هاتف') || lower.includes('contact') || lower.includes('phone')) {
+      await botTyping();
+      addMessage('bot', '📞 للتواصل معنا:\n📱 الهاتف: 0673310066\n📧 الإيميل: contact@dzboard.com');
+      return;
+    }
+
+    // بحث افتراضي
+    await botTyping();
+    await searchProducts(text);
+  };
+
+  // فتح رابط المنتج
+  const openProduct = (productId) => {
+    window.open(`/checkout?product=${productId}`, '_blank');
+  };
+
+  return (
+    <>
+      {/* زر البوت العائم */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="chatbot-toggle"
+        style={{
+          position: 'fixed',
+          bottom: 20,
+          left: 20,
+          width: 60,
+          height: 60,
+          borderRadius: '50%',
+          background: open ? '#ef4444' : '#3b82f6',
+          color: '#fff',
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+          zIndex: 9999,
+          transition: 'all 0.3s'
+        }}
+      >
+        {open ? <X size={28} /> : <Bot size={28} />}
+      </button>
+
+      {/* نافذة المحادثة */}
+      {open && (
+        <div className="chatbot-window" style={{
+          position: 'fixed',
+          bottom: 90,
+          left: 20,
+          width: 360,
+          maxWidth: '90vw',
+          height: 500,
+          maxHeight: '70vh',
+          background: '#fff',
+          borderRadius: 16,
+          boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
+          display: 'flex',
+          flexDirection: 'column',
+          zIndex: 9999,
+          overflow: 'hidden',
+          animation: 'slideUp 0.3s ease'
+        }}>
+          {/* Header */}
+          <div style={{
+            background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+            color: '#fff',
+            padding: '14px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10
+          }}>
+            <Bot size={24} />
+            <div>
+              <div style={{ fontWeight: 900, fontSize: 15 }}>DZBoard Bot</div>
+              <div style={{ fontSize: 11, opacity: 0.9 }}>🟢 متصل الآن</div>
+            </div>
+          </div>
+
+          {/* Messages */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: 16,
+            background: '#f8fafc',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10
+          }}>
+            {messages.map((msg, i) => (
+              <div key={i}>
+                {msg.type === 'bot' && msg.text && (
+                  <div style={{
+                    background: '#fff',
+                    border: '1px solid #e2e8f0',
+                    padding: '10px 14px',
+                    borderRadius: '12px 12px 12px 4px',
+                    maxWidth: '85%',
+                    fontSize: 13,
+                    whiteSpace: 'pre-line'
+                  }}>
+                    {msg.text}
+                  </div>
+                )}
+                
+                {msg.type === 'bot' && msg.extra && (
+                  <div style={{
+                    background: '#fff',
+                    border: '1px solid #e2e8f0',
+                    padding: 10,
+                    borderRadius: 12,
+                    maxWidth: '85%',
+                    display: 'flex',
+                    gap: 10,
+                    alignItems: 'center'
+                  }}>
+                    <img 
+                      src={msg.extra.image || '/default-product.jpg'} 
+                      alt={msg.extra.name}
+                      style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }}
+                      onError={(e) => e.target.src = '/default-product.jpg'}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 800, fontSize: 13 }}>{msg.extra.name}</div>
+                      <div style={{ fontSize: 12, color: '#10b981', fontWeight: 700 }}>
+                        {parseFloat(msg.extra.price || 0).toLocaleString('en-US')} دج
+                      </div>
+                      <div style={{ fontSize: 11, color: msg.extra.stock > 0 ? '#059669' : '#dc2626' }}>
+                        {msg.extra.stock > 0 ? '✅ متوفر' : '❌ غير متوفر'}
+                      </div>
+                      <button
+                        onClick={() => openProduct(msg.extra.id)}
+                        style={{
+                          marginTop: 6,
+                          padding: '4px 12px',
+                          background: '#3b82f6',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 6,
+                          fontSize: 11,
+                          cursor: 'pointer',
+                          fontWeight: 700
+                        }}
+                      >
+                        اطلب الآن
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {msg.type === 'user' && (
+                  <div style={{
+                    background: '#3b82f6',
+                    color: '#fff',
+                    padding: '10px 14px',
+                    borderRadius: '12px 12px 4px 12px',
+                    maxWidth: '85%',
+                    fontSize: 13,
+                    marginLeft: 'auto'
+                  }}>
+                    {msg.text}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {typing && (
+              <div style={{
+                background: '#fff',
+                border: '1px solid #e2e8f0',
+                padding: '10px 14px',
+                borderRadius: '12px 12px 12px 4px',
+                maxWidth: 60,
+                fontSize: 18,
+                animation: 'pulse 1s infinite'
+              }}>
+                ...
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          <div style={{
+            padding: 12,
+            borderTop: '1px solid #e2e8f0',
+            display: 'flex',
+            gap: 8,
+            background: '#fff'
+          }}>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="اكتب رسالتك..."
+              style={{
+                flex: 1,
+                padding: '10px 14px',
+                border: '1px solid #e2e8f0',
+                borderRadius: 20,
+                fontSize: 13,
+                outline: 'none'
+              }}
+            />
+            <button
+              onClick={handleSend}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                background: '#3b82f6',
+                color: '#fff',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Send size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
