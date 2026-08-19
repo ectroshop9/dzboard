@@ -23,6 +23,7 @@ import MobileBottomNav from './components/MobileBottomNav';
 
 // استيراد البوت
 import ChatBot from './components/ChatBot';
+import AdminChatLogsPage from './pages/AdminChatLogsPage';
 
 // مكون فرعي لإظهار الشريط السفلي فقط في صفحات الأدمن (باستثناء صفحة التسجيل)
 function LayoutWrapper({ children }) {
@@ -63,6 +64,8 @@ function App() {
           <Route path="/admin/scan" element={<AdminScanPage />} />
           <Route path="/admin/checkout-form" element={<CheckoutFormPage />} />
           <Route path="/admin/requests" element={<AdminRequestsPage />} />
+          <Route path="/admin/chat-logs" element={<AdminChatLogsPage />} />
+
         </Routes>
       </LayoutWrapper>
     </BrowserRouter>

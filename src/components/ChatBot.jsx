@@ -47,7 +47,8 @@ export default function ChatBot() {
   const [messages, setMessages] = useState([WELCOME_MESSAGE]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
-  const [awaitingState, setAwaitingState] = useState(null); // 'track' | 'search' | 'wilaya' | null
+  const [awaitingState, setAwaitingState] = useState(null);
+  const [pendingPartName, setPendingPartName] = useState('');
 
   const messagesEndRef = useRef(null);
   const timeoutsRef = useRef([]);
@@ -119,6 +120,25 @@ export default function ChatBot() {
     }
   };
 
+  // حفظ طلب قطعة في قاعدة البيانات
+  const savePartRequest = async (partName, phone) => {
+    try {
+      const res = await fetch(`${API}/requests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_name: 'عميل البوت',
+          phone: phone,
+          part_name: partName,
+          notes: 'طلب من ChatBot'
+        })
+      });
+      return await res.json();
+    } catch {
+      return { success: false };
+    }
+  };
+
   const showProducts = async (products) => {
     clearAllTimeouts();
     if (products.length === 0) {
@@ -150,7 +170,6 @@ export default function ChatBot() {
     timeoutsRef.current.push(finalTimer);
   };
 
-  // جلب تكلفة التوصيل من API
   const fetchShippingFee = async (wilayaId) => {
     try {
       const res = await fetch(`${API}/shipping/fee?wilaya_id=${wilayaId}`);
@@ -161,7 +180,6 @@ export default function ChatBot() {
     }
   };
 
-  // تتبع شحنة DHD
   const trackDHD = async (trackingNumber) => {
     try {
       const res = await fetch(`${API}/shipping/track?tracking=${trackingNumber}`);
@@ -181,12 +199,37 @@ export default function ChatBot() {
 
     const lower = messageText.toLowerCase();
 
-    // معالجة حالات المدخلات التفاعلية
+    // حالة طلب قطعة - اسم القطعة
+    if (awaitingState === 'part_name') {
+      setPendingPartName(messageText);
+      setAwaitingState('part_phone');
+      await botTyping();
+      addMessage('bot', `📱 حسناً، "${messageText}"\nالآن من فضلك أرسل رقم هاتفك للتواصل معك:`, null, ['🔙 القائمة الرئيسية']);
+      return;
+    }
+
+    // حالة طلب قطعة - رقم الهاتف
+    if (awaitingState === 'part_phone') {
+      const phone = messageText;
+      setAwaitingState(null);
+      await botTyping();
+      
+      const data = await savePartRequest(pendingPartName, phone);
+      
+      if (data.success) {
+        addMessage('bot', `✅ تم تسجيل طلبك بنجاح!\n\n🔧 القطعة: ${pendingPartName}\n📱 الهاتف: ${phone}\n\n📞 سنتحقق من توفرها ونتواصل معك قريباً.`, null, ['🔙 القائمة الرئيسية']);
+      } else {
+        addMessage('bot', '❌ حدث خطأ في تسجيل طلبك. حاول مرة أخرى.', null, ['🔧 طلب قطعة', '🔙 القائمة الرئيسية']);
+      }
+      setPendingPartName('');
+      return;
+    }
+
+    // حالة تتبع
     if (awaitingState === 'track') {
       setAwaitingState(null);
       await botTyping();
       
-      // تجربة تتبع DHD
       if (messageText.startsWith('DHD') || messageText.startsWith('dhd') || messageText.length > 10) {
         const data = await trackDHD(messageText.replace('#', ''));
         if (data && data.success && data.shipment) {
@@ -200,6 +243,7 @@ export default function ChatBot() {
       return;
     }
 
+    // حالة بحث
     if (awaitingState === 'search') {
       setAwaitingState(null);
       await botTyping();
@@ -213,6 +257,7 @@ export default function ChatBot() {
       return;
     }
 
+    // حالة ولاية
     if (awaitingState === 'wilaya') {
       setAwaitingState(null);
       const id = parseInt(messageText, 10);
@@ -231,13 +276,14 @@ export default function ChatBot() {
       return;
     }
 
-    // الأوامر الرئيسية
+    // تصفح المنتجات
     if (messageText.includes('تصفح المنتجات')) {
       const products = await fetchProducts();
       await showProducts(products);
       return;
     }
 
+    // البحث عن قطعة
     if (messageText.includes('البحث عن قطعة')) {
       setAwaitingState('search');
       await botTyping();
@@ -245,6 +291,7 @@ export default function ChatBot() {
       return;
     }
 
+    // تتبع طلب
     if (messageText.includes('تتبع')) {
       setAwaitingState('track');
       await botTyping();
@@ -252,6 +299,7 @@ export default function ChatBot() {
       return;
     }
 
+    // حساب التوصيل
     if (messageText.includes('حساب التوصيل')) {
       setAwaitingState('wilaya');
       await botTyping();
@@ -287,15 +335,11 @@ export default function ChatBot() {
       return;
     }
 
-    // طلب قطعة
+    // طلب قطعة - بداية المحادثة
     if (messageText.includes('طلب قطعة')) {
+      setAwaitingState('part_name');
       await botTyping();
-      addMessage('bot', '🔧 لطلب قطعة غير متوفرة، اضغط على الزر التالي:');
-      addMessage('bot', null, null, null, {
-        label: '🔧 اطلب قطعتك الآن',
-        action: () => window.open('/request-part', '_blank')
-      });
-      addMessage('bot', '📝 سنتحقق من توفر القطعة ونتواصل معك في أقرب وقت.', null, ['🔙 القائمة الرئيسية']);
+      addMessage('bot', '🔧 من فضلك أرسل اسم القطعة التي تبحث عنها:');
       return;
     }
 
@@ -310,6 +354,7 @@ export default function ChatBot() {
     if (messageText.includes('القائمة الرئيسية')) {
       clearAllTimeouts();
       setAwaitingState(null);
+      setPendingPartName('');
       await botTyping(400);
       addMessage('bot', WELCOME_MESSAGE.text, null, WELCOME_MESSAGE.buttons);
       return;
@@ -319,6 +364,7 @@ export default function ChatBot() {
     if (['سلام', 'مرحبا', 'اهلا', 'السلام عليكم', 'صباح الخير', 'مساء الخير', 'hi', 'hello', 'salut', 'bonjour'].some(g => lower.includes(g))) {
       clearAllTimeouts();
       setAwaitingState(null);
+      setPendingPartName('');
       await botTyping(400);
       addMessage('bot', WELCOME_MESSAGE.text, null, WELCOME_MESSAGE.buttons);
       return;
@@ -338,6 +384,7 @@ export default function ChatBot() {
   const clearChat = () => {
     clearAllTimeouts();
     setAwaitingState(null);
+    setPendingPartName('');
     setMessages([WELCOME_MESSAGE]);
     localStorage.removeItem('dzboard_chat_history');
   };

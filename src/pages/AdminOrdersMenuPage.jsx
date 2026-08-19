@@ -1,10 +1,41 @@
 import { useNavigate } from 'react-router-dom';
 import { 
-  ShoppingBag, FileText, Bot, ArrowLeft, ChevronLeft
+  ShoppingBag, FileText, Bot, ArrowLeft, ChevronLeft, MessageSquare
 } from 'lucide-react';
 
 export default function AdminOrdersMenuPage() {
   const navigate = useNavigate();
+
+  const menuItems = [
+    {
+      icon: ShoppingBag,
+      title: 'طلبات المتجر',
+      desc: 'طلبات المتجر الإلكتروني',
+      color: '#3b82f6',
+      path: '/admin/orders'
+    },
+    {
+      icon: Bot,
+      title: 'طلبات البوت',
+      desc: 'طلبات بوت ماسنجر',
+      color: '#8b5cf6',
+      path: '/admin/bot-orders'
+    },
+    {
+      icon: FileText,
+      title: 'الطلبات الخاصة',
+      desc: 'طلبات مخصصة من العملاء',
+      color: '#f59e0b',
+      path: '/admin/requests'
+    },
+    {
+      icon: MessageSquare,
+      title: 'محادثات البوت',
+      desc: 'أسئلة العملاء للبوت',
+      color: '#10b981',
+      path: '/admin/chat-logs'
+    }
+  ];
 
   return (
     <div style={{ 
@@ -20,10 +51,10 @@ export default function AdminOrdersMenuPage() {
       <div style={{
         background: '#fff',
         borderBottom: '1px solid #e2e8f0',
-        padding: '16px 20px',
+        padding: '14px 16px',
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
+        gap: 10,
         position: 'sticky',
         top: 0,
         zIndex: 30
@@ -33,147 +64,84 @@ export default function AdminOrdersMenuPage() {
           style={{
             background: '#f1f5f9',
             border: 'none',
-            borderRadius: 10,
-            width: 40,
-            height: 40,
+            borderRadius: 8,
+            width: 36,
+            height: 36,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer'
           }}
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} />
         </button>
-        <h1 style={{ fontSize: 20, fontWeight: 900, margin: 0, color: '#0f172a' }}>
+        <h1 style={{ fontSize: 18, fontWeight: 900, margin: 0, color: '#0f172a' }}>
           الطلبات
         </h1>
       </div>
 
       {/* المحتوى */}
       <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        padding: 20,
-        gap: 16,
-        maxWidth: 500,
+        padding: 16,
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+        gap: 10,
+        maxWidth: 600,
         margin: '0 auto',
         width: '100%'
       }}>
-        {/* بطاقة طلبات المتجر */}
-        <button
-          onClick={() => navigate('/admin/orders')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 16,
-            padding: 20,
-            background: '#fff',
-            border: '2px solid #3b82f6',
-            borderRadius: 20,
-            cursor: 'pointer',
-            width: '100%',
-            textAlign: 'right'
-          }}
-        >
-          <div style={{
-            background: '#3b82f6',
-            borderRadius: 14,
-            padding: 14,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0
-          }}>
-            <ShoppingBag size={28} color="#fff" />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
-              طلبات المتجر
-            </div>
-            <div style={{ fontSize: 12, color: '#64748b' }}>
-              عرض الطلبات القادمة من المتجر الإلكتروني
-            </div>
-          </div>
-          <ChevronLeft size={20} color="#94a3b8" />
-        </button>
-
-        {/* بطاقة طلبات البوت */}
-        <button
-          onClick={() => navigate('/admin/bot-orders')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 16,
-            padding: 20,
-            background: '#fff',
-            border: '2px solid #8b5cf6',
-            borderRadius: 20,
-            cursor: 'pointer',
-            width: '100%',
-            textAlign: 'right'
-          }}
-        >
-          <div style={{
-            background: '#8b5cf6',
-            borderRadius: 14,
-            padding: 14,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0
-          }}>
-            <Bot size={28} color="#fff" />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
-              طلبات البوت 🤖
-            </div>
-            <div style={{ fontSize: 12, color: '#64748b' }}>
-              عرض الطلبات القادمة من بوت ماسنجر
-            </div>
-          </div>
-          <ChevronLeft size={20} color="#94a3b8" />
-        </button>
-
-        {/* بطاقة الطلبات الخاصة */}
-        <button
-          onClick={() => navigate('/admin/requests')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 16,
-            padding: 20,
-            background: '#fff',
-            border: '2px solid #f59e0b',
-            borderRadius: 20,
-            cursor: 'pointer',
-            width: '100%',
-            textAlign: 'right'
-          }}
-        >
-          <div style={{
-            background: '#f59e0b',
-            borderRadius: 14,
-            padding: 14,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0
-          }}>
-            <FileText size={28} color="#fff" />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
-              الطلبات الخاصة
-            </div>
-            <div style={{ fontSize: 12, color: '#64748b' }}>
-              عرض الطلبات المخصصة من العملاء
-            </div>
-          </div>
-          <ChevronLeft size={20} color="#94a3b8" />
-        </button>
+        {menuItems.map((item, i) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={i}
+              onClick={() => navigate(item.path)}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 10,
+                padding: '16px 12px',
+                background: '#fff',
+                border: '1px solid #e2e8f0',
+                borderRadius: 14,
+                cursor: 'pointer',
+                width: '100%',
+                textAlign: 'center',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.borderColor = item.color;
+                e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.borderColor = '#e2e8f0';
+                e.target.style.boxShadow = 'none';
+              }}
+            >
+              <div style={{
+                background: item.color,
+                borderRadius: 10,
+                padding: 10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 44,
+                height: 44
+              }}>
+                <Icon size={22} color="#fff" />
+              </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', marginBottom: 2 }}>
+                  {item.title}
+                </div>
+                <div style={{ fontSize: 10, color: '#64748b' }}>
+                  {item.desc}
+                </div>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

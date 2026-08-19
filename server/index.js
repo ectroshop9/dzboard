@@ -14,6 +14,7 @@ import requestRoutes from './routes/requests.js';
 import inventoryRoutes from './routes/inventory.js';
 import backupRoutes from './routes/backup.js';
 import botOrdersRoutes from './routes/botOrders.js';
+import chatLogsRoutes from './routes/chatLogs.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,6 +40,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 // Serve static files from dist
 app.use(express.static(path.join(__dirname, '../dist')));
+app.use('/api/chat-logs', chatLogsRoutes);
 
 // Catch-all route for SPA
 app.get('*', (req, res) => {
