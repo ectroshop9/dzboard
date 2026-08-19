@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Bot, X, Send, Wrench, Trash2 } from 'lucide-react';
+import { Bot, X, Send, Wrench, Trash2, Headphones } from 'lucide-react';
 import './ChatBot.css';
 
 const API = 'https://dzboard.onrender.com/api';
@@ -16,6 +16,7 @@ const BUTTON_STYLES = [
   { prefix: '🛡️', bg: '#dcfce7', color: '#15803d', border: '1px solid #86efac' },
   { prefix: '🔧', bg: '#f3e8ff', color: '#7e22ce', border: '1px solid #d8b4fe' },
   { prefix: '📞', bg: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' },
+  { prefix: '💬', bg: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5' },
   { prefix: '🔙', bg: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }
 ];
 
@@ -38,6 +39,7 @@ const WELCOME_MESSAGE = {
     '🔄 سياسة الإرجاع',
     '🛡️ الضمان',
     '🔧 طلب قطعة',
+    '💬 دردشة مباشرة',
     '📞 اتصل بنا'
   ]
 };
@@ -139,6 +141,19 @@ export default function ChatBot() {
     }
   };
 
+  // حفظ رسالة الدردشة المباشرة
+  const saveLiveChatMessage = async (message) => {
+    try {
+      await fetch(`${API}/live-chat/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, sender: 'customer' })
+      });
+    } catch (error) {
+      console.error('Error sending live chat message:', error);
+    }
+  };
+
   const showProducts = async (products) => {
     clearAllTimeouts();
     if (products.length === 0) {
@@ -198,6 +213,14 @@ export default function ChatBot() {
     setInput('');
 
     const lower = messageText.toLowerCase();
+
+    // حالة الدردشة المباشرة
+    if (awaitingState === 'live_chat') {
+      await saveLiveChatMessage(messageText);
+      await botTyping();
+      addMessage('bot', '📨 تم إرسال رسالتك للدعم.\n⏳ سنرد عليك في أقرب وقت ممكن.', null, ['💬 إرسال رسالة أخرى', '🔙 القائمة الرئيسية']);
+      return;
+    }
 
     // حالة طلب قطعة - اسم القطعة
     if (awaitingState === 'part_name') {
@@ -288,6 +311,22 @@ export default function ChatBot() {
       setAwaitingState('search');
       await botTyping();
       addMessage('bot', '🔍 من فضلك أرسل اسم القطعة أو الرقم التسلسلي:');
+      return;
+    }
+
+    // دردشة مباشرة
+    if (messageText.includes('دردشة مباشرة') || messageText.includes('تحدث مع الدعم') || messageText.includes('دعم')) {
+      setAwaitingState('live_chat');
+      await botTyping();
+      addMessage('bot', '💬 أنت الآن في وضع الدردشة المباشرة!\n\nاكتب رسالتك وسنرد عليك في أقرب وقت.', null, ['🔙 القائمة الرئيسية']);
+      return;
+    }
+
+    // إرسال رسالة أخرى
+    if (messageText.includes('إرسال رسالة أخرى')) {
+      setAwaitingState('live_chat');
+      await botTyping();
+      addMessage('bot', '💬 اكتب رسالتك:');
       return;
     }
 

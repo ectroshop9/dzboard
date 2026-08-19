@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RefreshCw, Loader2, Trash2, ArrowRight, MessageSquare } from 'lucide-react';
+import { Trash2, RefreshCw, Loader2, ArrowRight, MessageSquare, PhoneCall } from 'lucide-react';
 
 const API = 'https://dzboard.onrender.com/api';
 
@@ -24,6 +24,7 @@ export default function AdminChatLogsPage() {
       .then(data => {
         if (data.success) setLogs(data.logs || []);
       })
+      .catch(() => {})
       .finally(() => setLoading(false));
   };
 
@@ -41,10 +42,10 @@ export default function AdminChatLogsPage() {
       <main style={{ padding: 16, maxWidth: 800, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button onClick={() => navigate('/admin/orders-menu')} style={{ background: '#f1f5f9', border: 'none', borderRadius: 10, width: 40, height: 40, cursor: 'pointer' }}>
+            <button onClick={() => navigate('/admin/orders-menu')} style={{ background: '#f1f5f9', border: 'none', borderRadius: 10, width: 40, height: 40, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <ArrowRight size={20} />
             </button>
-            <h1 style={{ fontSize: 20, fontWeight: 900 }}>محادثات البوت 💬</h1>
+            <h1 style={{ fontSize: 20, fontWeight: 900, color: '#0f172a' }}>محادثات البوت 💬</h1>
           </div>
           <button onClick={fetchLogs} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '8px 12px', cursor: 'pointer' }}>
             <RefreshCw size={16} />

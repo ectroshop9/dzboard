@@ -25,6 +25,7 @@ import MobileBottomNav from './components/MobileBottomNav';
 import ChatBot from './components/ChatBot';
 import AdminChatLogsPage from './pages/AdminChatLogsPage';
 import AdminOrdersMenuPage from './pages/AdminOrdersMenuPage';
+import AdminLiveChatPage from './pages/AdminLiveChatPage';
 
 // مكون فرعي لإظهار الشريط السفلي فقط في صفحات الأدمن (باستثناء صفحة التسجيل)
 function LayoutWrapper({ children }) {
@@ -67,6 +68,7 @@ function App() {
           <Route path="/admin/requests" element={<AdminRequestsPage />} />
           <Route path="/admin/chat-logs" element={<AdminChatLogsPage />} />
           <Route path="/admin/orders-menu" element={<AdminOrdersMenuPage />} />
+          <Route path="/admin/live-chat" element={<AdminLiveChatPage />} />
 
         </Routes>
       </LayoutWrapper>
