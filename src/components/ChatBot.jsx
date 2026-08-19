@@ -1,42 +1,106 @@
-import { useState, useEffect, useRef } from 'react';
-import { Bot, X, Send, Package, Search, Truck, Phone, ShoppingBag, Wrench, CreditCard, Shield, RotateCcw, Clock } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Bot, X, Send, Wrench, Trash2 } from 'lucide-react';
 import './ChatBot.css';
 
 const API = 'https://dzboard.onrender.com/api';
 
+// خريطة أنماط الأزرار بحسب الرمز/النوع
+const BUTTON_STYLES = [
+  { prefix: '🛍️', bg: '#dbeafe', color: '#1d4ed8', border: '1px solid #93c5fd' },
+  { prefix: '🔍', bg: '#fef3c7', color: '#b45309', border: '1px solid #fcd34d' },
+  { prefix: '📦', bg: '#e0e7ff', color: '#4338ca', border: '1px solid #a5b4fc' },
+  { prefix: '📍', bg: '#d1fae5', color: '#047857', border: '1px solid #6ee7b7' },
+  { prefix: '🚚', bg: '#fce7f3', color: '#be185d', border: '1px solid #f9a8d4' },
+  { prefix: '💳', bg: '#cffafe', color: '#0e7490', border: '1px solid #67e8f9' },
+  { prefix: '🔄', bg: '#fef9c3', color: '#a16207', border: '1px solid #fde047' },
+  { prefix: '🛡️', bg: '#dcfce7', color: '#15803d', border: '1px solid #86efac' },
+  { prefix: '🔧', bg: '#f3e8ff', color: '#7e22ce', border: '1px solid #d8b4fe' },
+  { prefix: '📞', bg: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' },
+  { prefix: '🔙', bg: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }
+];
+
+const getButtonStyle = (btnText) => {
+  const match = BUTTON_STYLES.find(style => btnText.includes(style.prefix));
+  return match || { bg: '#3b82f6', color: '#fff', border: 'none' };
+};
+
+const WELCOME_MESSAGE = {
+  id: 'welcome',
+  type: 'bot',
+  text: '👋 أهلاً بك في DZBoard! كيف يمكنني مساعدتك؟',
+  buttons: [
+    '🛍️ تصفح المنتجات',
+    '🔍 البحث عن قطعة',
+    '📦 تتبع طلبك',
+    '📍 حساب التوصيل',
+    '🚚 مدة التوصيل',
+    '💳 طرق الدفع',
+    '🔄 سياسة الإرجاع',
+    '🛡️ الضمان',
+    '🔧 طلب قطعة',
+    '📞 اتصل بنا'
+  ]
+};
+
 export default function ChatBot() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { type: 'bot', text: '👋 أهلاً بك في DZBoard! كيف يمكنني مساعدتك؟', buttons: [
-      '🛍️ تصفح المنتجات', '🔍 البحث عن قطعة', '📦 تتبع طلبك', '📍 حساب التوصيل', 
-      '🚚 مدة التوصيل', '💳 طرق الدفع', '🔄 سياسة الإرجاع', '🛡️ الضمان',
-      '🔧 طلب قطعة', '📞 اتصل بنا'
-    ] }
-  ]);
+  const [messages, setMessages] = useState([WELCOME_MESSAGE]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
-  const [awaitingTrack, setAwaitingTrack] = useState(false);
-  const [awaitingSearch, setAwaitingSearch] = useState(false);
-  const [awaitingWilaya, setAwaitingWilaya] = useState(false);
+  const [awaitingState, setAwaitingState] = useState(null); // 'track' | 'search' | 'wilaya' | null
+
   const messagesEndRef = useRef(null);
+  const timeoutsRef = useRef([]);
+
+  const clearAllTimeouts = useCallback(() => {
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = [];
+  }, []);
+
+  // حفظ واستعادة المحادثة
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('dzboard_chat_history');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) setMessages(parsed);
+      }
+    } catch (e) {
+      console.error('Failed to load chat history', e);
+    }
+  }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    try {
+      localStorage.setItem('dzboard_chat_history', JSON.stringify(messages));
+    } catch (e) {
+      console.error('Failed to save chat history', e);
+    }
   }, [messages]);
 
-  const fetchProducts = async () => {
+  // التمرير التلقائي
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, typing]);
+
+  useEffect(() => () => clearAllTimeouts(), [clearAllTimeouts]);
+
+  const playNotificationSound = () => {
     try {
-      const res = await fetch(`${API}/products`);
-      const data = await res.json();
-      return data.products || [];
-    } catch (error) {
-      return [];
-    }
+      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdVtjanB5e35/jI2PkJGUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8AAA0MDRk=');
+      audio.volume = 0.3;
+      audio.play().catch(() => {});
+    } catch (e) {}
   };
 
-  const addMessage = (type, text, extra = null, buttons = null, specialButton = null) => {
-    setMessages(prev => [...prev, { type, text, extra, buttons, specialButton }]);
-  };
+  const addMessage = useCallback((type, text, extra = null, buttons = null, specialButton = null) => {
+    setMessages(prev => {
+      const newMsg = { id: Date.now() + Math.random(), type, text, extra, buttons, specialButton };
+      return [...prev.slice(-49), newMsg];
+    });
+
+    if (type === 'bot') playNotificationSound();
+  }, []);
 
   const botTyping = async (delay = 800) => {
     setTyping(true);
@@ -44,7 +108,19 @@ export default function ChatBot() {
     setTyping(false);
   };
 
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch(`${API}/products`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      return data.products || [];
+    } catch {
+      return [];
+    }
+  };
+
   const showProducts = async (products) => {
+    clearAllTimeouts();
     if (products.length === 0) {
       await botTyping();
       addMessage('bot', '❌ عذراً، لا توجد منتجات متاحة حالياً.', null, ['🔙 القائمة الرئيسية']);
@@ -53,100 +129,47 @@ export default function ChatBot() {
 
     await botTyping();
     addMessage('bot', `🛍️ وجدت ${products.length} منتج:`);
-    
+
     const chunk = products.slice(0, 5);
     chunk.forEach((p, i) => {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         addMessage('bot', null, {
+          id: p.id,
           name: p.name,
           price: p.price,
           stock: p.stock,
-          image: p.image,
-          id: p.id
+          image: p.image
         });
       }, (i + 1) * 600);
+      timeoutsRef.current.push(timer);
     });
 
-    setTimeout(() => {
+    const finalTimer = setTimeout(() => {
       addMessage('bot', 'هل تريد شيئاً آخر؟', null, ['🔍 البحث عن قطعة', '📍 حساب التوصيل', '🔙 القائمة الرئيسية']);
     }, (chunk.length + 1) * 600);
+    timeoutsRef.current.push(finalTimer);
   };
 
-  const searchProducts = async (query) => {
-    const products = await fetchProducts();
-    const normalized = query.toLowerCase().replace(/[^a-z0-9]/g, '');
-    
-    const found = products.filter(p => {
-      const name = (p.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const category = (p.category || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      return name.includes(normalized) || category.includes(normalized);
-    });
-
-    await showProducts(found);
-  };
-
-  const trackDHD = async (trackingNumber) => {
-    await botTyping();
-    try {
-      const res = await fetch(`${API}/shipping/track?tracking=${trackingNumber}`);
-      const data = await res.json();
-      
-      if (data.success && data.shipment) {
-        const s = data.shipment;
-        addMessage('bot', `📦 حالة الشحنة: ${trackingNumber}\n\n📊 الحالة: ${s.status || 'غير معروف'}\n📍 الموقع: ${s.location || 'غير متوفر'}`, null, ['🔙 القائمة الرئيسية']);
-      } else {
-        addMessage('bot', `🔗 يمكنك تتبع شحنتك من هنا:\n${window.location.origin}/track/${trackingNumber}`, null, ['🔙 القائمة الرئيسية']);
-      }
-    } catch (error) {
-      addMessage('bot', '❌ تعذر تتبع الشحنة حالياً.', null, ['🔙 القائمة الرئيسية']);
-    }
-  };
-
-  const trackOrder = async (orderId) => {
-    await botTyping();
-    
-    if (orderId.startsWith('DHD') || orderId.startsWith('dhd') || orderId.length > 10) {
-      await trackDHD(orderId);
-      return;
-    }
-    
-    addMessage('bot', `📦 رقم الطلب: #${orderId}`);
-    addMessage('bot', `🔗 يمكنك تتبع طلبك من هنا: ${window.location.origin}/track/${orderId}`, null, ['🔙 القائمة الرئيسية']);
-  };
-
-  const calculateShipping = async (wilayaId) => {
-    await botTyping();
+  // جلب تكلفة التوصيل من API
+  const fetchShippingFee = async (wilayaId) => {
     try {
       const res = await fetch(`${API}/shipping/fee?wilaya_id=${wilayaId}`);
       const data = await res.json();
-      
-      if (data.success && data.fees) {
-        addMessage('bot', `📍 تكلفة التوصيل للولاية ${wilayaId}:\n\n🏠 للمنزل: ${data.fees.domicile} دج\n🏢 للمكتب: ${data.fees.stopdesk} دج`, null, ['🔙 القائمة الرئيسية']);
-      } else {
-        addMessage('bot', '❌ عذراً، لم نتمكن من حساب التكلفة.', null, ['🔙 القائمة الرئيسية']);
-      }
-    } catch (error) {
-      addMessage('bot', '❌ حدث خطأ في الاتصال.', null, ['🔙 القائمة الرئيسية']);
+      return data;
+    } catch {
+      return null;
     }
   };
 
-  const showMainMenu = async () => {
-    setAwaitingTrack(false);
-    setAwaitingSearch(false);
-    setAwaitingWilaya(false);
-    await botTyping(500);
-    addMessage('bot', '👋 كيف يمكنني مساعدتك؟', null, [
-      '🛍️ تصفح المنتجات',
-      '🔍 البحث عن قطعة',
-      '📦 تتبع طلبك',
-      '📍 حساب التوصيل',
-      '🚚 مدة التوصيل',
-      '💳 طرق الدفع',
-      '🔄 سياسة الإرجاع',
-      '🛡️ الضمان',
-      '🔧 طلب قطعة',
-      '📞 اتصل بنا'
-    ]);
+  // تتبع شحنة DHD
+  const trackDHD = async (trackingNumber) => {
+    try {
+      const res = await fetch(`${API}/shipping/track?tracking=${trackingNumber}`);
+      const data = await res.json();
+      return data;
+    } catch {
+      return null;
+    }
   };
 
   const handleSend = async (text) => {
@@ -158,56 +181,86 @@ export default function ChatBot() {
 
     const lower = messageText.toLowerCase();
 
-    // حالات الانتظار
-    if (awaitingTrack) {
-      setAwaitingTrack(false);
-      await trackOrder(messageText.replace('#', ''));
-      return;
-    }
-
-    if (awaitingSearch) {
-      setAwaitingSearch(false);
+    // معالجة حالات المدخلات التفاعلية
+    if (awaitingState === 'track') {
+      setAwaitingState(null);
       await botTyping();
-      await searchProducts(messageText);
-      return;
-    }
-
-    if (awaitingWilaya) {
-      setAwaitingWilaya(false);
-      const wilayaId = parseInt(messageText);
-      if (wilayaId > 0 && wilayaId <= 58) {
-        await calculateShipping(wilayaId);
+      
+      // تجربة تتبع DHD
+      if (messageText.startsWith('DHD') || messageText.startsWith('dhd') || messageText.length > 10) {
+        const data = await trackDHD(messageText.replace('#', ''));
+        if (data && data.success && data.shipment) {
+          addMessage('bot', `📦 حالة الشحنة: ${messageText}\n\n📊 الحالة: ${data.shipment.status || 'غير معروف'}\n📍 الموقع: ${data.shipment.location || 'غير متوفر'}`, null, ['🔙 القائمة الرئيسية']);
+        } else {
+          addMessage('bot', `🔗 يمكنك تتبع شحنتك من هنا:\n${window.location.origin}/track/${messageText}`, null, ['🔙 القائمة الرئيسية']);
+        }
       } else {
-        addMessage('bot', '❌ رقم الولاية غير صحيح. جرب من 1 إلى 58', null, ['🔙 القائمة الرئيسية']);
+        addMessage('bot', `📦 يمكنك تتبع طلبك عبر الرابط التالي:\n${window.location.origin}/track/${messageText.replace('#', '')}`, null, ['🔙 القائمة الرئيسية']);
       }
       return;
     }
 
-    // تصفح المنتجات
+    if (awaitingState === 'search') {
+      setAwaitingState(null);
+      await botTyping();
+      const products = await fetchProducts();
+      const norm = messageText.toLowerCase().trim();
+      const found = products.filter(p => 
+        (p.name || '').toLowerCase().includes(norm) || 
+        (p.category || '').toLowerCase().includes(norm)
+      );
+      await showProducts(found);
+      return;
+    }
+
+    if (awaitingState === 'wilaya') {
+      setAwaitingState(null);
+      const id = parseInt(messageText, 10);
+      if (id >= 1 && id <= 58) {
+        await botTyping();
+        const data = await fetchShippingFee(id);
+        if (data && data.success && data.fees) {
+          addMessage('bot', `📍 تكلفة التوصيل للولاية ${id}:\n\n🏠 للمنزل: ${data.fees.domicile} دج\n🏢 للمكتب: ${data.fees.stopdesk} دج`, null, ['🔙 القائمة الرئيسية']);
+        } else {
+          addMessage('bot', '❌ عذراً، لم نتمكن من حساب التكلفة.', null, ['🔙 القائمة الرئيسية']);
+        }
+      } else {
+        await botTyping();
+        addMessage('bot', '❌ رقم الولاية غير صحيح. يرجى إدخال رقم بين 1 و 58.', null, ['🔙 القائمة الرئيسية']);
+      }
+      return;
+    }
+
+    // الأوامر الرئيسية
     if (messageText.includes('تصفح المنتجات')) {
       const products = await fetchProducts();
       await showProducts(products);
       return;
     }
 
-    // البحث عن قطعة
     if (messageText.includes('البحث عن قطعة')) {
-      setAwaitingSearch(true);
+      setAwaitingState('search');
       await botTyping();
       addMessage('bot', '🔍 من فضلك أرسل اسم القطعة أو الرقم التسلسلي:');
       return;
     }
 
-    // حساب التوصيل
+    if (messageText.includes('تتبع')) {
+      setAwaitingState('track');
+      await botTyping();
+      addMessage('bot', '📦 من فضلك أرسل رقم الطلب أو رقم التتبع (DHD):');
+      return;
+    }
+
     if (messageText.includes('حساب التوصيل')) {
-      setAwaitingWilaya(true);
+      setAwaitingState('wilaya');
       await botTyping();
       addMessage('bot', '📍 من فضلك أرسل رقم الولاية (مثال: 16 للجزائر العاصمة):');
       return;
     }
 
     // مدة التوصيل
-    if (messageText.includes('مدة التوصيل') || messageText.includes('مدة') && lower.includes('توصيل')) {
+    if (messageText.includes('مدة التوصيل')) {
       await botTyping();
       addMessage('bot', '🚚 مدة التوصيل:\n\n📍 الولايات الشمالية: 1-2 يوم\n📍 الولايات الوسطى: 2-3 أيام\n📍 الولايات الصحراوية وأقصى الجنوب: 2-4 أيام\n\n⚠️ قد تتأخر الشحنات في أوقات الذروة أو الأحوال الجوية السيئة.', null, ['📍 حساب التوصيل', '🔙 القائمة الرئيسية']);
       return;
@@ -246,14 +299,6 @@ export default function ChatBot() {
       return;
     }
 
-    // تتبع طلب
-    if (messageText.includes('تتبع طلبك') || messageText.includes('تتبع')) {
-      setAwaitingTrack(true);
-      await botTyping();
-      addMessage('bot', '📦 من فضلك أرسل رقم الطلب أو رقم التتبع (DHD):');
-      return;
-    }
-
     // اتصل بنا
     if (messageText.includes('اتصل بنا')) {
       await botTyping();
@@ -263,156 +308,88 @@ export default function ChatBot() {
 
     // القائمة الرئيسية
     if (messageText.includes('القائمة الرئيسية')) {
-      await showMainMenu();
+      clearAllTimeouts();
+      setAwaitingState(null);
+      await botTyping(400);
+      addMessage('bot', WELCOME_MESSAGE.text, null, WELCOME_MESSAGE.buttons);
       return;
     }
 
     // الترحيب
     if (['سلام', 'مرحبا', 'اهلا', 'السلام عليكم', 'صباح الخير', 'مساء الخير', 'hi', 'hello', 'salut', 'bonjour'].some(g => lower.includes(g))) {
-      await showMainMenu();
-      return;
-    }
-
-    // عرض المنتجات
-    if (lower.includes('منتج') || lower.includes('قطع') || lower.includes('كارت') || lower.includes('لوحة') || lower.includes('تغذية') || lower.includes('produit') || lower.includes('product')) {
-      const products = await fetchProducts();
-      await showProducts(products);
+      clearAllTimeouts();
+      setAwaitingState(null);
+      await botTyping(400);
+      addMessage('bot', WELCOME_MESSAGE.text, null, WELCOME_MESSAGE.buttons);
       return;
     }
 
     // بحث افتراضي
     await botTyping();
-    await searchProducts(messageText);
+    const products = await fetchProducts();
+    const norm = messageText.toLowerCase().trim();
+    const found = products.filter(p => 
+      (p.name || '').toLowerCase().includes(norm) || 
+      (p.category || '').toLowerCase().includes(norm)
+    );
+    await showProducts(found);
   };
 
-  const openProduct = (productId) => {
-    window.open(`/checkout?product=${productId}`, '_blank');
+  const clearChat = () => {
+    clearAllTimeouts();
+    setAwaitingState(null);
+    setMessages([WELCOME_MESSAGE]);
+    localStorage.removeItem('dzboard_chat_history');
   };
 
   return (
-    <>
+    <div dir="rtl" className="dzboard-chatbot-wrapper">
       <button
         onClick={() => setOpen(!open)}
         className="chatbot-toggle"
-        style={{
-          position: 'fixed',
-          bottom: 20,
-          left: 20,
-          width: 60,
-          height: 60,
-          borderRadius: '50%',
-          background: open ? '#ef4444' : '#3b82f6',
-          color: '#fff',
-          border: 'none',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-          zIndex: 9999,
-          transition: 'all 0.3s'
-        }}
+        aria-label="افتح الشات بوت"
       >
-        {open ? <X size={28} /> : <Bot size={28} />}
+        {open ? <X size={26} /> : <Bot size={26} />}
       </button>
 
       {open && (
-        <div className="chatbot-window" style={{
-          position: 'fixed',
-          bottom: 90,
-          left: 20,
-          width: 360,
-          maxWidth: '90vw',
-          height: 500,
-          maxHeight: '70vh',
-          background: '#fff',
-          borderRadius: 16,
-          boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
-          display: 'flex',
-          flexDirection: 'column',
-          zIndex: 9999,
-          overflow: 'hidden',
-          animation: 'slideUp 0.3s ease'
-        }}>
-          <div style={{
-            background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-            color: '#fff',
-            padding: '14px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10
-          }}>
+        <div className="chatbot-window">
+          {/* Header */}
+          <div className="chatbot-header">
             <Bot size={24} />
-            <div>
-              <div style={{ fontWeight: 900, fontSize: 15 }}>DZBoard Bot</div>
-              <div style={{ fontSize: 11, opacity: 0.9 }}>🟢 متصل الآن</div>
+            <div className="header-info">
+              <span className="bot-title">DZBoard Bot</span>
+              <span className="bot-status">🟢 متصل الآن</span>
             </div>
+            <button onClick={clearChat} className="clear-btn" title="مسح المحادثة">
+              <Trash2 size={14} />
+            </button>
           </div>
 
-          <div style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: 16,
-            background: '#f8fafc',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10
-          }}>
-            {messages.map((msg, i) => (
-              <div key={i}>
+          {/* Messages Body */}
+          <div className="chatbot-body">
+            {messages.map((msg) => (
+              <div key={msg.id || Math.random()} className="message-row">
                 {msg.type === 'bot' && msg.text && (
-                  <div style={{
-                    background: '#fff',
-                    border: '1px solid #e2e8f0',
-                    padding: '10px 14px',
-                    borderRadius: '12px 12px 12px 4px',
-                    maxWidth: '85%',
-                    fontSize: 13,
-                    whiteSpace: 'pre-line'
-                  }}>
-                    {msg.text}
-                  </div>
+                  <div className="msg-bubble bot">{msg.text}</div>
                 )}
-                
+
                 {msg.type === 'bot' && msg.extra && (
-                  <div style={{
-                    background: '#fff',
-                    border: '1px solid #e2e8f0',
-                    padding: 10,
-                    borderRadius: 12,
-                    maxWidth: '85%',
-                    display: 'flex',
-                    gap: 10,
-                    alignItems: 'center'
-                  }}>
-                    <img 
-                      src={msg.extra.image || '/default-product.jpg'} 
+                  <div className="product-card">
+                    <img
+                      src={msg.extra.image || '/default-product.jpg'}
                       alt={msg.extra.name}
-                      style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }}
-                      onError={(e) => e.target.src = '/default-product.jpg'}
+                      onError={(e) => (e.target.src = '/default-product.jpg')}
                     />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 800, fontSize: 13 }}>{msg.extra.name}</div>
-                      <div style={{ fontSize: 12, color: '#10b981', fontWeight: 700 }}>
-                        {parseFloat(msg.extra.price || 0).toLocaleString('en-US')} دج
+                    <div className="product-info">
+                      <div className="product-name">{msg.extra.name}</div>
+                      <div className="product-price">
+                        {parseFloat(msg.extra.price || 0).toLocaleString()} دج
                       </div>
-                      <div style={{ fontSize: 11, color: msg.extra.stock > 0 ? '#059669' : '#dc2626' }}>
+                      <div className={`product-stock ${msg.extra.stock > 0 ? 'in-stock' : 'out-stock'}`}>
                         {msg.extra.stock > 0 ? '✅ متوفر' : '❌ غير متوفر'}
                       </div>
-                      <button
-                        onClick={() => openProduct(msg.extra.id)}
-                        style={{
-                          marginTop: 6,
-                          padding: '4px 12px',
-                          background: '#3b82f6',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: 6,
-                          fontSize: 11,
-                          cursor: 'pointer',
-                          fontWeight: 700
-                        }}
-                      >
+                      <button onClick={() => window.open(`/checkout?product=${msg.extra.id}`, '_blank')}>
                         اطلب الآن
                       </button>
                     </div>
@@ -420,132 +397,57 @@ export default function ChatBot() {
                 )}
 
                 {msg.specialButton && (
-                  <button
-                    onClick={msg.specialButton.action}
-                    style={{
-                      padding: '12px 20px',
-                      background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: 20,
-                      fontSize: 14,
-                      cursor: 'pointer',
-                      fontWeight: 800,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      marginTop: 4,
-                      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
-                    }}
-                  >
+                  <button onClick={msg.specialButton.action} className="special-btn">
                     <Wrench size={18} />
                     {msg.specialButton.label}
                   </button>
                 )}
 
-                {msg.buttons && msg.buttons.length > 0 && (
-                  <div style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: 6,
-                    marginTop: 4
-                  }}>
-                    {msg.buttons.map((btn, bi) => (
-                      <button
-                        key={bi}
-                        onClick={() => handleSend(btn)}
-                        style={{
-                          padding: '8px 14px',
-                          background: '#3b82f6',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: 20,
-                          fontSize: 12,
-                          cursor: 'pointer',
-                          fontWeight: 700,
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        {btn}
-                      </button>
-                    ))}
+                {msg.buttons && (
+                  <div className="buttons-group">
+                    {msg.buttons.map((btn, bi) => {
+                      const style = getButtonStyle(btn);
+                      return (
+                        <button
+                          key={bi}
+                          onClick={() => handleSend(btn)}
+                          style={{
+                            backgroundColor: style.bg,
+                            color: style.color,
+                            border: style.border
+                          }}
+                        >
+                          {btn}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
 
                 {msg.type === 'user' && (
-                  <div style={{
-                    background: '#3b82f6',
-                    color: '#fff',
-                    padding: '10px 14px',
-                    borderRadius: '12px 12px 4px 12px',
-                    maxWidth: '85%',
-                    fontSize: 13,
-                    marginLeft: 'auto'
-                  }}>
-                    {msg.text}
-                  </div>
+                  <div className="msg-bubble user">{msg.text}</div>
                 )}
               </div>
             ))}
 
-            {typing && (
-              <div style={{
-                background: '#fff',
-                border: '1px solid #e2e8f0',
-                padding: '10px 14px',
-                borderRadius: '12px 12px 12px 4px',
-                maxWidth: 60,
-                fontSize: 18,
-                animation: 'pulse 1s infinite'
-              }}>
-                ...
-              </div>
-            )}
-
+            {typing && <div className="typing-indicator">...</div>}
             <div ref={messagesEndRef} />
           </div>
 
-          <div style={{
-            padding: 12,
-            borderTop: '1px solid #e2e8f0',
-            display: 'flex',
-            gap: 8,
-            background: '#fff'
-          }}>
+          {/* Footer Input */}
+          <div className="chatbot-footer">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend(input)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend(input)}
               placeholder="اكتب رسالتك..."
-              style={{
-                flex: 1,
-                padding: '10px 14px',
-                border: '1px solid #e2e8f0',
-                borderRadius: 20,
-                fontSize: 13,
-                outline: 'none'
-              }}
             />
-            <button
-              onClick={() => handleSend(input)}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: '50%',
-                background: '#3b82f6',
-                color: '#fff',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
+            <button onClick={() => handleSend(input)} aria-label="إرسال">
               <Send size={18} />
             </button>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
