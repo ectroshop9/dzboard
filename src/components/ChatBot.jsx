@@ -4,7 +4,7 @@ import './ChatBot.css';
 
 const API = 'https://dzboard.onrender.com/api';
 
-// خريطة أنماط الأزرار بحسب الرمز/النوع
+// خريطة أنماط الأزرار
 const BUTTON_STYLES = [
   { prefix: '🛍️', bg: '#dbeafe', color: '#1d4ed8', border: '1px solid #93c5fd' },
   { prefix: '🔍', bg: '#fef3c7', color: '#b45309', border: '1px solid #fcd34d' },
@@ -18,6 +18,7 @@ const BUTTON_STYLES = [
   { prefix: '📞', bg: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' },
   { prefix: '💬', bg: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5' },
   { prefix: '📘', bg: '#dbeafe', color: '#1d4ed8', border: '1px solid #93c5fd' },
+  { prefix: '❓', bg: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' },
   { prefix: '🔙', bg: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }
 ];
 
@@ -26,25 +27,38 @@ const getButtonStyle = (btnText) => {
   return match || { bg: '#3b82f6', color: '#fff', border: 'none' };
 };
 
-const WELCOME_MESSAGE = {
-  id: 'welcome',
+// ✅ قوائم منظمة
+const MAIN_MENU = {
+  id: 'main_menu',
   type: 'bot',
   text: '👋 أهلاً بك في DZBoard! كيف يمكنني مساعدتك؟',
   buttons: [
     '🛍️ تصفح المنتجات',
     '🔍 البحث عن قطعة',
     '📦 تتبع طلبك',
+    '💬 دردشة مباشرة',
+    '❓ مساعدة'
+  ]
+};
+
+const HELP_MENU = {
+  id: 'help_menu',
+  type: 'bot',
+  text: '❓ كيف يمكننا مساعدتك؟',
+  buttons: [
     '📍 حساب التوصيل',
     '🚚 مدة التوصيل',
     '💳 طرق الدفع',
     '🔄 سياسة الإرجاع',
     '🛡️ الضمان',
     '🔧 طلب قطعة',
-    '💬 دردشة مباشرة',
     '📘 صفحتنا على فيسبوك',
-    '📞 اتصل بنا'
+    '📞 اتصل بنا',
+    '🔙 القائمة الرئيسية'
   ]
 };
+
+const WELCOME_MESSAGE = MAIN_MENU;
 
 export default function ChatBot() {
   const [open, setOpen] = useState(false);
@@ -63,7 +77,6 @@ export default function ChatBot() {
     timeoutsRef.current = [];
   }, []);
 
-  // حفظ واستعادة المحادثة
   useEffect(() => {
     try {
       const saved = localStorage.getItem('dzboard_chat_history');
@@ -71,33 +84,26 @@ export default function ChatBot() {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) setMessages(parsed);
       }
-    } catch (e) {
-      console.error('Failed to load chat history', e);
-    }
+    } catch (e) {}
   }, []);
 
   useEffect(() => {
     try {
       localStorage.setItem('dzboard_chat_history', JSON.stringify(messages));
-    } catch (e) {
-      console.error('Failed to save chat history', e);
-    }
+    } catch (e) {}
   }, [messages]);
 
-  // التمرير التلقائي
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typing]);
 
   useEffect(() => () => clearAllTimeouts(), [clearAllTimeouts]);
 
-  // جلب ردود الأدمن كل 5 ثواني
   useEffect(() => {
     const fetchAdminReplies = async () => {
       try {
         const res = await fetch(`${API}/live-chat/admin-replies`);
         const data = await res.json();
-        
         if (data.success && data.replies && data.replies.length > 0) {
           data.replies.forEach(reply => {
             if (!shownReplies.includes(reply.id)) {
@@ -127,7 +133,6 @@ export default function ChatBot() {
       const newMsg = { id: Date.now() + Math.random(), type, text, extra, buttons, specialButton };
       return [...prev.slice(-49), newMsg];
     });
-
     if (type === 'bot') playNotificationSound();
   }, []);
 
@@ -153,12 +158,7 @@ export default function ChatBot() {
       const res = await fetch(`${API}/requests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customer_name: 'عميل البوت',
-          phone: phone,
-          part_name: partName,
-          notes: 'طلب من ChatBot'
-        })
+        body: JSON.stringify({ customer_name: 'عميل البوت', phone, part_name: partName, notes: 'طلب من ChatBot' })
       });
       return await res.json();
     } catch {
@@ -173,9 +173,7 @@ export default function ChatBot() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, sender: 'customer' })
       });
-    } catch (error) {
-      console.error('Error sending live chat message:', error);
-    }
+    } catch (error) {}
   };
 
   const showProducts = async (products) => {
@@ -185,26 +183,17 @@ export default function ChatBot() {
       addMessage('bot', '❌ عذراً، لا توجد منتجات متاحة حالياً.', null, ['🔙 القائمة الرئيسية']);
       return;
     }
-
     await botTyping();
     addMessage('bot', `🛍️ وجدت ${products.length} منتج:`);
-
     const chunk = products.slice(0, 5);
     chunk.forEach((p, i) => {
       const timer = setTimeout(() => {
-        addMessage('bot', null, {
-          id: p.id,
-          name: p.name,
-          price: p.price,
-          stock: p.stock,
-          image: p.image
-        });
+        addMessage('bot', null, { id: p.id, name: p.name, price: p.price, stock: p.stock, image: p.image });
       }, (i + 1) * 600);
       timeoutsRef.current.push(timer);
     });
-
     const finalTimer = setTimeout(() => {
-      addMessage('bot', 'هل تريد شيئاً آخر؟', null, ['🔍 البحث عن قطعة', '📍 حساب التوصيل', '🔙 القائمة الرئيسية']);
+      addMessage('bot', 'هل تريد شيئاً آخر؟', null, ['🔍 البحث عن قطعة', '❓ مساعدة', '🔙 القائمة الرئيسية']);
     }, (chunk.length + 1) * 600);
     timeoutsRef.current.push(finalTimer);
   };
@@ -212,21 +201,30 @@ export default function ChatBot() {
   const fetchShippingFee = async (wilayaId) => {
     try {
       const res = await fetch(`${API}/shipping/fee?wilaya_id=${wilayaId}`);
-      const data = await res.json();
-      return data;
-    } catch {
-      return null;
-    }
+      return await res.json();
+    } catch { return null; }
   };
 
   const trackDHD = async (trackingNumber) => {
     try {
       const res = await fetch(`${API}/shipping/track?tracking=${trackingNumber}`);
-      const data = await res.json();
-      return data;
-    } catch {
-      return null;
-    }
+      return await res.json();
+    } catch { return null; }
+  };
+
+  const showMainMenu = async () => {
+    clearAllTimeouts();
+    setAwaitingState(null);
+    setPendingPartName('');
+    await botTyping(400);
+    addMessage('bot', MAIN_MENU.text, null, MAIN_MENU.buttons);
+  };
+
+  const showHelpMenu = async () => {
+    clearAllTimeouts();
+    setAwaitingState(null);
+    await botTyping(400);
+    addMessage('bot', HELP_MENU.text, null, HELP_MENU.buttons);
   };
 
   const handleSend = async (text) => {
@@ -235,10 +233,21 @@ export default function ChatBot() {
 
     addMessage('user', messageText);
     setInput('');
-
     const lower = messageText.toLowerCase();
 
-    // حالة الدردشة المباشرة
+    // ✅ قائمة المساعدة
+    if (messageText.includes('مساعدة')) {
+      await showHelpMenu();
+      return;
+    }
+
+    // ✅ القائمة الرئيسية
+    if (messageText.includes('القائمة الرئيسية')) {
+      await showMainMenu();
+      return;
+    }
+
+    // حالات الانتظار
     if (awaitingState === 'live_chat') {
       await saveLiveChatMessage(messageText);
       await botTyping();
@@ -246,7 +255,6 @@ export default function ChatBot() {
       return;
     }
 
-    // حالة طلب قطعة - اسم القطعة
     if (awaitingState === 'part_name') {
       setPendingPartName(messageText);
       setAwaitingState('part_phone');
@@ -255,56 +263,46 @@ export default function ChatBot() {
       return;
     }
 
-    // حالة طلب قطعة - رقم الهاتف
     if (awaitingState === 'part_phone') {
       const phone = messageText;
       setAwaitingState(null);
       await botTyping();
-      
       const data = await savePartRequest(pendingPartName, phone);
-      
       if (data.success) {
         addMessage('bot', `✅ تم تسجيل طلبك بنجاح!\n\n🔧 القطعة: ${pendingPartName}\n📱 الهاتف: ${phone}\n\n📞 سنتحقق من توفرها ونتواصل معك قريباً.`, null, ['🔙 القائمة الرئيسية']);
       } else {
-        addMessage('bot', '❌ حدث خطأ في تسجيل طلبك. حاول مرة أخرى.', null, ['🔧 طلب قطعة', '🔙 القائمة الرئيسية']);
+        addMessage('bot', '❌ حدث خطأ في تسجيل طلبك.', null, ['🔧 طلب قطعة', '🔙 القائمة الرئيسية']);
       }
       setPendingPartName('');
       return;
     }
 
-    // حالة تتبع
     if (awaitingState === 'track') {
       setAwaitingState(null);
       await botTyping();
-      
       if (messageText.startsWith('DHD') || messageText.startsWith('dhd') || messageText.length > 10) {
         const data = await trackDHD(messageText.replace('#', ''));
         if (data && data.success && data.shipment) {
-          addMessage('bot', `📦 حالة الشحنة: ${messageText}\n\n📊 الحالة: ${data.shipment.status || 'غير معروف'}\n📍 الموقع: ${data.shipment.location || 'غير متوفر'}`, null, ['🔙 القائمة الرئيسية']);
+          addMessage('bot', `📦 حالة الشحنة: ${messageText}\n\n📊 الحالة: ${data.shipment.status || 'غير معروف'}`, null, ['🔙 القائمة الرئيسية']);
         } else {
-          addMessage('bot', `🔗 يمكنك تتبع شحنتك من هنا:\n${window.location.origin}/track/${messageText}`, null, ['🔙 القائمة الرئيسية']);
+          addMessage('bot', `🔗 تتبع شحنتك: ${window.location.origin}/track/${messageText}`, null, ['🔙 القائمة الرئيسية']);
         }
       } else {
-        addMessage('bot', `📦 يمكنك تتبع طلبك عبر الرابط التالي:\n${window.location.origin}/track/${messageText.replace('#', '')}`, null, ['🔙 القائمة الرئيسية']);
+        addMessage('bot', `📦 تتبع طلبك: ${window.location.origin}/track/${messageText.replace('#', '')}`, null, ['🔙 القائمة الرئيسية']);
       }
       return;
     }
 
-    // حالة بحث
     if (awaitingState === 'search') {
       setAwaitingState(null);
       await botTyping();
       const products = await fetchProducts();
       const norm = messageText.toLowerCase().trim();
-      const found = products.filter(p => 
-        (p.name || '').toLowerCase().includes(norm) || 
-        (p.category || '').toLowerCase().includes(norm)
-      );
+      const found = products.filter(p => (p.name || '').toLowerCase().includes(norm) || (p.category || '').toLowerCase().includes(norm));
       await showProducts(found);
       return;
     }
 
-    // حالة ولاية
     if (awaitingState === 'wilaya') {
       setAwaitingState(null);
       const id = parseInt(messageText, 10);
@@ -314,129 +312,32 @@ export default function ChatBot() {
         if (data && data.success && data.fees) {
           addMessage('bot', `📍 تكلفة التوصيل للولاية ${id}:\n\n🏠 للمنزل: ${data.fees.domicile} دج\n🏢 للمكتب: ${data.fees.stopdesk} دج`, null, ['🔙 القائمة الرئيسية']);
         } else {
-          addMessage('bot', '❌ عذراً، لم نتمكن من حساب التكلفة.', null, ['🔙 القائمة الرئيسية']);
+          addMessage('bot', '❌ لم نتمكن من حساب التكلفة.', null, ['🔙 القائمة الرئيسية']);
         }
       } else {
-        await botTyping();
-        addMessage('bot', '❌ رقم الولاية غير صحيح. يرجى إدخال رقم بين 1 و 58.', null, ['🔙 القائمة الرئيسية']);
+        addMessage('bot', '❌ رقم الولاية غير صحيح (1-58).', null, ['🔙 القائمة الرئيسية']);
       }
       return;
     }
 
-    // تصفح المنتجات
-    if (messageText.includes('تصفح المنتجات')) {
-      const products = await fetchProducts();
-      await showProducts(products);
-      return;
-    }
-
-    // البحث عن قطعة
-    if (messageText.includes('البحث عن قطعة')) {
-      setAwaitingState('search');
-      await botTyping();
-      addMessage('bot', '🔍 من فضلك أرسل اسم القطعة أو الرقم التسلسلي:');
-      return;
-    }
-
-    // دردشة مباشرة
-    if (messageText.includes('دردشة مباشرة') || messageText.includes('تحدث مع الدعم') || messageText.includes('دعم')) {
-      setAwaitingState('live_chat');
-      await botTyping();
-      addMessage('bot', '💬 أنت الآن في وضع الدردشة المباشرة!\n\nاكتب رسالتك وسنرد عليك في أقرب وقت.', null, ['🔙 القائمة الرئيسية']);
-      return;
-    }
-
-    // إرسال رسالة أخرى
-    if (messageText.includes('إرسال رسالة أخرى')) {
-      setAwaitingState('live_chat');
-      await botTyping();
-      addMessage('bot', '💬 اكتب رسالتك:');
-      return;
-    }
-
-    // ✅ فيسبوك
-    if (messageText.includes('فيسبوك') || messageText.includes('facebook')) {
-      await botTyping();
-      addMessage('bot', '📘 تابعنا على فيسبوك:\nhttps://www.facebook.com/DZBord', null, ['🔙 القائمة الرئيسية']);
-      return;
-    }
-
-    // تتبع طلب
-    if (messageText.includes('تتبع')) {
-      setAwaitingState('track');
-      await botTyping();
-      addMessage('bot', '📦 من فضلك أرسل رقم الطلب أو رقم التتبع (DHD):');
-      return;
-    }
-
-    // حساب التوصيل
-    if (messageText.includes('حساب التوصيل')) {
-      setAwaitingState('wilaya');
-      await botTyping();
-      addMessage('bot', '📍 من فضلك أرسل رقم الولاية (مثال: 16 للجزائر العاصمة):');
-      return;
-    }
-
-    // مدة التوصيل
-    if (messageText.includes('مدة التوصيل')) {
-      await botTyping();
-      addMessage('bot', '🚚 مدة التوصيل:\n\n📍 الولايات الشمالية: 1-2 يوم\n📍 الولايات الوسطى: 2-3 أيام\n📍 الولايات الصحراوية وأقصى الجنوب: 2-4 أيام\n\n⚠️ قد تتأخر الشحنات في أوقات الذروة أو الأحوال الجوية السيئة.', null, ['📍 حساب التوصيل', '🔙 القائمة الرئيسية']);
-      return;
-    }
-
-    // طرق الدفع
-    if (messageText.includes('طرق الدفع') || messageText.includes('الدفع') || messageText.includes('بريدي') || messageText.includes('موب')) {
-      await botTyping();
-      addMessage('bot', '💳 طرق الدفع المتاحة:\n\n1️⃣ الدفع عند الاستلام 💵\n   - ادفع للموزع عند وصول طلبك\n\n2️⃣ بريدي موب 📱\n   - الدفع الإلكتروني عبر تطبيق بريدي موب\n\n✅ نضمن لك عملية دفع آمنة وموثوقة.', null, ['🛍️ تصفح المنتجات', '🔙 القائمة الرئيسية']);
-      return;
-    }
-
-    // سياسة الإرجاع
-    if (messageText.includes('سياسة الإرجاع') || messageText.includes('ارجاع') || messageText.includes('إرجاع') || messageText.includes('استبدال')) {
-      await botTyping();
-      addMessage('bot', '🔄 سياسة الإرجاع:\n\n✅ يمكنك إرجاع المنتج خلال 7 أيام من الاستلام\n✅ يجب أن يكون المنتج في حالته الأصلية\n✅ مع التغليف الأصلي وجميع الملحقات\n\n❌ لا يمكن إرجاع:\n- المنتجات التي تم استخدامها\n- المنتجات المتضررة من سوء الاستخدام\n\n📞 للإرجاع، تواصل معنا وسنرشدك للخطوات.', null, ['📞 اتصل بنا', '🔙 القائمة الرئيسية']);
-      return;
-    }
-
-    // الضمان
-    if (messageText.includes('الضمان') || messageText.includes('ضمان')) {
-      await botTyping();
-      addMessage('bot', '🛡️ الضمان:\n\n✅ جميع منتجاتنا مضمونة\n\n📋 مدة الضمان:\n- الكروت الإلكترونية: 6 أشهر\n- لوحات التغذية: 6 أشهر\n- القطع الأخرى: حسب المنتج\n\n⚠️ الضمان لا يشمل:\n- التلف الناتج عن سوء الاستخدام\n- الكسر أو الحرق\n- العبث بالمنتج\n\n📞 للاستفادة من الضمان، تواصل معنا.', null, ['📞 اتصل بنا', '🔙 القائمة الرئيسية']);
-      return;
-    }
-
-    // طلب قطعة - بداية المحادثة
-    if (messageText.includes('طلب قطعة')) {
-      setAwaitingState('part_name');
-      await botTyping();
-      addMessage('bot', '🔧 من فضلك أرسل اسم القطعة التي تبحث عنها:');
-      return;
-    }
-
-    // اتصل بنا
-    if (messageText.includes('اتصل بنا')) {
-      await botTyping();
-      addMessage('bot', '📞 للتواصل معنا:\n📱 الهاتف: 0673310066\n📧 الإيميل: contact@dzboard.com', null, ['🔙 القائمة الرئيسية']);
-      return;
-    }
-
-    // القائمة الرئيسية
-    if (messageText.includes('القائمة الرئيسية')) {
-      clearAllTimeouts();
-      setAwaitingState(null);
-      setPendingPartName('');
-      await botTyping(400);
-      addMessage('bot', WELCOME_MESSAGE.text, null, WELCOME_MESSAGE.buttons);
-      return;
-    }
+    // الأوامر
+    if (messageText.includes('تصفح المنتجات')) { const products = await fetchProducts(); await showProducts(products); return; }
+    if (messageText.includes('البحث عن قطعة')) { setAwaitingState('search'); await botTyping(); addMessage('bot', '🔍 أرسل اسم القطعة أو الرقم التسلسلي:'); return; }
+    if (messageText.includes('تتبع')) { setAwaitingState('track'); await botTyping(); addMessage('bot', '📦 أرسل رقم الطلب أو التتبع:'); return; }
+    if (messageText.includes('حساب التوصيل')) { setAwaitingState('wilaya'); await botTyping(); addMessage('bot', '📍 أرسل رقم الولاية (1-58):'); return; }
+    if (messageText.includes('دردشة مباشرة') || messageText.includes('دعم')) { setAwaitingState('live_chat'); await botTyping(); addMessage('bot', '💬 اكتب رسالتك وسنرد عليك.'); return; }
+    if (messageText.includes('إرسال رسالة أخرى')) { setAwaitingState('live_chat'); await botTyping(); addMessage('bot', '💬 اكتب رسالتك:'); return; }
+    if (messageText.includes('فيسبوك') || messageText.includes('facebook')) { await botTyping(); addMessage('bot', '📘 تابعنا: https://www.facebook.com/DZBord', null, ['🔙 القائمة الرئيسية']); return; }
+    if (messageText.includes('مدة التوصيل')) { await botTyping(); addMessage('bot', '🚚 مدة التوصيل:\n\n📍 الشمال: 1-2 يوم\n📍 الوسط: 2-3 أيام\n📍 الجنوب: 2-4 أيام', null, ['🔙 القائمة الرئيسية']); return; }
+    if (messageText.includes('طرق الدفع') || messageText.includes('الدفع') || messageText.includes('بريدي')) { await botTyping(); addMessage('bot', '💳 طرق الدفع:\n\n1️⃣ الدفع عند الاستلام\n2️⃣ بريدي موب', null, ['🔙 القائمة الرئيسية']); return; }
+    if (messageText.includes('سياسة الإرجاع') || messageText.includes('ارجاع')) { await botTyping(); addMessage('bot', '🔄 الإرجاع خلال 7 أيام بحالة المنتج الأصلية.', null, ['🔙 القائمة الرئيسية']); return; }
+    if (messageText.includes('الضمان')) { await botTyping(); addMessage('bot', '🛡️ ضمان 6 أشهر على الكروت ولوحات التغذية.', null, ['🔙 القائمة الرئيسية']); return; }
+    if (messageText.includes('طلب قطعة')) { setAwaitingState('part_name'); await botTyping(); addMessage('bot', '🔧 أرسل اسم القطعة:'); return; }
+    if (messageText.includes('اتصل بنا')) { await botTyping(); addMessage('bot', '📞 الهاتف: 0673310066\n📧 الإيميل: contact@dzboard.com', null, ['🔙 القائمة الرئيسية']); return; }
 
     // الترحيب
-    if (['سلام', 'مرحبا', 'اهلا', 'السلام عليكم', 'صباح الخير', 'مساء الخير', 'hi', 'hello', 'salut', 'bonjour'].some(g => lower.includes(g))) {
-      clearAllTimeouts();
-      setAwaitingState(null);
-      setPendingPartName('');
-      await botTyping(400);
-      addMessage('bot', WELCOME_MESSAGE.text, null, WELCOME_MESSAGE.buttons);
+    if (['سلام', 'مرحبا', 'اهلا', 'السلام عليكم', 'hi', 'hello', 'salut'].some(g => lower.includes(g))) {
+      await showMainMenu();
       return;
     }
 
@@ -444,10 +345,7 @@ export default function ChatBot() {
     await botTyping();
     const products = await fetchProducts();
     const norm = messageText.toLowerCase().trim();
-    const found = products.filter(p => 
-      (p.name || '').toLowerCase().includes(norm) || 
-      (p.category || '').toLowerCase().includes(norm)
-    );
+    const found = products.filter(p => (p.name || '').toLowerCase().includes(norm) || (p.category || '').toLowerCase().includes(norm));
     await showProducts(found);
   };
 
@@ -462,11 +360,7 @@ export default function ChatBot() {
 
   return (
     <div dir="rtl" className="dzboard-chatbot-wrapper">
-      <button
-        onClick={() => setOpen(!open)}
-        className="chatbot-toggle"
-        aria-label="افتح الشات بوت"
-      >
+      <button onClick={() => setOpen(!open)} className="chatbot-toggle" aria-label="افتح الشات بوت">
         {open ? <X size={26} /> : <Bot size={26} />}
       </button>
 
@@ -486,80 +380,47 @@ export default function ChatBot() {
           <div className="chatbot-body">
             {messages.map((msg) => (
               <div key={msg.id || Math.random()} className="message-row">
-                {msg.type === 'bot' && msg.text && (
-                  <div className="msg-bubble bot">{msg.text}</div>
-                )}
-
+                {msg.type === 'bot' && msg.text && <div className="msg-bubble bot">{msg.text}</div>}
                 {msg.type === 'bot' && msg.extra && (
                   <div className="product-card">
-                    <img
-                      src={msg.extra.image || '/default-product.jpg'}
-                      alt={msg.extra.name}
-                      onError={(e) => (e.target.src = '/default-product.jpg')}
-                    />
+                    <img src={msg.extra.image || '/default-product.jpg'} alt={msg.extra.name} onError={(e) => (e.target.src = '/default-product.jpg')} />
                     <div className="product-info">
                       <div className="product-name">{msg.extra.name}</div>
-                      <div className="product-price">
-                        {parseFloat(msg.extra.price || 0).toLocaleString()} دج
-                      </div>
+                      <div className="product-price">{parseFloat(msg.extra.price || 0).toLocaleString()} دج</div>
                       <div className={`product-stock ${msg.extra.stock > 0 ? 'in-stock' : 'out-stock'}`}>
                         {msg.extra.stock > 0 ? '✅ متوفر' : '❌ غير متوفر'}
                       </div>
-                      <button onClick={() => window.open(`/checkout?product=${msg.extra.id}`, '_blank')}>
-                        اطلب الآن
-                      </button>
+                      <button onClick={() => window.open(`/checkout?product=${msg.extra.id}`, '_blank')}>اطلب الآن</button>
                     </div>
                   </div>
                 )}
-
                 {msg.specialButton && (
                   <button onClick={msg.specialButton.action} className="special-btn">
-                    <Wrench size={18} />
-                    {msg.specialButton.label}
+                    <Wrench size={18} /> {msg.specialButton.label}
                   </button>
                 )}
-
                 {msg.buttons && (
                   <div className="buttons-group">
                     {msg.buttons.map((btn, bi) => {
                       const style = getButtonStyle(btn);
                       return (
-                        <button
-                          key={bi}
-                          onClick={() => handleSend(btn)}
-                          style={{
-                            backgroundColor: style.bg,
-                            color: style.color,
-                            border: style.border
-                          }}
-                        >
+                        <button key={bi} onClick={() => handleSend(btn)} style={{ backgroundColor: style.bg, color: style.color, border: style.border }}>
                           {btn}
                         </button>
                       );
                     })}
                   </div>
                 )}
-
-                {msg.type === 'user' && (
-                  <div className="msg-bubble user">{msg.text}</div>
-                )}
+                {msg.type === 'user' && <div className="msg-bubble user">{msg.text}</div>}
               </div>
             ))}
-
             {typing && <div className="typing-indicator">...</div>}
             <div ref={messagesEndRef} />
           </div>
 
           <div className="chatbot-footer">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend(input)}
-              placeholder="اكتب رسالتك..."
-            />
-            <button onClick={() => handleSend(input)} aria-label="إرسال">
-              <Send size={18} />
-            </button>
+            <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend(input)} placeholder="اكتب رسالتك..." />
+            <button onClick={() => handleSend(input)} aria-label="إرسال"><Send size={18} /></button>
           </div>
         </div>
       )}
