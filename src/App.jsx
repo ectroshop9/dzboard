@@ -17,15 +17,14 @@ import CheckoutFormPage from './pages/CheckoutFormPage';
 import AdminRequestsPage from './pages/AdminRequestsPage';
 import AdminOrdersMenuPage from './pages/AdminOrdersMenuPage';
 import AdminBotOrdersPage from './pages/AdminBotOrdersPage';
+import AdminChatLogsPage from './pages/AdminChatLogsPage';
+import AdminLiveChatPage from './pages/AdminLiveChatPage';
 
 // استيراد الشريط السفلي
 import MobileBottomNav from './components/MobileBottomNav';
 
 // استيراد البوت
 import ChatBot from './components/ChatBot';
-import AdminChatLogsPage from './pages/AdminChatLogsPage';
-import AdminOrdersMenuPage from './pages/AdminOrdersMenuPage';
-import AdminLiveChatPage from './pages/AdminLiveChatPage';
 
 // مكون فرعي لإظهار الشريط السفلي فقط في صفحات الأدمن (باستثناء صفحة التسجيل)
 function LayoutWrapper({ children }) {
@@ -62,14 +61,12 @@ function App() {
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
           <Route path="/admin/orders-menu" element={<AdminOrdersMenuPage />} />
           <Route path="/admin/bot-orders" element={<AdminBotOrdersPage />} />
+          <Route path="/admin/chat-logs" element={<AdminChatLogsPage />} />
+          <Route path="/admin/live-chat" element={<AdminLiveChatPage />} />
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
           <Route path="/admin/scan" element={<AdminScanPage />} />
           <Route path="/admin/checkout-form" element={<CheckoutFormPage />} />
           <Route path="/admin/requests" element={<AdminRequestsPage />} />
-          <Route path="/admin/chat-logs" element={<AdminChatLogsPage />} />
-          <Route path="/admin/orders-menu" element={<AdminOrdersMenuPage />} />
-          <Route path="/admin/live-chat" element={<AdminLiveChatPage />} />
-
         </Routes>
       </LayoutWrapper>
     </BrowserRouter>
