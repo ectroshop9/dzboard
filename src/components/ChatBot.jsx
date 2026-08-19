@@ -7,11 +7,12 @@ const API = 'https://dzboard.onrender.com/api';
 export default function ChatBot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { type: 'bot', text: '👋 أهلاً بك في DZBoard! كيف يمكنني مساعدتك؟' }
+    { type: 'bot', text: '👋 أهلاً بك في DZBoard! كيف يمكنني مساعدتك؟', buttons: ['🛍️ تصفح المنتجات', '🔍 البحث عن قطعة', '📦 تتبع طلبك', '📞 اتصل بنا'] }
   ]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
   const [awaitingTrack, setAwaitingTrack] = useState(false);
+  const [awaitingSearch, setAwaitingSearch] = useState(false);
   const messagesEndRef = useRef(null);
 
   // Auto scroll
@@ -31,8 +32,8 @@ export default function ChatBot() {
   };
 
   // إضافة رسالة
-  const addMessage = (type, text, extra = null) => {
-    setMessages(prev => [...prev, { type, text, extra }]);
+  const addMessage = (type, text, extra = null, buttons = null) => {
+    setMessages(prev => [...prev, { type, text, extra, buttons }]);
   };
 
   // محاكاة الكتابة
@@ -46,7 +47,7 @@ export default function ChatBot() {
   const showProducts = async (products) => {
     if (products.length === 0) {
       await botTyping();
-      addMessage('bot', '❌ عذراً، لا توجد منتجات متاحة حالياً.');
+      addMessage('bot', '❌ عذراً، لا توجد منتجات متاحة حالياً.', null, ['🔙 القائمة الرئيسية']);
       return;
     }
 
@@ -65,6 +66,11 @@ export default function ChatBot() {
         });
       }, (i + 1) * 600);
     });
+
+    // إضافة أزرار بعد عرض المنتجات
+    setTimeout(() => {
+      addMessage('bot', 'هل تريد شيئاً آخر؟', null, ['🔍 البحث عن قطعة', '📦 تتبع طلبك', '🔙 القائمة الرئيسية']);
+    }, (chunk.length + 1) * 600);
   };
 
   // البحث عن منتج
@@ -85,60 +91,90 @@ export default function ChatBot() {
   const trackOrder = async (orderId) => {
     await botTyping();
     addMessage('bot', `📦 رقم الطلب: #${orderId}`);
-    addMessage('bot', `🔗 يمكنك تتبع طلبك من هنا: ${window.location.origin}/track/${orderId}`);
+    addMessage('bot', `🔗 يمكنك تتبع طلبك من هنا: ${window.location.origin}/track/${orderId}`, null, ['🔙 القائمة الرئيسية']);
   };
 
-  // معالجة الرسالة
-  const handleSend = async () => {
-    const text = input.trim();
-    if (!text) return;
+  // القائمة الرئيسية
+  const showMainMenu = async () => {
+    setAwaitingTrack(false);
+    setAwaitingSearch(false);
+    await botTyping(500);
+    addMessage('bot', '👋 كيف يمكنني مساعدتك؟', null, ['🛍️ تصفح المنتجات', '🔍 البحث عن قطعة', '📦 تتبع طلبك', '📞 اتصل بنا']);
+  };
 
-    addMessage('user', text);
+  // معالجة الرسالة أو الزر
+  const handleSend = async (text) => {
+    const messageText = text || input.trim();
+    if (!messageText) return;
+
+    addMessage('user', messageText);
     setInput('');
 
-    const lower = text.toLowerCase();
+    const lower = messageText.toLowerCase();
 
     // حالة انتظار رقم التتبع
     if (awaitingTrack) {
       setAwaitingTrack(false);
-      await trackOrder(text.replace('#', ''));
+      await trackOrder(messageText.replace('#', ''));
       return;
     }
 
-    // الترحيب
-    if (['سلام', 'مرحبا', 'اهلا', 'السلام عليكم', 'صباح الخير', 'مساء الخير', 'hi', 'hello', 'salut', 'bonjour'].some(g => lower.includes(g))) {
+    // حالة انتظار البحث
+    if (awaitingSearch) {
+      setAwaitingSearch(false);
       await botTyping();
-      addMessage('bot', '👋 أهلاً بك! أنا بوت DZBoard المساعد.');
-      addMessage('bot', 'يمكنني مساعدتك في:');
-      addMessage('bot', '🔍 البحث عن قطعة\n📦 تتبع طلبك\n🛍️ تصفح المنتجات\n📞 معلومات التواصل');
+      await searchProducts(messageText);
       return;
     }
 
-    // الأوامر
-    if (lower.includes('منتج') || lower.includes('قطع') || lower.includes('كارت') || lower.includes('لوحة') || lower.includes('تغذية') || lower.includes('produit') || lower.includes('product')) {
+    // الأزرار السريعة
+    if (messageText.includes('تصفح المنتجات')) {
       const products = await fetchProducts();
       await showProducts(products);
       return;
     }
 
-    // تتبع طلب
-    if (lower.includes('تتبع') || lower.includes('طلب') || lower.includes('track') || lower.includes('commande')) {
+    if (messageText.includes('البحث عن قطعة')) {
+      setAwaitingSearch(true);
+      await botTyping();
+      addMessage('bot', '🔍 من فضلك أرسل اسم القطعة أو الرقم التسلسلي:');
+      return;
+    }
+
+    if (messageText.includes('تتبع طلبك') || messageText.includes('تتبع')) {
       setAwaitingTrack(true);
       await botTyping();
       addMessage('bot', '📦 من فضلك أرسل رقم الطلب الخاص بك:');
       return;
     }
 
-    // اتصال
-    if (lower.includes('اتصال') || lower.includes('هاتف') || lower.includes('contact') || lower.includes('phone')) {
+    if (messageText.includes('اتصل بنا')) {
       await botTyping();
-      addMessage('bot', '📞 للتواصل معنا:\n📱 الهاتف: 0673310066\n📧 الإيميل: contact@dzboard.com');
+      addMessage('bot', '📞 للتواصل معنا:\n📱 الهاتف: 0673310066\n📧 الإيميل: contact@dzboard.com', null, ['🔙 القائمة الرئيسية']);
+      return;
+    }
+
+    if (messageText.includes('القائمة الرئيسية')) {
+      await showMainMenu();
+      return;
+    }
+
+    // الترحيب
+    if (['سلام', 'مرحبا', 'اهلا', 'السلام عليكم', 'صباح الخير', 'مساء الخير', 'hi', 'hello', 'salut', 'bonjour'].some(g => lower.includes(g))) {
+      await showMainMenu();
+      return;
+    }
+
+    // طلب عرض المنتجات
+    if (lower.includes('منتج') || lower.includes('قطع') || lower.includes('كارت') || lower.includes('لوحة') || lower.includes('تغذية') || lower.includes('produit') || lower.includes('product')) {
+      const products = await fetchProducts();
+      await showProducts(products);
       return;
     }
 
     // بحث افتراضي
     await botTyping();
-    await searchProducts(text);
+    await searchProducts(messageText);
   };
 
   // فتح رابط المنتج
@@ -280,6 +316,38 @@ export default function ChatBot() {
                   </div>
                 )}
 
+                {/* أزرار سريعة */}
+                {msg.buttons && msg.buttons.length > 0 && (
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 6,
+                    marginTop: 4
+                  }}>
+                    {msg.buttons.map((btn, bi) => (
+                      <button
+                        key={bi}
+                        onClick={() => handleSend(btn)}
+                        style={{
+                          padding: '8px 14px',
+                          background: '#3b82f6',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 20,
+                          fontSize: 12,
+                          cursor: 'pointer',
+                          fontWeight: 700,
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = '#1d4ed8'}
+                        onMouseLeave={(e) => e.target.style.background = '#3b82f6'}
+                      >
+                        {btn}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 {msg.type === 'user' && (
                   <div style={{
                     background: '#3b82f6',
@@ -324,7 +392,7 @@ export default function ChatBot() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              onKeyPress={(e) => e.key === 'Enter' && handleSend(input)}
               placeholder="اكتب رسالتك..."
               style={{
                 flex: 1,
@@ -336,7 +404,7 @@ export default function ChatBot() {
               }}
             />
             <button
-              onClick={handleSend}
+              onClick={() => handleSend(input)}
               style={{
                 width: 40,
                 height: 40,
