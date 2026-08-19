@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { 
-  ShoppingBag, FileText, ArrowLeft, MessageSquare
+  ShoppingBag, FileText, ArrowLeft, MessageSquare, Headphones
 } from 'lucide-react';
 
 export default function AdminOrdersMenuPage() {
@@ -27,6 +27,13 @@ export default function AdminOrdersMenuPage() {
       desc: 'أسئلة العملاء للبوت',
       color: '#10b981',
       path: '/admin/chat-logs'
+    },
+    {
+      icon: Headphones,
+      title: 'محادثة مباشرة',
+      desc: 'تحدث مع العملاء الآن',
+      color: '#ef4444',
+      path: '/admin/live-chat'
     }
   ];
 
@@ -120,9 +127,24 @@ export default function AdminOrdersMenuPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 width: 44,
-                height: 44
+                height: 44,
+                position: 'relative'
               }}>
                 <Icon size={22} color="#fff" />
+                {/* نقطة حمراء للمحادثة المباشرة */}
+                {item.path === '/admin/live-chat' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: -2,
+                    left: -2,
+                    width: 10,
+                    height: 10,
+                    background: '#22c55e',
+                    borderRadius: '50%',
+                    border: '2px solid #fff',
+                    animation: 'pulse 2s infinite'
+                  }} />
+                )}
               </div>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', marginBottom: 2 }}>
@@ -136,6 +158,13 @@ export default function AdminOrdersMenuPage() {
           );
         })}
       </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+      `}</style>
     </div>
   );
 }
