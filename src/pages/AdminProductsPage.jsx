@@ -245,14 +245,105 @@ export default function AdminProductsPage() {
     }
   };
 
+  // ✅ طباعة باركود واحد - تصميم احترافي
   const handlePrintBarcode = (product, barcodeCode) => {
     const code = barcodeCode || items.find(i => i.product_id === product.id)?.barcode || product.id;
-    const printWindow = window.open('', '_blank', 'width=500,height=500');
+    const printWindow = window.open('', '_blank', 'width=400,height=500');
     if (!printWindow) {
       showToast('المرجو السماح بالنوافذ المنبثقة', 'error');
       return;
     }
-    printWindow.document.write(`<!DOCTYPE html><html dir="rtl"><head><title>${product.name}</title><style>@page{size:auto;margin:0}body{font-family:system-ui;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#fff}.card{border:2px dashed #000;padding:16px;text-align:center;max-width:280px;border-radius:8px}.title{font-size:16px;font-weight:800;margin-bottom:8px;word-break:break-word}img{width:140px;height:140px}.code{font-size:12px;font-family:monospace;margin-top:4px}.price{font-size:15px;font-weight:700;margin-top:6px;border-top:1px solid #ddd;padding-top:4px}</style></head><body><div class="card"><div class="title">${product.name}</div><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${code}" /><div class="code">Barcode: ${code}</div><div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div></div><script>setTimeout(()=>{window.print();window.close()},500)</script></body></html>`);
+    printWindow.document.write(`<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <title>${product.name}</title>
+  <style>
+    @page { size: 80mm 100mm; margin: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Cairo', system-ui, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #f8fafc;
+      padding: 10mm;
+    }
+    .card {
+      background: #fff;
+      border: 2px solid #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      max-width: 60mm;
+      page-break-inside: avoid;
+    }
+    .store-name {
+      font-size: 14px;
+      font-weight: 900;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+    .store-phone {
+      font-size: 10px;
+      color: #64748b;
+      margin-bottom: 10px;
+    }
+    .product-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 10px;
+      word-break: break-word;
+      line-height: 1.3;
+    }
+    .qr-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    img {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+    }
+    .code {
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+      color: #334155;
+      margin-bottom: 8px;
+      word-break: break-all;
+      direction: ltr;
+    }
+    .price {
+      font-size: 16px;
+      font-weight: 900;
+      color: #d97706;
+      padding-top: 8px;
+      border-top: 1px dashed #cbd5e1;
+    }
+    .footer {
+      font-size: 9px;
+      color: #94a3b8;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="store-name">DZBoard Store</div>
+    <div class="store-phone">📱 0673310066</div>
+    <div class="product-name">${product.name}</div>
+    <div class="qr-container">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${code}&bgcolor=ffffff&color=000000" />
+    </div>
+    <div class="code">${code}</div>
+    <div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div>
+    <div class="footer">شكراً لثقتكم 🛒</div>
+  </div>
+  <script>setTimeout(()=>{window.print();window.close()},500)</script>
+</body>
+</html>`);
     printWindow.document.close();
   };
 
@@ -264,6 +355,7 @@ export default function AdminProductsPage() {
     );
   };
 
+  // ✅ طباعة باركودات محددة - تصميم موحد
   const handlePrintSelected = () => {
     if (selectedProducts.length === 0) {
       showToast('اختر منتجات للطباعة أولاً', 'error');
@@ -284,8 +376,9 @@ export default function AdminProductsPage() {
       const barcode = items.find(i => i.product_id === product.id)?.barcode || product.id;
       
       barcodesHTML += `
-        <div class="barcode-item">
-          <div class="title">${product.name}</div>
+        <div class="card">
+          <div class="store-name">DZBoard</div>
+          <div class="product-name">${product.name}</div>
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${barcode}" />
           <div class="code">${barcode}</div>
           <div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div>
@@ -297,26 +390,39 @@ export default function AdminProductsPage() {
       <!DOCTYPE html>
       <html dir="rtl">
         <head>
-          <title>طباعة الباركودات المحددة - ${selected.length} منتج</title>
+          <title>باركودات - ${selected.length} منتج</title>
           <style>
-            @page{size:auto;margin:10mm}
-            body{font-family:system-ui;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px}
-            .barcode-item{border:1px dashed #000;padding:10px;text-align:center;border-radius:8px;page-break-inside:avoid}
-            .title{font-size:12px;font-weight:800;margin-bottom:6px;word-break:break-word}
-            img{width:100px;height:100px}
-            .code{font-size:10px;font-family:monospace;margin-top:4px}
-            .price{font-size:12px;font-weight:bold;margin-top:4px;border-top:1px solid #ddd;padding-top:4px}
+            @page { size: A4; margin: 10mm; }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+              font-family: 'Cairo', system-ui, sans-serif;
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 10px;
+              padding: 10px;
+              background: #fff;
+            }
+            .card {
+              border: 1px solid #1e293b;
+              border-radius: 8px;
+              padding: 12px;
+              text-align: center;
+              page-break-inside: avoid;
+            }
+            .store-name { font-size: 10px; font-weight: 900; color: #0f172a; margin-bottom: 4px; }
+            .product-name { font-size: 11px; font-weight: 800; margin-bottom: 6px; word-break: break-word; }
+            img { width: 80px; height: 80px; }
+            .code { font-size: 8px; font-family: monospace; margin-top: 4px; direction: ltr; word-break: break-all; }
+            .price { font-size: 12px; font-weight: 900; color: #d97706; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #cbd5e1; }
             @media print {
-              body{grid-template-columns:repeat(3,1fr)}
-              .barcode-item{page-break-inside:avoid}
+              body { grid-template-columns: repeat(3, 1fr); }
+              .card { page-break-inside: avoid; }
             }
           </style>
         </head>
         <body>
           ${barcodesHTML}
-          <script>
-            setTimeout(()=>{window.print();window.close()},1000)
-          </script>
+          <script>setTimeout(()=>{window.print();window.close()},1000)</script>
         </body>
       </html>
     `);
@@ -324,6 +430,7 @@ export default function AdminProductsPage() {
     setSelectedProducts([]);
   };
 
+  // ✅ طباعة كل الباركودات
   const handlePrintAllBarcodes = () => {
     if (!products.length) {
       showToast('لا توجد منتجات للطباعة', 'error');
@@ -342,8 +449,9 @@ export default function AdminProductsPage() {
       const barcode = items.find(i => i.product_id === product.id)?.barcode || product.id;
       
       barcodesHTML += `
-        <div class="barcode-item">
-          <div class="title">${product.name}</div>
+        <div class="card">
+          <div class="store-name">DZBoard</div>
+          <div class="product-name">${product.name}</div>
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${barcode}" />
           <div class="code">${barcode}</div>
           <div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div>
@@ -357,24 +465,37 @@ export default function AdminProductsPage() {
         <head>
           <title>جميع الباركودات - ${products.length} منتج</title>
           <style>
-            @page{size:auto;margin:10mm}
-            body{font-family:system-ui;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px}
-            .barcode-item{border:1px dashed #000;padding:10px;text-align:center;border-radius:8px;page-break-inside:avoid}
-            .title{font-size:12px;font-weight:800;margin-bottom:6px;word-break:break-word}
-            img{width:100px;height:100px}
-            .code{font-size:10px;font-family:monospace;margin-top:4px}
-            .price{font-size:12px;font-weight:bold;margin-top:4px;border-top:1px solid #ddd;padding-top:4px}
+            @page { size: A4; margin: 10mm; }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+              font-family: 'Cairo', system-ui, sans-serif;
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 10px;
+              padding: 10px;
+              background: #fff;
+            }
+            .card {
+              border: 1px solid #1e293b;
+              border-radius: 8px;
+              padding: 12px;
+              text-align: center;
+              page-break-inside: avoid;
+            }
+            .store-name { font-size: 10px; font-weight: 900; color: #0f172a; margin-bottom: 4px; }
+            .product-name { font-size: 11px; font-weight: 800; margin-bottom: 6px; word-break: break-word; }
+            img { width: 80px; height: 80px; }
+            .code { font-size: 8px; font-family: monospace; margin-top: 4px; direction: ltr; word-break: break-all; }
+            .price { font-size: 12px; font-weight: 900; color: #d97706; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #cbd5e1; }
             @media print {
-              body{grid-template-columns:repeat(3,1fr)}
-              .barcode-item{page-break-inside:avoid}
+              body { grid-template-columns: repeat(3, 1fr); }
+              .card { page-break-inside: avoid; }
             }
           </style>
         </head>
         <body>
           ${barcodesHTML}
-          <script>
-            setTimeout(()=>{window.print();window.close()},1000)
-          </script>
+          <script>setTimeout(()=>{window.print();window.close()},1000)</script>
         </body>
       </html>
     `);
