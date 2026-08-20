@@ -226,7 +226,6 @@ export default function AdminProductsPage() {
     }
   };
 
-  // إخفاء/إظهار المنتج - تم الإصلاح
   const toggleVisibility = async (product) => {
     const newActive = product.active === false ? true : false;
     
@@ -249,6 +248,10 @@ export default function AdminProductsPage() {
   const handlePrintBarcode = (product, barcodeCode) => {
     const code = barcodeCode || items.find(i => i.product_id === product.id)?.barcode || product.id;
     const printWindow = window.open('', '_blank', 'width=500,height=500');
+    if (!printWindow) {
+      showToast('المرجو السماح بالنوافذ المنبثقة', 'error');
+      return;
+    }
     printWindow.document.write(`<!DOCTYPE html><html dir="rtl"><head><title>${product.name}</title><style>@page{size:auto;margin:0}body{font-family:system-ui;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#fff}.card{border:2px dashed #000;padding:16px;text-align:center;max-width:280px;border-radius:8px}.title{font-size:16px;font-weight:800;margin-bottom:8px;word-break:break-word}img{width:140px;height:140px}.code{font-size:12px;font-family:monospace;margin-top:4px}.price{font-size:15px;font-weight:700;margin-top:6px;border-top:1px solid #ddd;padding-top:4px}</style></head><body><div class="card"><div class="title">${product.name}</div><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${code}" /><div class="code">Barcode: ${code}</div><div class="price">${(parseFloat(product.price)||0).toLocaleString('en-US')} دج</div></div><script>setTimeout(()=>{window.print();window.close()},500)</script></body></html>`);
     printWindow.document.close();
   };
@@ -270,6 +273,10 @@ export default function AdminProductsPage() {
     const selected = products.filter(p => selectedProducts.includes(p.id));
     
     const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+      showToast('المرجو السماح بالنوافذ المنبثقة', 'error');
+      return;
+    }
     
     let barcodesHTML = '';
     
@@ -314,7 +321,6 @@ export default function AdminProductsPage() {
       </html>
     `);
     printWindow.document.close();
-    
     setSelectedProducts([]);
   };
 
@@ -325,6 +331,10 @@ export default function AdminProductsPage() {
     }
     
     const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+      showToast('المرجو السماح بالنوافذ المنبثقة', 'error');
+      return;
+    }
     
     let barcodesHTML = '';
     
@@ -550,9 +560,15 @@ export default function AdminProductsPage() {
                       <button onClick={() => toggleVisibility(product)} className="btn btn-ghost btn-sm" title={isVisible ? 'إخفاء' : 'إظهار'} style={{ color: isVisible ? '#10b981' : '#f59e0b' }}>
                         {isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
                       </button>
-                      <button onClick={() => handlePrintBarcode(product, barcode)} className="btn btn-ghost btn-sm" title="طباعة">🖨️</button>
-                      <button onClick={() => handleOpenEdit(product)} className="btn btn-ghost btn-sm" style={{ color: '#2563eb' }}><Edit3 size={14} /></button>
-                      <button onClick={() => handleDelete(product.id)} className="btn btn-ghost btn-sm" style={{ color: '#ef4444' }}><Trash2 size={14} /></button>
+                      <button onClick={() => handlePrintBarcode(product, barcode)} className="btn btn-ghost btn-sm" title="طباعة" style={{ color: '#059669' }}>
+                        <Printer size={16} />
+                      </button>
+                      <button onClick={() => handleOpenEdit(product)} className="btn btn-ghost btn-sm" style={{ color: '#2563eb' }}>
+                        <Edit3 size={14} />
+                      </button>
+                      <button onClick={() => handleDelete(product.id)} className="btn btn-ghost btn-sm" style={{ color: '#ef4444' }}>
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -562,7 +578,6 @@ export default function AdminProductsPage() {
         )}
       </div>
 
-      {/* Zoom Modal */}
       {zoomedImage && (
         <div 
           onClick={() => setZoomedImage(null)}
