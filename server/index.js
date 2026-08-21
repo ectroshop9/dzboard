@@ -23,7 +23,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({ origin: ['https://dzboard.vercel.app', 'http://localhost:5173'], credentials: true }));
+app.use(cors({ origin: ['https://dzboard.vercel.app', 'https://serialcotv.onrender.com', 'http://localhost:5173'], credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(morgan('combined'));
 
