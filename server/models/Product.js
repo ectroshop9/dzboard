@@ -13,7 +13,6 @@ export default {
     const { data } = await supabase.from('products').select('*').eq('id', id).single()
     return data
   },
-  // ✅ دالة فحص التكرار - أضفتها فقط
   getByName: async (name) => {
     const { data } = await supabase
       .from('products')
@@ -30,8 +29,24 @@ export default {
     const { data } = await supabase.from('products').update(product).eq('id', id).select().single()
     return data
   },
+  // ✅ دالة الحذف المصححة
   delete: async (id) => {
-    await supabase.from('products').delete().eq('id', id)
-    return true
+    try {
+      // 1. حذف عناصر المخزون المرتبطة بالمنتج
+      await supabase.from('inventory_items').delete().eq('product_id', id);
+      
+      // 2. حذف المنتج
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      
+      if (error) {
+        console.error('Delete error:', error);
+        return false;
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('Delete exception:', err);
+      return false;
+    }
   },
 }
