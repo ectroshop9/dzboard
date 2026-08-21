@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, ChevronLeft, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, Download } from 'lucide-react';
+import { Search, ChevronLeft, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, Download, Plus, Minus } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function StorePage() {
@@ -10,6 +10,7 @@ export default function StorePage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
+  const [quantities, setQuantities] = useState({}); // ✅ الكميات المختارة
 
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
@@ -26,17 +27,7 @@ export default function StorePage() {
   const searchInProduct = (product, query) => {
     if (!query) return true;
     const q = query.toLowerCase().trim();
-    const fields = [
-      product.name,
-      product.title,
-      product.description,
-      product.category,
-      product.brand,
-      product.model,
-      product.serial_number,
-      product.code,
-      product.sku
-    ];
+    const fields = [product.name, product.title, product.description, product.category, product.brand, product.model, product.serial_number, product.code, product.sku];
     const text = fields.filter(Boolean).join(' ').toLowerCase();
     return text.includes(q);
   };
@@ -57,23 +48,17 @@ export default function StorePage() {
     let isMounted = true;
     setLoading(true);
 
-    // ✅ جلب كل المنتجات دائماً
     api.getProducts()
       .then(data => {
         if (isMounted) {
           if (data && data.success) {
             let filtered = [...(data.products || [])];
-            
-            // ✅ فلترة محلية حسب التصنيف
             if (selectedCategory !== 'all') {
               filtered = filtered.filter(p => p.category === selectedCategory);
             }
-            
-            // ✅ البحث المحلي
             if (debouncedQuery) {
               filtered = filtered.filter(p => searchInProduct(p, debouncedQuery));
             }
-            
             setProducts(filtered);
           } else {
             setProducts([]);
@@ -82,7 +67,6 @@ export default function StorePage() {
         }
       })
       .catch((err) => {
-        console.error('Error fetching products:', err);
         if (isMounted) {
           setProducts([]);
           setLoading(false);
@@ -92,11 +76,23 @@ export default function StorePage() {
     return () => { isMounted = false; };
   }, [selectedCategory, debouncedQuery]);
 
+  // ✅ تغيير الكمية
+  const changeQuantity = (productId, delta) => {
+    e.stopPropagation();
+    setQuantities(prev => {
+      const current = prev[productId] || 1;
+      const max = products.find(p => p.id === productId)?.stock || 1;
+      const newQty = Math.max(1, Math.min(current + delta, max));
+      return { ...prev, [productId]: newQty };
+    });
+  };
+
   const handleBuyNow = (e, product) => {
     e.stopPropagation();
+    const qty = quantities[product.id] || 1;
     navigate('/checkout', {
       state: {
-        items: [{ id: product.id, name: product.name || product.title, price: product.price, quantity: 1, image: product.image }]
+        items: [{ id: product.id, name: product.name || product.title, price: product.price, quantity: qty, image: product.image }]
       }
     });
   };
@@ -116,7 +112,7 @@ export default function StorePage() {
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', system-ui, sans-serif", paddingBottom: 40 }}>
       
-      {/* الهيدر العلوي */}
+      {/* الهيدر */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '10px 12px', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
@@ -150,7 +146,7 @@ export default function StorePage() {
           </button>
         </div>
 
-        {/* ✅ شريط التصنيفات - في الوسط */}
+        {/* التصنيفات في الوسط */}
         <div style={{ 
           maxWidth: 1100, 
           margin: '8px auto 0', 
@@ -218,11 +214,7 @@ export default function StorePage() {
           <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, textAlign: 'center', padding: '48px 16px' }}>
             <Package size={44} style={{ color: '#cbd5e1', marginBottom: 12 }} />
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#334155', margin: 0 }}>لم يتم العثور على قطع متطابقة</h3>
-            <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 4, marginBottom: 16 }}>جرب تغيير عبارات البحث</p>
-            <button
-              onClick={handleClearFilters}
-              style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
-            >
+            <button onClick={handleClearFilters} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', marginTop: 12 }}>
               عرض جميع القطع
             </button>
           </div>
@@ -236,11 +228,13 @@ export default function StorePage() {
               const numericPrice = parseFloat(product.price) || 0;
               const isAvailable = product.stock !== false && product.stock !== 0;
               const hasUpdate = product.update_url && product.update_url.trim() !== '';
+              const isParts = product.category === 'parts'; // ✅ فقط قطع الغيار
+              const qty = quantities[product.id] || 1;
 
               return (
                 <div
                   key={product.id}
-                  onClick={() => navigate('/checkout', { state: { items: [{ id: product.id, name: product.name, price: product.price, quantity: 1, image: product.image }] } })}
+                  onClick={() => navigate('/checkout', { state: { items: [{ id: product.id, name: product.name, price: product.price, quantity: qty, image: product.image }] } })}
                   style={{
                     background: '#fff',
                     border: '1px solid #e2e8f0',
@@ -282,7 +276,7 @@ export default function StorePage() {
                   }}>
                     <img
                       src={product.image || 'https://via.placeholder.com/200?text=لا+توجد+صورة'}
-                      alt={product.name || product.title}
+                      alt={product.name}
                       style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 6 }}
                       onError={(e) => { e.target.src = 'https://via.placeholder.com/200?text=صورة+غير+متاحة'; }}
                     />
@@ -293,55 +287,33 @@ export default function StorePage() {
                       <h2 style={{ fontSize: 13, fontWeight: 700, margin: '0 0 4px 0', color: '#0f172a', lineHeight: 1.3 }}>
                         {product.name || product.title}
                       </h2>
-                      <p style={{ fontSize: 11, color: '#64748b', margin: 0, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {product.description || 'قطعة غيار إلكترونية'}
-                      </p>
                     </div>
+
+                    {/* ✅ الكمية لقطع الغيار فقط */}
+                    {isParts && isAvailable && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
+                        <button onClick={() => changeQuantity(product.id, -1)} style={{ width: 28, height: 28, borderRadius: 6, background: '#f1f5f9', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                          <Minus size={14} />
+                        </button>
+                        <span style={{ fontSize: 14, fontWeight: 800, minWidth: 30, textAlign: 'center' }}>{qty}</span>
+                        <button onClick={() => changeQuantity(product.id, 1)} style={{ width: 28, height: 28, borderRadius: 6, background: '#f1f5f9', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                    )}
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: 6, borderTop: '1px dashed #f1f5f9', flexWrap: 'wrap', gap: 4 }}>
                       <span style={{ fontSize: 13, fontWeight: 800, color: '#d97706' }}>
-                        {numericPrice.toLocaleString('en-US')} <span style={{ fontSize: 10 }}>دج</span>
+                        {(numericPrice * qty).toLocaleString('en-US')} <span style={{ fontSize: 10 }}>دج</span>
                       </span>
 
                       <div style={{ display: 'flex', gap: 4 }}>
                         {hasUpdate && (
-                          <button
-                            onClick={(e) => handleDownloadUpdate(e, product)}
-                            style={{
-                              padding: '6px 10px',
-                              background: '#3b82f6',
-                              color: '#fff',
-                              border: 'none',
-                              borderRadius: 6,
-                              fontWeight: 700,
-                              fontSize: 11,
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 4
-                            }}
-                          >
+                          <button onClick={(e) => handleDownloadUpdate(e, product)} style={{ padding: '6px 10px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                             <Download size={13} /> تحديث
                           </button>
                         )}
-
-                        <button
-                          onClick={(e) => handleBuyNow(e, product)}
-                          disabled={!isAvailable}
-                          style={{
-                            padding: '6px 10px',
-                            background: isAvailable ? '#f59e0b' : '#cbd5e1',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: 6,
-                            fontWeight: 700,
-                            fontSize: 11,
-                            cursor: isAvailable ? 'pointer' : 'not-allowed',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4
-                          }}
-                        >
+                        <button onClick={(e) => handleBuyNow(e, product)} disabled={!isAvailable} style={{ padding: '6px 10px', background: isAvailable ? '#f59e0b' : '#cbd5e1', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 11, cursor: isAvailable ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: 4 }}>
                           <ShoppingCart size={13} /> {isAvailable ? 'شراء' : 'نفد'}
                         </button>
                       </div>
