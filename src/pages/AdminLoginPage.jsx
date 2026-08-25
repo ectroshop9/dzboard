@@ -14,34 +14,34 @@ export default function AdminLoginPage() {
   const [attempts, setAttempts] = useState(0);
   const recaptchaRef = useRef(null);
 
-  // ✅ تحميل سكربت reCAPTCHA
+  // ✅ تحميل سكربت reCAPTCHA v2 Invisible
   useEffect(() => {
     if (!RECAPTCHA_SITE_KEY) return;
+
+    window.onSubmitRecaptcha = () => {
+      handleLogin(new Event('submit'));
+    };
 
     const scriptId = 'recaptcha-script';
     if (!document.getElementById(scriptId)) {
       const script = document.createElement('script');
       script.id = scriptId;
-      script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
+      script.src = `https://www.google.com/recaptcha/api.js`;
       script.async = true;
+      script.defer = true;
       document.body.appendChild(script);
     }
   }, []);
 
-  // ✅ الحصول على توكن reCAPTCHA
-  const getRecaptchaToken = async () => {
-    if (!RECAPTCHA_SITE_KEY || !window.grecaptcha) return '';
+  // ✅ تنفيذ reCAPTCHA v2 Invisible
+  const executeRecaptcha = () => {
+    if (!RECAPTCHA_SITE_KEY || !window.grecaptcha) return;
     
-    return new Promise((resolve) => {
-      window.grecaptcha.ready(async () => {
-        try {
-          const token = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'login' });
-          resolve(token);
-        } catch {
-          resolve('');
-        }
-      });
-    });
+    try {
+      window.grecaptcha.execute();
+    } catch {
+      // تجاهل
+    }
   };
 
   const handleLogin = async (e) => {
@@ -59,8 +59,8 @@ export default function AdminLoginPage() {
     setLoading(true); 
     setError('');
     try {
-      // ✅ جلب توكن reCAPTCHA
-      const recaptchaToken = await getRecaptchaToken();
+      // ✅ الحصول على توكن reCAPTCHA v2
+      const recaptchaToken = window.grecaptcha ? window.grecaptcha.getResponse() : '';
 
       const data = await api.adminLogin(username, password, recaptchaToken);
       if (data && data.success) {
@@ -76,6 +76,9 @@ export default function AdminLoginPage() {
         setError(remaining > 0 
           ? `${data?.message || 'بيانات الدخول غير صحيحة'} - محاولات متبقية: ${remaining}` 
           : 'تم حظر المحاولات - انتظر 15 دقيقة');
+        
+        // ✅ إعادة تعيين reCAPTCHA
+        if (window.grecaptcha) window.grecaptcha.reset();
       }
     } catch { 
       setAttempts(prev => prev + 1);
@@ -153,6 +156,16 @@ export default function AdminLoginPage() {
               style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
             />
           </div>
+
+          {/* ✅ حقل reCAPTCHA v2 Invisible */}
+          <div 
+            ref={recaptchaRef}
+            className="g-recaptcha"
+            data-sitekey={RECAPTCHA_SITE_KEY}
+            data-size="invisible"
+            data-callback="onSubmitRecaptcha"
+            style={{ display: 'none' }}
+          ></div>
 
           <button 
             type="submit" 
