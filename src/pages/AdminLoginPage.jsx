@@ -44,10 +44,6 @@ export default function AdminLoginPage() {
     // ✅ الحصول على توكن reCAPTCHA
     const recaptchaToken = window.grecaptcha ? window.grecaptcha.getResponse() : '';
     
-    if (!recaptchaToken) {
-      setError('الرجاء التأكيد أنك لست روبوت');
-      return;
-    }
 
     setLoading(true); 
     setError('');
@@ -149,9 +145,6 @@ export default function AdminLoginPage() {
           {/* ✅ reCAPTCHA v2 Checkbox - يظهر */}
           <div 
             ref={recaptchaRef}
-            className="g-recaptcha"
-            data-sitekey={RECAPTCHA_SITE_KEY}
-          ></div>
 
           <button 
             type="submit" 
