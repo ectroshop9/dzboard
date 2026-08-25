@@ -14,13 +14,9 @@ export default function AdminLoginPage() {
   const [attempts, setAttempts] = useState(0);
   const recaptchaRef = useRef(null);
 
-  // ✅ تحميل سكربت reCAPTCHA v2 Invisible
+  // ✅ تحميل سكربت reCAPTCHA v2
   useEffect(() => {
     if (!RECAPTCHA_SITE_KEY) return;
-
-    window.onSubmitRecaptcha = () => {
-      handleLogin(new Event('submit'));
-    };
 
     const scriptId = 'recaptcha-script';
     if (!document.getElementById(scriptId)) {
@@ -32,17 +28,6 @@ export default function AdminLoginPage() {
       document.body.appendChild(script);
     }
   }, []);
-
-  // ✅ تنفيذ reCAPTCHA v2 Invisible
-  const executeRecaptcha = () => {
-    if (!RECAPTCHA_SITE_KEY || !window.grecaptcha) return;
-    
-    try {
-      window.grecaptcha.execute();
-    } catch {
-      // تجاهل
-    }
-  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -56,12 +41,17 @@ export default function AdminLoginPage() {
       return;
     }
 
+    // ✅ الحصول على توكن reCAPTCHA
+    const recaptchaToken = window.grecaptcha ? window.grecaptcha.getResponse() : '';
+    
+    if (!recaptchaToken) {
+      setError('الرجاء التأكيد أنك لست روبوت');
+      return;
+    }
+
     setLoading(true); 
     setError('');
     try {
-      // ✅ الحصول على توكن reCAPTCHA v2
-      const recaptchaToken = window.grecaptcha ? window.grecaptcha.getResponse() : '';
-
       const data = await api.adminLogin(username, password, recaptchaToken);
       if (data && data.success) {
         const tokenData = {
@@ -77,7 +67,6 @@ export default function AdminLoginPage() {
           ? `${data?.message || 'بيانات الدخول غير صحيحة'} - محاولات متبقية: ${remaining}` 
           : 'تم حظر المحاولات - انتظر 15 دقيقة');
         
-        // ✅ إعادة تعيين reCAPTCHA
         if (window.grecaptcha) window.grecaptcha.reset();
       }
     } catch { 
@@ -157,14 +146,11 @@ export default function AdminLoginPage() {
             />
           </div>
 
-          {/* ✅ حقل reCAPTCHA v2 Invisible */}
+          {/* ✅ reCAPTCHA v2 Checkbox - يظهر */}
           <div 
             ref={recaptchaRef}
             className="g-recaptcha"
             data-sitekey={RECAPTCHA_SITE_KEY}
-            data-size="invisible"
-            data-callback="onSubmitRecaptcha"
-            style={{ display: 'none' }}
           ></div>
 
           <button 
