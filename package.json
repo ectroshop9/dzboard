@@ -13,6 +13,7 @@
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
     "@supabase/supabase-js": "^2.112.2",
+    "axios": "^1.19.0",
     "cloudinary": "^2.10.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

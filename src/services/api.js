@@ -16,7 +16,14 @@ export const api = {
   createOrder: (data) => fetch(`${API_BASE}/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
   getOrders: () => fetch(`${API_BASE}/orders`, { headers: headers() }).then(r => r.json()),
   updateOrderStatus: (id, status) => fetch(`${API_BASE}/orders/${id}/status`, { method: 'PUT', headers: headers(), body: JSON.stringify({ status }) }).then(r => r.json()),
-  adminLogin: (username, password) => fetch(`${API_BASE}/admin/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) }).then(r => r.json()),
+  
+  // ✅ تم التعديل - إضافة recaptchaToken
+  adminLogin: (username, password, recaptchaToken = '') => fetch(`${API_BASE}/admin/login`, { 
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/json' }, 
+    body: JSON.stringify({ username, password, recaptchaToken }) 
+  }).then(r => r.json()),
+  
   verifyAdmin: () => fetch(`${API_BASE}/admin/verify`, { headers: headers() }).then(r => r.json()),
   adminLogout: () => localStorage.removeItem('dzboard_admin_token'),
 };

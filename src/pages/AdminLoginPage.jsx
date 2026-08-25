@@ -1,7 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Loader2, Shield, ArrowRight } from 'lucide-react';
 import { api } from '../services/api';
+
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
+
+declare global {
+  interface Window {
+    grecaptcha: any;
+  }
+}
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();
@@ -10,8 +18,39 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [attempts, setAttempts] = useState(0);
+  const recaptchaRef = useRef<any>(null);
 
-  const handleLogin = async (e) => {
+  // ✅ تحميل سكربت reCAPTCHA
+  useEffect(() => {
+    if (!RECAPTCHA_SITE_KEY) return;
+
+    const scriptId = 'recaptcha-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  // ✅ الحصول على توكن reCAPTCHA
+  const getRecaptchaToken = async (): Promise<string> => {
+    if (!RECAPTCHA_SITE_KEY || !window.grecaptcha) return '';
+    
+    return new Promise((resolve) => {
+      window.grecaptcha.ready(async () => {
+        try {
+          const token = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'login' });
+          resolve(token);
+        } catch {
+          resolve('');
+        }
+      });
+    });
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) { 
       setError('الرجاء إدخال اسم المستخدم وكلمة المرور'); 
@@ -26,12 +65,14 @@ export default function AdminLoginPage() {
     setLoading(true); 
     setError('');
     try {
-      const data = await api.adminLogin(username, password);
+      // ✅ جلب توكن reCAPTCHA
+      const recaptchaToken = await getRecaptchaToken();
+
+      const data = await api.adminLogin(username, password, recaptchaToken);
       if (data && data.success) {
-        // ✅ حفظ مع تاريخ انتهاء
         const tokenData = {
           token: data.token,
-          expires: Date.now() + (24 * 60 * 60 * 1000) // 24 ساعة
+          expires: Date.now() + (24 * 60 * 60 * 1000)
         };
         localStorage.setItem('dzboard_admin_token', JSON.stringify(tokenData));
         navigate('/admin/dashboard');
@@ -49,7 +90,6 @@ export default function AdminLoginPage() {
     setLoading(false);
   };
 
-  // ✅ التحقق من انتهاء التوكن عند تحميل الصفحة
   const checkTokenExpiry = () => {
     const tokenData = localStorage.getItem('dzboard_admin_token');
     if (tokenData) {
@@ -67,13 +107,12 @@ export default function AdminLoginPage() {
     return false;
   };
 
-  // ✅ التحقق عند فتح الصفحة
-  useState(() => {
+  useEffect(() => {
     const token = localStorage.getItem('dzboard_admin_token');
     if (token && !checkTokenExpiry()) {
       navigate('/admin/dashboard');
     }
-  });
+  }, [navigate]);
 
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: "system-ui, -apple-system, sans-serif" }}>
@@ -81,7 +120,6 @@ export default function AdminLoginPage() {
       
       <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 20, padding: '40px 28px', maxWidth: 420, width: '100%', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)' }}>
         
-        {/* Header Icon & Title */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{ background: '#eff6ff', color: '#2563eb', margin: '0 auto 16px auto', width: 64, height: 64, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Shield size={32} />
@@ -90,14 +128,12 @@ export default function AdminLoginPage() {
           <p style={{ color: '#64748b', fontSize: 13, margin: 0, fontWeight: 600 }}>DZBoard Administration</p>
         </div>
 
-        {/* Error Alert */}
         {error && (
           <div style={{ background: '#fef2f2', color: '#dc2626', padding: '10px 14px', borderRadius: 10, marginBottom: 18, textAlign: 'center', fontSize: 13, border: '1px solid #fecaca', fontWeight: 600 }}>
             {error}
           </div>
         )}
 
-        {/* Form */}
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>اسم المستخدم</label>
@@ -150,7 +186,6 @@ export default function AdminLoginPage() {
           </button>
         </form>
 
-        {/* Footer Navigation */}
         <div style={{ textAlign: 'center', marginTop: 20 }}>
           <button 
             onClick={() => navigate('/')} 
