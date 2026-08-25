@@ -20,7 +20,7 @@ const BLOCK_DURATION = 15 * 60 * 1000; // 15 دقيقة
 async function verifyRecaptcha(token) {
   try {
     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-    if (!secretKey) return true; // ✅ إذا لم يوجد مفتاح - اسمح بالدخول
+    if (!secretKey || !token) return true; // ✅ إذا لم يوجد مفتاح - اسمح بالدخول
 
     const res = await axios.post(
       'https://www.google.com/recaptcha/api/siteverify',
