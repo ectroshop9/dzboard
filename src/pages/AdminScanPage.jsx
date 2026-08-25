@@ -7,7 +7,7 @@ const API = import.meta.env.VITE_API_URL || 'https://dzboard.onrender.com/api';
 
 export default function AdminScanPage() {
   const navigate = useNavigate();
-  const token = localStorage.getItem('dzboard_admin_token');
+  const tokenData = localStorage.getItem('dzboard_admin_token'); const token = (() => { try { return JSON.parse(tokenData).token; } catch { return tokenData; } })();
   
   const [scanning, setScanning] = useState(false);
   const [loading, setLoading] = useState(false);

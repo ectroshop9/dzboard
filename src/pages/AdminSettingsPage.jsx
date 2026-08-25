@@ -9,7 +9,7 @@ const API = 'https://dzboard.onrender.com/api';
 
 export default function AdminSettingsPage() {
   const navigate = useNavigate();
-  const token = localStorage.getItem('dzboard_admin_token');
+  const tokenData = localStorage.getItem('dzboard_admin_token'); const token = (() => { try { return JSON.parse(tokenData).token; } catch { return tokenData; } })();
   
   // حالة تغيير كلمة المرور
   const [currentPassword, setCurrentPassword] = useState('');

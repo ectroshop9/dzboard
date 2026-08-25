@@ -88,7 +88,7 @@ export default function AdminLoginPage() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('dzboard_admin_token');
+    const tokenData = localStorage.getItem('dzboard_admin_token'); const token = (() => { try { return JSON.parse(tokenData).token; } catch { return tokenData; } })();
     if (token && !checkTokenExpiry()) {
       navigate('/admin/dashboard');
     }

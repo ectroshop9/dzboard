@@ -6,7 +6,7 @@ const API = 'https://dzboard.onrender.com/api';
 
 export default function AdminLiveChatPage() {
   const navigate = useNavigate();
-  const token = localStorage.getItem('dzboard_admin_token');
+  const tokenData = localStorage.getItem('dzboard_admin_token'); const token = (() => { try { return JSON.parse(tokenData).token; } catch { return tokenData; } })();
   const [conversations, setConversations] = useState({});
   const [selectedSession, setSelectedSession] = useState(null);
   const [input, setInput] = useState('');
