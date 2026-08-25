@@ -9,6 +9,7 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [attempts, setAttempts] = useState(0);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -17,21 +18,62 @@ export default function AdminLoginPage() {
       return; 
     }
 
+    if (attempts >= 5) {
+      setError('تم حظر المحاولات - انتظر 15 دقيقة');
+      return;
+    }
+
     setLoading(true); 
     setError('');
     try {
       const data = await api.adminLogin(username, password);
       if (data && data.success) {
-        localStorage.setItem('dzboard_admin_token', data.token);
+        // ✅ حفظ مع تاريخ انتهاء
+        const tokenData = {
+          token: data.token,
+          expires: Date.now() + (24 * 60 * 60 * 1000) // 24 ساعة
+        };
+        localStorage.setItem('dzboard_admin_token', JSON.stringify(tokenData));
         navigate('/admin/dashboard');
       } else {
-        setError(data?.message || 'بيانات الدخول غير صحيحة');
+        setAttempts(prev => prev + 1);
+        const remaining = 5 - (attempts + 1);
+        setError(remaining > 0 
+          ? `${data?.message || 'بيانات الدخول غير صحيحة'} - محاولات متبقية: ${remaining}` 
+          : 'تم حظر المحاولات - انتظر 15 دقيقة');
       }
     } catch { 
+      setAttempts(prev => prev + 1);
       setError('حدث خطأ أثناء الاتصال بالخادم'); 
     }
     setLoading(false);
   };
+
+  // ✅ التحقق من انتهاء التوكن عند تحميل الصفحة
+  const checkTokenExpiry = () => {
+    const tokenData = localStorage.getItem('dzboard_admin_token');
+    if (tokenData) {
+      try {
+        const parsed = JSON.parse(tokenData);
+        if (parsed.expires && Date.now() > parsed.expires) {
+          localStorage.removeItem('dzboard_admin_token');
+          return true;
+        }
+      } catch {
+        localStorage.removeItem('dzboard_admin_token');
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // ✅ التحقق عند فتح الصفحة
+  useState(() => {
+    const token = localStorage.getItem('dzboard_admin_token');
+    if (token && !checkTokenExpiry()) {
+      navigate('/admin/dashboard');
+    }
+  });
 
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: "system-ui, -apple-system, sans-serif" }}>
@@ -65,7 +107,7 @@ export default function AdminLoginPage() {
               value={username} 
               onChange={e => setUsername(e.target.value)} 
               autoFocus 
-              disabled={loading}
+              disabled={loading || attempts >= 5}
               style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
             />
           </div>
@@ -77,34 +119,34 @@ export default function AdminLoginPage() {
               placeholder="••••••••" 
               value={password} 
               onChange={e => setPassword(e.target.value)} 
-              disabled={loading}
+              disabled={loading || attempts >= 5}
               style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
             />
           </div>
 
           <button 
             type="submit" 
-            disabled={loading} 
+            disabled={loading || attempts >= 5} 
             style={{ 
               width: '100%', 
               padding: '14px', 
-              background: loading ? '#94a3b8' : '#2563eb', 
+              background: (loading || attempts >= 5) ? '#94a3b8' : '#2563eb', 
               color: '#fff', 
               border: 'none', 
               borderRadius: 12, 
               fontSize: 15, 
               fontWeight: 800, 
-              cursor: loading ? 'not-allowed' : 'pointer', 
+              cursor: (loading || attempts >= 5) ? 'not-allowed' : 'pointer', 
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center', 
               gap: 8, 
               marginTop: 8,
-              boxShadow: loading ? 'none' : '0 4px 12px rgba(37, 99, 235, 0.25)'
+              boxShadow: (loading || attempts >= 5) ? 'none' : '0 4px 12px rgba(37, 99, 235, 0.25)'
             }}
           >
             {loading ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Lock size={18} />}
-            {loading ? 'جاري الدخول...' : 'تسجيل الدخول'}
+            {loading ? 'جاري الدخول...' : attempts >= 5 ? 'محظور مؤقتاً' : 'تسجيل الدخول'}
           </button>
         </form>
 
