@@ -5,12 +5,6 @@ import { api } from '../services/api';
 
 const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
 
-declare global {
-  interface Window {
-    grecaptcha: any;
-  }
-}
-
 export default function AdminLoginPage() {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
@@ -18,7 +12,7 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [attempts, setAttempts] = useState(0);
-  const recaptchaRef = useRef<any>(null);
+  const recaptchaRef = useRef(null);
 
   // ✅ تحميل سكربت reCAPTCHA
   useEffect(() => {
@@ -35,7 +29,7 @@ export default function AdminLoginPage() {
   }, []);
 
   // ✅ الحصول على توكن reCAPTCHA
-  const getRecaptchaToken = async (): Promise<string> => {
+  const getRecaptchaToken = async () => {
     if (!RECAPTCHA_SITE_KEY || !window.grecaptcha) return '';
     
     return new Promise((resolve) => {
@@ -50,7 +44,7 @@ export default function AdminLoginPage() {
     });
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (!username || !password) { 
       setError('الرجاء إدخال اسم المستخدم وكلمة المرور'); 
