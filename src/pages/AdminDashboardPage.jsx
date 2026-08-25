@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingBag, QrCode, TrendingUp, Clock, Loader2, AlertCircle, Users, Truck, Bot, Percent } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, QrCode, TrendingUp, Clock, Loader2, AlertCircle, Users, Truck, Bot, Percent, LogOut } from 'lucide-react';
 
 const API = 'https://dzboard.onrender.com/api';
 
@@ -29,11 +29,9 @@ export default function AdminDashboardPage() {
       const orders = o.orders || [];
       const botOrders = b.orders || [];
       
-      // حساب الإحصائيات
       const deliveredOrders = orders.filter(x => x.status === 'delivered').length;
       const deliveryRate = orders.length > 0 ? Math.round((deliveredOrders / orders.length) * 100) : 0;
       
-      // عدد العملاء الفريدين (من الطلبات العادية + طلبات البوت)
       const regularCustomers = [...new Set(orders.map(x => x.phone || x.customer).filter(Boolean))];
       const botCustomers = botOrders.map(x => x.phone).filter(Boolean);
       const allCustomers = new Set([...regularCustomers, ...botCustomers]);
@@ -54,6 +52,12 @@ export default function AdminDashboardPage() {
     }).finally(() => setLoading(false));
   };
 
+  // ✅ تسجيل الخروج
+  const handleLogout = () => {
+    localStorage.removeItem('dzboard_admin_token');
+    navigate('/admin');
+  };
+
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
       <Loader2 size={36} className="spin" />
@@ -65,16 +69,17 @@ export default function AdminDashboardPage() {
       <main style={{ padding: 16, maxWidth: 1200, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h1 style={{ fontSize: 20, fontWeight: 900, color: '#0f172a' }}>لوحة التحكم</h1>
+          {/* ✅ زر تسجيل الخروج بدل تحديث */}
           <button 
-            onClick={loadData}
+            onClick={handleLogout}
             style={{ 
               display: 'flex', alignItems: 'center', gap: 6, 
-              padding: '8px 16px', background: '#3b82f6', color: '#fff', 
+              padding: '8px 16px', background: '#ef4444', color: '#fff', 
               border: 'none', borderRadius: 8, cursor: 'pointer', 
               fontSize: 13, fontWeight: 700 
             }}
           >
-            <QrCode size={16} /> تحديث
+            <LogOut size={16} /> تسجيل الخروج
           </button>
         </div>
         
