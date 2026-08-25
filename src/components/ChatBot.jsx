@@ -116,9 +116,9 @@ export default function ChatBot() {
     };
 
     fetchAdminReplies();
-    const interval = setInterval(fetchAdminReplies, 5000);
+    const interval = setInterval(fetchAdminReplies, 15000);
     return () => clearInterval(interval);
-  }, [shownReplies]);
+  }, [shownReplies, open]);
 
   const playNotificationSound = () => {
     try {
