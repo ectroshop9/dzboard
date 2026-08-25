@@ -14,7 +14,6 @@ export default function AdminLoginPage() {
   const [attempts, setAttempts] = useState(0);
   const recaptchaRef = useRef(null);
 
-  // ✅ تحميل سكربت reCAPTCHA v2
   useEffect(() => {
     if (!RECAPTCHA_SITE_KEY) return;
 
@@ -43,7 +42,6 @@ export default function AdminLoginPage() {
 
     // ✅ الحصول على توكن reCAPTCHA
     const recaptchaToken = window.grecaptcha ? window.grecaptcha.getResponse() : '';
-    
 
     setLoading(true); 
     setError('');
@@ -142,9 +140,12 @@ export default function AdminLoginPage() {
             />
           </div>
 
-          {/* ✅ reCAPTCHA v2 Checkbox - يظهر */}
+          {/* ✅ reCAPTCHA v2 */}
           <div 
             ref={recaptchaRef}
+            className="g-recaptcha"
+            data-sitekey={RECAPTCHA_SITE_KEY}
+          ></div>
 
           <button 
             type="submit" 
