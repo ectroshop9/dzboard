@@ -4,7 +4,6 @@ import './ChatBot.css';
 
 const API = 'https://dzboard.onrender.com/api';
 
-// خريطة أنماط الأزرار
 const BUTTON_STYLES = [
   { prefix: '🛍️', bg: '#dbeafe', color: '#1d4ed8', border: '1px solid #93c5fd' },
   { prefix: '🔍', bg: '#fef3c7', color: '#b45309', border: '1px solid #fcd34d' },
@@ -27,7 +26,6 @@ const getButtonStyle = (btnText) => {
   return match || { bg: '#3b82f6', color: '#fff', border: 'none' };
 };
 
-// ✅ قوائم منظمة
 const MAIN_MENU = {
   id: 'main_menu',
   type: 'bot',
@@ -99,7 +97,10 @@ export default function ChatBot() {
 
   useEffect(() => () => clearAllTimeouts(), [clearAllTimeouts]);
 
+  // ✅ جلب ردود الأدمن - فقط عند فتح البوت + كل 15 ثانية
   useEffect(() => {
+    if (!open) return;
+
     const fetchAdminReplies = async () => {
       try {
         const res = await fetch(`${API}/live-chat/admin-replies`);
@@ -235,19 +236,16 @@ export default function ChatBot() {
     setInput('');
     const lower = messageText.toLowerCase();
 
-    // ✅ قائمة المساعدة
     if (messageText.includes('مساعدة')) {
       await showHelpMenu();
       return;
     }
 
-    // ✅ القائمة الرئيسية
     if (messageText.includes('القائمة الرئيسية')) {
       await showMainMenu();
       return;
     }
 
-    // حالات الانتظار
     if (awaitingState === 'live_chat') {
       await saveLiveChatMessage(messageText);
       await botTyping();
@@ -320,7 +318,6 @@ export default function ChatBot() {
       return;
     }
 
-    // الأوامر
     if (messageText.includes('تصفح المنتجات')) { const products = await fetchProducts(); await showProducts(products); return; }
     if (messageText.includes('البحث عن قطعة')) { setAwaitingState('search'); await botTyping(); addMessage('bot', '🔍 أرسل اسم القطعة أو الرقم التسلسلي:'); return; }
     if (messageText.includes('تتبع')) { setAwaitingState('track'); await botTyping(); addMessage('bot', '📦 أرسل رقم الطلب أو التتبع:'); return; }
@@ -335,13 +332,11 @@ export default function ChatBot() {
     if (messageText.includes('طلب قطعة')) { setAwaitingState('part_name'); await botTyping(); addMessage('bot', '🔧 أرسل اسم القطعة:'); return; }
     if (messageText.includes('اتصل بنا')) { await botTyping(); addMessage('bot', '📞 الهاتف: 0673310066\n📧 الإيميل: contact@dzboard.com', null, ['🔙 القائمة الرئيسية']); return; }
 
-    // الترحيب
     if (['سلام', 'مرحبا', 'اهلا', 'السلام عليكم', 'hi', 'hello', 'salut'].some(g => lower.includes(g))) {
       await showMainMenu();
       return;
     }
 
-    // بحث افتراضي
     await botTyping();
     const products = await fetchProducts();
     const norm = messageText.toLowerCase().trim();
