@@ -16,6 +16,17 @@ const CATEGORIES = [
 
 const API = 'https://dzboard.onrender.com/api';
 
+// ✅ دالة استخراج التوكن الصحيح
+const getToken = () => {
+  const tokenData = localStorage.getItem('dzboard_admin_token');
+  try {
+    const parsed = JSON.parse(tokenData);
+    return parsed.token || tokenData;
+  } catch {
+    return tokenData;
+  }
+};
+
 export default function AdminProductsPage() {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
@@ -45,7 +56,8 @@ export default function AdminProductsPage() {
   const [formData, setFormData] = useState(initialForm);
 
   useEffect(() => { 
-    if (!localStorage.getItem('dzboard_admin_token')) {
+    const token = getToken();
+    if (!token) {
       navigate('/admin');
     } else {
       loadAll(); 
@@ -57,9 +69,10 @@ export default function AdminProductsPage() {
     setTimeout(() => setNotification(null), 3000); 
   };
   
+  // ✅ الإصلاح - استخراج التوكن الصحيح
   const getAuthHeader = () => ({ 
     'Content-Type': 'application/json', 
-    Authorization: `Bearer ${localStorage.getItem('dzboard_admin_token')}` 
+    Authorization: `Bearer ${getToken()}` 
   });
 
   const loadAll = () => {
@@ -245,7 +258,6 @@ export default function AdminProductsPage() {
     }
   };
 
-  // ✅ طباعة باركود واحد - تصميم احترافي
   const handlePrintBarcode = (product, barcodeCode) => {
     const code = barcodeCode || items.find(i => i.product_id === product.id)?.barcode || product.id;
     const printWindow = window.open('', '_blank', 'width=400,height=500');
@@ -260,73 +272,16 @@ export default function AdminProductsPage() {
   <style>
     @page { size: 80mm 100mm; margin: 0; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Cairo', system-ui, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: #f8fafc;
-      padding: 10mm;
-    }
-    .card {
-      background: #fff;
-      border: 2px solid #1e293b;
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-      max-width: 60mm;
-      page-break-inside: avoid;
-    }
-    .store-name {
-      font-size: 14px;
-      font-weight: 900;
-      color: #0f172a;
-      margin-bottom: 4px;
-    }
-    .store-phone {
-      font-size: 10px;
-      color: #64748b;
-      margin-bottom: 10px;
-    }
-    .product-name {
-      font-size: 13px;
-      font-weight: 800;
-      color: #1e293b;
-      margin-bottom: 10px;
-      word-break: break-word;
-      line-height: 1.3;
-    }
-    .qr-container {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 10px;
-    }
-    img {
-      width: 120px;
-      height: 120px;
-      object-fit: contain;
-    }
-    .code {
-      font-size: 11px;
-      font-family: 'Courier New', monospace;
-      color: #334155;
-      margin-bottom: 8px;
-      word-break: break-all;
-      direction: ltr;
-    }
-    .price {
-      font-size: 16px;
-      font-weight: 900;
-      color: #d97706;
-      padding-top: 8px;
-      border-top: 1px dashed #cbd5e1;
-    }
-    .footer {
-      font-size: 9px;
-      color: #94a3b8;
-      margin-top: 8px;
-    }
+    body { font-family: 'Cairo', system-ui, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f8fafc; padding: 10mm; }
+    .card { background: #fff; border: 2px solid #1e293b; border-radius: 12px; padding: 20px; text-align: center; max-width: 60mm; page-break-inside: avoid; }
+    .store-name { font-size: 14px; font-weight: 900; color: #0f172a; margin-bottom: 4px; }
+    .store-phone { font-size: 10px; color: #64748b; margin-bottom: 10px; }
+    .product-name { font-size: 13px; font-weight: 800; color: #1e293b; margin-bottom: 10px; word-break: break-word; line-height: 1.3; }
+    .qr-container { display: flex; justify-content: center; margin-bottom: 10px; }
+    img { width: 120px; height: 120px; object-fit: contain; }
+    .code { font-size: 11px; font-family: 'Courier New', monospace; color: #334155; margin-bottom: 8px; word-break: break-all; direction: ltr; }
+    .price { font-size: 16px; font-weight: 900; color: #d97706; padding-top: 8px; border-top: 1px dashed #cbd5e1; }
+    .footer { font-size: 9px; color: #94a3b8; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -355,7 +310,6 @@ export default function AdminProductsPage() {
     );
   };
 
-  // ✅ طباعة باركودات محددة - تصميم موحد
   const handlePrintSelected = () => {
     if (selectedProducts.length === 0) {
       showToast('اختر منتجات للطباعة أولاً', 'error');
@@ -363,7 +317,6 @@ export default function AdminProductsPage() {
     }
     
     const selected = products.filter(p => selectedProducts.includes(p.id));
-    
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) {
       showToast('المرجو السماح بالنوافذ المنبثقة', 'error');
@@ -371,10 +324,8 @@ export default function AdminProductsPage() {
     }
     
     let barcodesHTML = '';
-    
     selected.forEach((product) => {
       const barcode = items.find(i => i.product_id === product.id)?.barcode || product.id;
-      
       barcodesHTML += `
         <div class="card">
           <div class="store-name">DZBoard</div>
@@ -388,49 +339,14 @@ export default function AdminProductsPage() {
     
     printWindow.document.write(`
       <!DOCTYPE html>
-      <html dir="rtl">
-        <head>
-          <title>باركودات - ${selected.length} منتج</title>
-          <style>
-            @page { size: A4; margin: 10mm; }
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-              font-family: 'Cairo', system-ui, sans-serif;
-              display: grid;
-              grid-template-columns: repeat(3, 1fr);
-              gap: 10px;
-              padding: 10px;
-              background: #fff;
-            }
-            .card {
-              border: 1px solid #1e293b;
-              border-radius: 8px;
-              padding: 12px;
-              text-align: center;
-              page-break-inside: avoid;
-            }
-            .store-name { font-size: 10px; font-weight: 900; color: #0f172a; margin-bottom: 4px; }
-            .product-name { font-size: 11px; font-weight: 800; margin-bottom: 6px; word-break: break-word; }
-            img { width: 80px; height: 80px; }
-            .code { font-size: 8px; font-family: monospace; margin-top: 4px; direction: ltr; word-break: break-all; }
-            .price { font-size: 12px; font-weight: 900; color: #d97706; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #cbd5e1; }
-            @media print {
-              body { grid-template-columns: repeat(3, 1fr); }
-              .card { page-break-inside: avoid; }
-            }
-          </style>
-        </head>
-        <body>
-          ${barcodesHTML}
-          <script>setTimeout(()=>{window.print();window.close()},1000)</script>
-        </body>
-      </html>
+      <html dir="rtl"><head><title>باركودات - ${selected.length} منتج</title>
+      <style>@page { size: A4; margin: 10mm; } * { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: 'Cairo', system-ui, sans-serif; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; background: #fff; } .card { border: 1px solid #1e293b; border-radius: 8px; padding: 12px; text-align: center; page-break-inside: avoid; } .store-name { font-size: 10px; font-weight: 900; color: #0f172a; margin-bottom: 4px; } .product-name { font-size: 11px; font-weight: 800; margin-bottom: 6px; word-break: break-word; } img { width: 80px; height: 80px; } .code { font-size: 8px; font-family: monospace; margin-top: 4px; direction: ltr; word-break: break-all; } .price { font-size: 12px; font-weight: 900; color: #d97706; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #cbd5e1; } @media print { body { grid-template-columns: repeat(3, 1fr); } .card { page-break-inside: avoid; } }</style>
+      </head><body>${barcodesHTML}<script>setTimeout(()=>{window.print();window.close()},1000)</script></body></html>
     `);
     printWindow.document.close();
     setSelectedProducts([]);
   };
 
-  // ✅ طباعة كل الباركودات
   const handlePrintAllBarcodes = () => {
     if (!products.length) {
       showToast('لا توجد منتجات للطباعة', 'error');
@@ -444,10 +360,8 @@ export default function AdminProductsPage() {
     }
     
     let barcodesHTML = '';
-    
     products.forEach((product) => {
       const barcode = items.find(i => i.product_id === product.id)?.barcode || product.id;
-      
       barcodesHTML += `
         <div class="card">
           <div class="store-name">DZBoard</div>
@@ -461,43 +375,9 @@ export default function AdminProductsPage() {
     
     printWindow.document.write(`
       <!DOCTYPE html>
-      <html dir="rtl">
-        <head>
-          <title>جميع الباركودات - ${products.length} منتج</title>
-          <style>
-            @page { size: A4; margin: 10mm; }
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-              font-family: 'Cairo', system-ui, sans-serif;
-              display: grid;
-              grid-template-columns: repeat(3, 1fr);
-              gap: 10px;
-              padding: 10px;
-              background: #fff;
-            }
-            .card {
-              border: 1px solid #1e293b;
-              border-radius: 8px;
-              padding: 12px;
-              text-align: center;
-              page-break-inside: avoid;
-            }
-            .store-name { font-size: 10px; font-weight: 900; color: #0f172a; margin-bottom: 4px; }
-            .product-name { font-size: 11px; font-weight: 800; margin-bottom: 6px; word-break: break-word; }
-            img { width: 80px; height: 80px; }
-            .code { font-size: 8px; font-family: monospace; margin-top: 4px; direction: ltr; word-break: break-all; }
-            .price { font-size: 12px; font-weight: 900; color: #d97706; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #cbd5e1; }
-            @media print {
-              body { grid-template-columns: repeat(3, 1fr); }
-              .card { page-break-inside: avoid; }
-            }
-          </style>
-        </head>
-        <body>
-          ${barcodesHTML}
-          <script>setTimeout(()=>{window.print();window.close()},1000)</script>
-        </body>
-      </html>
+      <html dir="rtl"><head><title>جميع الباركودات - ${products.length} منتج</title>
+      <style>@page { size: A4; margin: 10mm; } * { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: 'Cairo', system-ui, sans-serif; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; background: #fff; } .card { border: 1px solid #1e293b; border-radius: 8px; padding: 12px; text-align: center; page-break-inside: avoid; } .store-name { font-size: 10px; font-weight: 900; color: #0f172a; margin-bottom: 4px; } .product-name { font-size: 11px; font-weight: 800; margin-bottom: 6px; word-break: break-word; } img { width: 80px; height: 80px; } .code { font-size: 8px; font-family: monospace; margin-top: 4px; direction: ltr; word-break: break-all; } .price { font-size: 12px; font-weight: 900; color: #d97706; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #cbd5e1; } @media print { body { grid-template-columns: repeat(3, 1fr); } .card { page-break-inside: avoid; } }</style>
+      </head><body>${barcodesHTML}<script>setTimeout(()=>{window.print();window.close()},1000)</script></body></html>
     `);
     printWindow.document.close();
   };
@@ -522,18 +402,7 @@ export default function AdminProductsPage() {
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'المنتجات');
-    
-    ws['!cols'] = [
-      { wch: 5 },
-      { wch: 25 },
-      { wch: 15 },
-      { wch: 12 },
-      { wch: 10 },
-      { wch: 15 },
-      { wch: 10 },
-      { wch: 20 },
-    ];
-    
+    ws['!cols'] = [{ wch: 5 }, { wch: 25 }, { wch: 15 }, { wch: 12 }, { wch: 10 }, { wch: 15 }, { wch: 10 }, { wch: 20 }];
     XLSX.writeFile(wb, `products_${new Date().toISOString().split('T')[0]}.xlsx`);
     showToast('تم تصدير المنتجات بنجاح');
   };
@@ -640,29 +509,11 @@ export default function AdminProductsPage() {
               const isVisible = product.active === false ? false : true;
               return (
                 <div key={product.id} className="card" style={{ padding: 16, position: 'relative', border: isSelected ? '2px solid #3b82f6' : '1px solid #e2e8f0', opacity: isVisible ? 1 : 0.5 }}>
-                  <button 
-                    onClick={() => toggleSelect(product.id)}
-                    style={{ 
-                      position: 'absolute', 
-                      top: 10, 
-                      left: 10, 
-                      background: 'none', 
-                      border: 'none', 
-                      cursor: 'pointer',
-                      color: isSelected ? '#3b82f6' : '#94a3b8',
-                      zIndex: 2
-                    }}
-                  >
+                  <button onClick={() => toggleSelect(product.id)} style={{ position: 'absolute', top: 10, left: 10, background: 'none', border: 'none', cursor: 'pointer', color: isSelected ? '#3b82f6' : '#94a3b8', zIndex: 2 }}>
                     {isSelected ? <CheckSquare size={22} /> : <Square size={22} />}
                   </button>
                   <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                    <img 
-                      src={product.image || 'https://via.placeholder.com/60'} 
-                      style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover', cursor: 'zoom-in' }} 
-                      alt={product.name} 
-                      onClick={() => product.image && setZoomedImage(product.image)}
-                      onPointerUp={() => product.image && setZoomedImage(product.image)}
-                    />
+                    <img src={product.image || 'https://via.placeholder.com/60'} style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover', cursor: 'zoom-in' }} alt={product.name} onClick={() => product.image && setZoomedImage(product.image)} onPointerUp={() => product.image && setZoomedImage(product.image)} />
                     <div style={{ flex: 1 }}>
                       <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: `${catObj.color}15`, color: catObj.color, fontWeight: 700 }}>{catObj.label}</span>
                       <h4 style={{ fontSize: 14, fontWeight: 800, margin: '4px 0' }}>{product.name}</h4>
@@ -673,9 +524,7 @@ export default function AdminProductsPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <span style={{ fontSize: 12, color: '#64748b' }}>المخزون: <strong>{product.stock || 0}</strong></span>
                       <span style={{ fontSize: 11, color: '#94a3b8' }}>🗓️ {formatDate(product.created_at)}</span>
-                      <span style={{ fontSize: 11, color: isVisible ? '#10b981' : '#ef4444', fontWeight: 700 }}>
-                        {isVisible ? '👁️ ظاهر' : '🚫 مخفي'}
-                      </span>
+                      <span style={{ fontSize: 11, color: isVisible ? '#10b981' : '#ef4444', fontWeight: 700 }}>{isVisible ? '👁️ ظاهر' : '🚫 مخفي'}</span>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => toggleVisibility(product)} className="btn btn-ghost btn-sm" title={isVisible ? 'إخفاء' : 'إظهار'} style={{ color: isVisible ? '#10b981' : '#f59e0b' }}>
@@ -700,27 +549,8 @@ export default function AdminProductsPage() {
       </div>
 
       {zoomedImage && (
-        <div 
-          onClick={() => setZoomedImage(null)}
-          onPointerUp={() => setZoomedImage(null)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.85)',
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 20,
-            cursor: 'zoom-out',
-            touchAction: 'manipulation'
-          }}
-        >
-          <img 
-            src={zoomedImage} 
-            alt="تكبير"
-            style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 16, objectFit: 'contain', pointerEvents: 'none' }}
-          />
+        <div onClick={() => setZoomedImage(null)} onPointerUp={() => setZoomedImage(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, cursor: 'zoom-out', touchAction: 'manipulation' }}>
+          <img src={zoomedImage} alt="تكبير" style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 16, objectFit: 'contain', pointerEvents: 'none' }} />
         </div>
       )}
     </div>
