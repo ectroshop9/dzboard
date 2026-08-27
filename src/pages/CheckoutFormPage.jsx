@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowRight, User, Phone, MapPin, Home, Save, Loader2, Package } from 'lucide-react';
 
-const API = 'https://dzboard.onrender.com/api';
+const API = 'https://dzboard2.onrender.com/api';
 
 export default function CheckoutFormPage() {
   const navigate = useNavigate();

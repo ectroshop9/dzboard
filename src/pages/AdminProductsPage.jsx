@@ -14,7 +14,7 @@ const CATEGORIES = [
   { key: 'parts', label: 'قطع غيار', icon: Package, color: '#10b981' },
 ];
 
-const API = 'https://dzboard.onrender.com/api';
+const API = 'https://dzboard2.onrender.com/api';
 
 // ✅ دالة استخراج التوكن الصحيح
 const getToken = () => {

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Package, ShoppingBag, QrCode, TrendingUp, Clock, Loader2, AlertCircle, Users, Truck, Bot, Percent, LogOut } from 'lucide-react';
 
-const API = 'https://dzboard.onrender.com/api';
+const API = 'https://dzboard2.onrender.com/api';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();

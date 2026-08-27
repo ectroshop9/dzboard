@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
 import { Camera, Search, Loader2, AlertCircle, X, User, Phone, MapPin, Home, Save } from 'lucide-react';
 
-const API = import.meta.env.VITE_API_URL || 'https://dzboard.onrender.com/api';
+const API = import.meta.env.VITE_API_URL || 'https://dzboard2.onrender.com/api';
 
 export default function AdminScanPage() {
   const navigate = useNavigate();

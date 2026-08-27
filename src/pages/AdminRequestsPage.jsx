@@ -4,7 +4,7 @@ import {
   CheckCircle2, XCircle, Clock, RefreshCw, Trash2, X 
 } from 'lucide-react';
 
-const API = 'https://dzboard.onrender.com/api';
+const API = 'https://dzboard2.onrender.com/api';
 
 export default function AdminRequestsPage() {
   const navigate = useNavigate();

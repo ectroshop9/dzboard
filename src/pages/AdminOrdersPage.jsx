@@ -12,7 +12,7 @@ const STATUS_MAP = {
   cancelled: { label: 'ملغى', bg: '#fee2e2', color: '#b91c1c' },
 };
 
-const API = 'https://dzboard.onrender.com/api';
+const API = 'https://dzboard2.onrender.com/api';
 
 export default function AdminOrdersPage() {
   const navigate = useNavigate();

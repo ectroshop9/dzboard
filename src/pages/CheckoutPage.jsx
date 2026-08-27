@@ -35,7 +35,7 @@ export default function CheckoutPage() {
   // ✅ جلب المنتج من URL إذا وجد
   useEffect(() => {
     if (productId) {
-      fetch(`https://dzboard.onrender.com/api/products/${productId}`)
+      fetch(`https://dzboard2.onrender.com/api/products/${productId}`)
         .then(r => r.json())
         .then(data => {
           if (data.product) {
@@ -56,7 +56,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     let isMounted = true;
-    api.getWilayas?.() || fetch('https://dzboard.onrender.com/api/shipping/wilayas').then(r => r.json())
+    api.getWilayas?.() || fetch('https://dzboard2.onrender.com/api/shipping/wilayas').then(r => r.json())
       .then(data => {
         if (isMounted && data.success) setWilayas(data.wilayas);
       })
@@ -80,8 +80,8 @@ export default function CheckoutPage() {
     setLoadingCommunes(true);
 
     Promise.all([
-      fetch(`https://dzboard.onrender.com/api/shipping/fee?wilaya_id=${wilayaId}`, { signal: controller.signal }).then(r => r.json()),
-      fetch(`https://dzboard.onrender.com/api/shipping/communes?wilaya_id=${wilayaId}`, { signal: controller.signal }).then(r => r.json())
+      fetch(`https://dzboard2.onrender.com/api/shipping/fee?wilaya_id=${wilayaId}`, { signal: controller.signal }).then(r => r.json()),
+      fetch(`https://dzboard2.onrender.com/api/shipping/communes?wilaya_id=${wilayaId}`, { signal: controller.signal }).then(r => r.json())
     ])
       .then(([feeData, communesData]) => {
         if (feeData?.success) setFees(feeData.fees);

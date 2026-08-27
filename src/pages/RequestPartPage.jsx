@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Send, Loader2, CheckCircle2, ArrowRight, AlertCircle, Upload, X } from 'lucide-react';
 
-const API = 'https://dzboard.onrender.com/api';
+const API = 'https://dzboard2.onrender.com/api';
 
 export default function RequestPartPage() {
   const navigate = useNavigate();
