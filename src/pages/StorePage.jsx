@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, ChevronLeft, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, Download, Plus, Minus } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Search, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, Download, Plus, Minus } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function StorePage() {
@@ -23,6 +23,12 @@ export default function StorePage() {
     { key: 'main-board', label: 'مين بورد', icon: Cpu, color: '#6366f1' },
     { key: 'parts', label: 'قطع غيار', icon: Package, color: '#10b981' },
   ];
+
+  // ✅ تنقية النص من XSS
+  const sanitizeText = (text) => {
+    if (!text) return '';
+    return String(text).replace(/<[^>]*>/g, '').replace(/[<>]/g, '');
+  };
 
   const searchInProduct = (product, query) => {
     if (!query) return true;
@@ -76,8 +82,7 @@ export default function StorePage() {
           setLoading(false);
         }
       })
-      .catch((err) => {
-        console.error('Error fetching products:', err);
+      .catch(() => {
         if (isMounted) {
           setProducts([]);
           setLoading(false);
@@ -87,12 +92,13 @@ export default function StorePage() {
     return () => { isMounted = false; };
   }, [selectedCategory, debouncedQuery]);
 
-  // ✅ دالة تغيير الكمية
+  // ✅ تغيير الكمية مع حماية
   const changeQuantity = (e, productId, delta) => {
     e.stopPropagation();
     setQuantities(prev => {
-      const current = prev[productId] || 1;
-      const max = products.find(p => p.id === productId)?.stock || 1;
+      const current = parseInt(prev[productId]) || 1;
+      const stock = parseInt(products.find(p => p.id === productId)?.stock) || 0;
+      const max = Math.max(1, stock);
       const newQty = Math.max(1, Math.min(current + delta, max));
       return { ...prev, [productId]: newQty };
     });
@@ -100,18 +106,26 @@ export default function StorePage() {
 
   const handleBuyNow = (e, product) => {
     e.stopPropagation();
-    const qty = quantities[product.id] || 1;
+    const qty = parseInt(quantities[product.id]) || 1;
+    const safeQty = Math.max(1, qty);
     navigate('/checkout', {
       state: {
-        items: [{ id: product.id, name: product.name || product.title, price: product.price, quantity: qty, image: product.image }]
+        items: [{ 
+          id: product.id, 
+          name: sanitizeText(product.name || product.title), 
+          price: parseFloat(product.price) || 0, 
+          quantity: safeQty, 
+          image: product.image 
+        }]
       }
     });
   };
 
+  // ✅ فتح رابط آمن
   const handleDownloadUpdate = (e, product) => {
     e.stopPropagation();
-    if (product.update_url) {
-      window.open(product.update_url, '_blank');
+    if (product.update_url && product.update_url.startsWith('https://')) {
+      window.open(product.update_url, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -123,16 +137,11 @@ export default function StorePage() {
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', system-ui, sans-serif", paddingBottom: 40 }}>
       
-      {/* الهيدر العلوي */}
+      {/* الهيدر العلوي - بدون "الرئيسية" و"المتجر" */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '10px 12px', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-            <Link to="/" style={{ textDecoration: 'none', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 2, fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
-              <ChevronLeft size={18} /> الرئيسية
-            </Link>
-            <h1 style={{ fontSize: 15, fontWeight: 800, margin: 0, color: '#0f172a', whiteSpace: 'nowrap' }}>المتجر</h1>
-          </div>
-
+          
+          {/* ✅ بحث فقط - بدون روابط */}
           <div style={{ position: 'relative', flex: 1, maxWidth: 350 }}>
             <input
               type="text"
@@ -149,6 +158,7 @@ export default function StorePage() {
             )}
           </div>
 
+          {/* ✅ زر عرض فقط */}
           <button
             onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
             style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 20, padding: '7px 10px', cursor: 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, flexShrink: 0 }}
@@ -157,7 +167,7 @@ export default function StorePage() {
           </button>
         </div>
 
-        {/* شريط التصنيفات في الوسط */}
+        {/* شريط التصنيفات */}
         <div style={{ 
           maxWidth: 1100, 
           margin: '8px auto 0', 
@@ -241,16 +251,18 @@ export default function StorePage() {
           }}>
             {products.map(product => {
               const numericPrice = parseFloat(product.price) || 0;
-              const isAvailable = product.stock !== false && product.stock !== 0;
-              const hasUpdate = product.update_url && product.update_url.trim() !== '';
+              const isAvailable = parseInt(product.stock) > 0;
+              const hasUpdate = product.update_url && product.update_url.startsWith('https://');
               const isParts = product.category === 'parts';
-              const qty = quantities[product.id] || 1;
+              const qty = parseInt(quantities[product.id]) || 1;
               const totalPrice = numericPrice * qty;
+              const safeName = sanitizeText(product.name || product.title);
+              const safeDescription = sanitizeText(product.description || 'قطعة غيار إلكترونية');
 
               return (
                 <div
                   key={product.id}
-                  onClick={() => navigate('/checkout', { state: { items: [{ id: product.id, name: product.name, price: product.price, quantity: isParts ? qty : 1, image: product.image }] } })}
+                  onClick={() => navigate('/checkout', { state: { items: [{ id: product.id, name: safeName, price: numericPrice, quantity: isParts ? qty : 1, image: product.image }] } })}
                   style={{
                     background: '#fff',
                     border: '1px solid #e2e8f0',
@@ -292,7 +304,7 @@ export default function StorePage() {
                   }}>
                     <img
                       src={product.image || 'https://via.placeholder.com/200?text=لا+توجد+صورة'}
-                      alt={product.name || product.title}
+                      alt={safeName}
                       style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 6 }}
                       onError={(e) => { e.target.src = 'https://via.placeholder.com/200?text=صورة+غير+متاحة'; }}
                     />
@@ -301,14 +313,13 @@ export default function StorePage() {
                   <div style={{ padding: 10, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 6 }}>
                     <div>
                       <h2 style={{ fontSize: 13, fontWeight: 700, margin: '0 0 4px 0', color: '#0f172a', lineHeight: 1.3 }}>
-                        {product.name || product.title}
+                        {safeName}
                       </h2>
                       <p style={{ fontSize: 11, color: '#64748b', margin: 0, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {product.description || 'قطعة غيار إلكترونية'}
+                        {safeDescription}
                       </p>
                     </div>
 
-                    {/* ✅ الكمية فقط لقطع الغيار */}
                     {isParts && isAvailable && (
                       <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '4px 0' }}>
                         <button onClick={(e) => changeQuantity(e, product.id, -1)} style={{ width: 28, height: 28, borderRadius: 6, background: '#f1f5f9', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
