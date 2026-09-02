@@ -125,7 +125,19 @@ router.get('/download-temp/:token', async (req, res) => {
   }
 
   tempTokens.delete(req.params.token);
-  res.redirect(data.file_url);
+  try {
+    const fileResponse = await fetch(data.file_url);
+    if (!fileResponse.ok) {
+      return res.status(500).send("فشل جلب الملف");
+    }
+    const buffer = await fileResponse.arrayBuffer();
+    res.setHeader("Content-Type", fileResponse.headers.get("content-type") || "application/octet-stream");
+    res.setHeader("Content-Disposition", `attachment; filename="${data.file_name || "download"}"`);
+    res.send(Buffer.from(buffer));
+  } catch (error) {
+    console.error("Proxy error:", error);
+    res.status(500).send("خطأ في التحميل");
+  }
 });
 
 // ✅ قائمة السيريالات للأدمن
