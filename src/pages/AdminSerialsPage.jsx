@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, RefreshCw, Loader2, Key, Copy, CheckCircle, Search } from 'lucide-react';
+import { Plus, Trash2, RefreshCw, Loader2, Key, Copy, CheckCircle, Search, Power, Play } from 'lucide-react';
 
 const API = '/api';
 
@@ -57,7 +57,6 @@ export default function AdminSerialsPage() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-
     setSaving(true);
     try {
       const count = parseInt(bulkCount) || 1;
@@ -80,16 +79,31 @@ export default function AdminSerialsPage() {
       setMaxDownloads(1);
       setBulkCount(1);
       loadData();
-      alert(`تم إنشاء ${count} سيريال بنجاح`);
     } catch (err) {
       console.error('Create error:', err);
-      alert('خطأ في الاتصال');
     }
     setSaving(false);
   };
 
+  // ✅ تفعيل/تعطيل سيريال
+  const toggleActive = async (serial) => {
+    try {
+      await fetch(`${API}/serials/admin/toggle/${serial.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ is_active: !serial.is_active })
+      });
+      loadData();
+    } catch (err) {
+      console.error('Toggle error:', err);
+    }
+  };
+
   const handleDelete = async (id) => {
-    if (!confirm('حذف هذا السيريال؟')) return;
+    if (!confirm('حذف هذا السيريال نهائياً؟')) return;
 
     try {
       const res = await fetch(`${API}/serials/admin/delete/${id}`, {
@@ -113,13 +127,13 @@ export default function AdminSerialsPage() {
     const remaining = serial.max_downloads - serial.used_downloads;
     const matchSearch = serial.serial_code.toLowerCase().includes(searchQuery.toLowerCase());
     const matchStatus = statusFilter === 'all' || 
-      (statusFilter === 'active' && remaining > 0) ||
-      (statusFilter === 'expired' && remaining <= 0);
+      (statusFilter === 'active' && serial.is_active && remaining > 0) ||
+      (statusFilter === 'expired' && (!serial.is_active || remaining <= 0));
     return matchSearch && matchStatus;
   });
 
-  const activeCount = serials.filter(s => (s.max_downloads - s.used_downloads) > 0).length;
-  const expiredCount = serials.filter(s => (s.max_downloads - s.used_downloads) <= 0).length;
+  const activeCount = serials.filter(s => s.is_active && (s.max_downloads - s.used_downloads) > 0).length;
+  const expiredCount = serials.filter(s => !s.is_active || (s.max_downloads - s.used_downloads) <= 0).length;
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
@@ -154,7 +168,7 @@ export default function AdminSerialsPage() {
           </div>
           <div style={{ background: '#fff', borderRadius: 10, padding: 12, textAlign: 'center', border: '1px solid #e2e8f0' }}>
             <div style={{ fontSize: 22, fontWeight: 900, color: '#ef4444' }}>{expiredCount}</div>
-            <div style={{ fontSize: 11, color: '#64748b' }}>منتهية</div>
+            <div style={{ fontSize: 11, color: '#64748b' }}>منتهية/معطلة</div>
           </div>
         </div>
 
@@ -217,7 +231,7 @@ export default function AdminSerialsPage() {
           >
             <option value="all">الكل</option>
             <option value="active">نشطة</option>
-            <option value="expired">منتهية</option>
+            <option value="expired">منتهية/معطلة</option>
           </select>
         </div>
 
@@ -232,36 +246,81 @@ export default function AdminSerialsPage() {
           <div style={{ display: 'grid', gap: 10 }}>
             {filteredSerials.map(serial => {
               const remaining = serial.max_downloads - serial.used_downloads;
+              const isActive = serial.is_active && remaining > 0;
               return (
-                <div key={serial.id} style={{ background: '#fff', borderRadius: 14, padding: 16, border: '1px solid #e2e8f0' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <span style={{ 
-                      padding: '4px 12px', 
-                      borderRadius: 20, 
-                      fontSize: 11, 
-                      fontWeight: 700,
-                      background: remaining > 0 ? '#dcfce7' : '#fee2e2',
-                      color: remaining > 0 ? '#166534' : '#991b1b'
+                <div key={serial.id} style={{ 
+                  background: '#fff', 
+                  borderRadius: 14, 
+                  padding: 14, 
+                  border: `1px solid ${isActive ? '#e2e8f0' : '#fee2e2'}`,
+                  opacity: isActive ? 1 : 0.7
+                }}>
+                  {/* صف الكود + الحالة */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                    <code style={{ 
+                      flex: 1, 
+                      fontSize: 14, 
+                      fontWeight: 700, 
+                      letterSpacing: 1,
+                      background: isActive ? '#f1f5f9' : '#fef2f2',
+                      padding: '10px 12px',
+                      borderRadius: 8,
+                      wordBreak: 'break-all'
                     }}>
-                      {remaining > 0 ? `متبقي ${remaining}` : 'منتهي'}
-                    </span>
-                    <span style={{ fontSize: 12, color: '#64748b' }}>
-                      {serial.used_downloads} / {serial.max_downloads} تحميل
+                      {serial.serial_code}
+                    </code>
+                    <span style={{ 
+                      padding: '4px 10px', 
+                      borderRadius: 20, 
+                      fontSize: 10, 
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap',
+                      background: isActive ? '#dcfce7' : '#fee2e2',
+                      color: isActive ? '#166534' : '#991b1b'
+                    }}>
+                      {isActive ? `متبقي ${remaining}` : serial.is_active ? 'منتهي' : 'معطل'}
                     </span>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f1f5f9', padding: '12px', borderRadius: 8, marginBottom: 10 }}>
-                    <code style={{ fontSize: 15, fontWeight: 700, letterSpacing: 1, flex: 1 }}>{serial.serial_code}</code>
-                    <button onClick={() => copySerial(serial.serial_code)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: copiedCode === serial.serial_code ? '#10b981' : '#64748b' }}>
-                      {copiedCode === serial.serial_code ? <CheckCircle size={16} /> : <Copy size={16} />}
-                    </button>
-                  </div>
+                  {/* صف المعلومات + الأزرار */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 11, color: '#64748b', flexWrap: 'wrap' }}>
+                      <span>{serial.used_downloads} / {serial.max_downloads} تحميل</span>
+                      <span>📅 {formatDate(serial.created_at)}</span>
+                    </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 11, color: '#94a3b8' }}>📅 {formatDate(serial.created_at)}</span>
-                    <button onClick={() => handleDelete(serial.id)} style={{ background: '#fee2e2', border: 'none', color: '#b91c1c', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Trash2 size={14} /> حذف
-                    </button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        onClick={() => copySerial(serial.serial_code)}
+                        title="نسخ"
+                        style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: '7px 10px', cursor: 'pointer', color: copiedCode === serial.serial_code ? '#10b981' : '#64748b' }}
+                      >
+                        {copiedCode === serial.serial_code ? <CheckCircle size={14} /> : <Copy size={14} />}
+                      </button>
+                      
+                      <button
+                        onClick={() => toggleActive(serial)}
+                        title={serial.is_active ? 'تعطيل' : 'تفعيل'}
+                        style={{ 
+                          background: serial.is_active ? '#fef3c7' : '#dcfce7', 
+                          border: 'none', 
+                          borderRadius: 6, 
+                          padding: '7px 10px', 
+                          cursor: 'pointer',
+                          color: serial.is_active ? '#b45309' : '#166534'
+                        }}
+                      >
+                        {serial.is_active ? <Power size={14} /> : <Play size={14} />}
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(serial.id)}
+                        title="حذف"
+                        style={{ background: '#fee2e2', border: 'none', color: '#b91c1c', borderRadius: 6, padding: '7px 10px', cursor: 'pointer' }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
