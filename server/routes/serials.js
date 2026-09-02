@@ -13,7 +13,7 @@ router.post('/verify', async (req, res) => {
 
   const { data: serial, error } = await supabase
     .from('serials')
-    .select('*, products(name, image)')
+    .select('*')
     .eq('serial_code', serial_code.trim().toUpperCase())
     .eq('is_active', true)
     .single();
@@ -31,30 +31,30 @@ router.post('/verify', async (req, res) => {
     success: true,
     serial: {
       id: serial.id,
-      product_name: serial.products?.name || 'منتج',
-      product_image: serial.products?.image || '',
       remaining_downloads: remaining,
+      max_downloads: serial.max_downloads,
     }
   });
 });
 
-// ✅ تنفيذ التحميل
+// ✅ التحميل - السيريال + المنتج
 router.post('/download', async (req, res) => {
-  const { serial_code } = req.body;
+  const { serial_code, product_id } = req.body;
   const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
 
-  if (!serial_code) {
-    return res.status(400).json({ success: false, message: 'يرجى إدخال السيريال' });
+  if (!serial_code || !product_id) {
+    return res.status(400).json({ success: false, message: 'يرجى إدخال السيريال واختيار المنتج' });
   }
 
-  const { data: serial, error } = await supabase
+  // البحث عن السيريال
+  const { data: serial, error: serialError } = await supabase
     .from('serials')
     .select('*')
     .eq('serial_code', serial_code.trim().toUpperCase())
     .eq('is_active', true)
     .single();
 
-  if (error || !serial) {
+  if (serialError || !serial) {
     return res.status(404).json({ success: false, message: 'سيريال غير صحيح' });
   }
 
@@ -63,6 +63,18 @@ router.post('/download', async (req, res) => {
     return res.status(400).json({ success: false, message: 'استنفدت التحميلات' });
   }
 
+  // البحث عن المنتج وملفه
+  const { data: product, error: productError } = await supabase
+    .from('products')
+    .select('id, name, file_url')
+    .eq('id', product_id)
+    .single();
+
+  if (productError || !product || !product.file_url) {
+    return res.status(404).json({ success: false, message: 'لا يوجد ملف لهذا المنتج' });
+  }
+
+  // زيادة العداد
   const { error: updateError } = await supabase
     .from('serials')
     .update({ used_downloads: serial.used_downloads + 1 })
@@ -72,19 +84,20 @@ router.post('/download', async (req, res) => {
     return res.status(500).json({ success: false, message: 'خطأ في التحديث' });
   }
 
+  // تسجيل التحميل
   await supabase.from('download_logs').insert({
     serial_id: serial.id,
+    product_id: product.id,
     ip_address: ip
   });
 
   res.json({
     success: true,
-    file_url: serial.file_url,
+    file_url: product.file_url,
+    file_name: product.name,
     remaining_downloads: remaining - 1
   });
 });
-
-export default router;
 
 // ✅ قائمة السيريالات للأدمن
 router.get('/admin/list', async (req, res) => {
@@ -97,7 +110,7 @@ router.get('/admin/list', async (req, res) => {
 
   const { data: serials, error } = await supabase
     .from('serials')
-    .select('*, products(name)')
+    .select('*')
     .order('id', { ascending: false });
 
   if (error) {
@@ -116,9 +129,9 @@ router.post('/admin/create', async (req, res) => {
     return res.status(401).json({ success: false, message: 'غير مصرح' });
   }
 
-  const { serial_code, product_id, file_url, max_downloads } = req.body;
+  const { serial_code, max_downloads } = req.body;
 
-  if (!serial_code || !product_id || !file_url) {
+  if (!serial_code || !max_downloads) {
     return res.status(400).json({ success: false, message: 'بيانات ناقصة' });
   }
 
@@ -126,8 +139,6 @@ router.post('/admin/create', async (req, res) => {
     .from('serials')
     .insert({
       serial_code,
-      product_id: parseInt(product_id),
-      file_url,
       max_downloads: parseInt(max_downloads) || 1,
       used_downloads: 0,
       is_active: true

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, RefreshCw, Loader2, Key, Copy, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Trash2, RefreshCw, Loader2, Key, Copy, CheckCircle } from 'lucide-react';
 
 const API = '/api';
 
@@ -17,11 +17,10 @@ const getToken = () => {
 export default function AdminSerialsPage() {
   const navigate = useNavigate();
   const [serials, setSerials] = useState([]);
-  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    product_id: '',
+    file_name: '',
     file_url: '',
     max_downloads: 1
   });
@@ -40,15 +39,11 @@ export default function AdminSerialsPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [serialsRes, productsRes] = await Promise.all([
-        fetch(`${API}/serials/admin/list`, {
-          headers: { Authorization: `Bearer ${getToken()}` }
-        }).then(r => r.json()),
-        fetch(`${API}/products`).then(r => r.json())
-      ]);
-
-      if (serialsRes.success) setSerials(serialsRes.serials || []);
-      if (productsRes.success) setProducts(productsRes.products || []);
+      const res = await fetch(`${API}/serials/admin/list`, {
+        headers: { Authorization: `Bearer ${getToken()}` }
+      });
+      const data = await res.json();
+      if (data.success) setSerials(data.serials || []);
     } catch (err) {
       console.error('Load error:', err);
     }
@@ -56,16 +51,15 @@ export default function AdminSerialsPage() {
   };
 
   const generateSerialCode = () => {
-    const prefix = 'DZB';
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const code = Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-    return `${prefix}-${code.slice(0, 4)}-${code.slice(4, 8)}-${code.slice(8, 12)}`;
+    return `DZB-${code.slice(0, 4)}-${code.slice(4, 8)}-${code.slice(8, 12)}`;
   };
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!formData.product_id || !formData.file_url) {
-      alert('اختر المنتج وأدخل رابط الملف');
+    if (!formData.file_name || !formData.file_url) {
+      alert('أدخل اسم الملف ورابط التحميل');
       return;
     }
 
@@ -78,8 +72,9 @@ export default function AdminSerialsPage() {
           Authorization: `Bearer ${getToken()}`
         },
         body: JSON.stringify({
-          ...formData,
           serial_code: generateSerialCode(),
+          file_name: formData.file_name.trim(),
+          file_url: formData.file_url.trim(),
           max_downloads: parseInt(formData.max_downloads) || 1
         })
       });
@@ -87,7 +82,7 @@ export default function AdminSerialsPage() {
 
       if (data.success) {
         setShowForm(false);
-        setFormData({ product_id: '', file_url: '', max_downloads: 1 });
+        setFormData({ file_name: '', file_url: '', max_downloads: 1 });
         loadData();
       } else {
         alert(data.message || 'فشل الإنشاء');
@@ -139,39 +134,48 @@ export default function AdminSerialsPage() {
           <div style={{ background: '#fff', border: '1px solid #3b82f6', borderRadius: 14, padding: 20, marginBottom: 20 }}>
             <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>إنشاء سيريال جديد</h3>
             <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <select
-                value={formData.product_id}
-                onChange={e => setFormData({ ...formData, product_id: e.target.value })}
-                style={{ padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14 }}
-                required
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, display: 'block' }}>اسم الملف *</label>
+                <input
+                  type="text"
+                  placeholder="مثال: Iris 32E3100 Firmware V1.0"
+                  value={formData.file_name}
+                  onChange={e => setFormData({ ...formData, file_name: e.target.value })}
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, boxSizing: 'border-box' }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, display: 'block' }}>رابط التحميل *</label>
+                <input
+                  type="url"
+                  placeholder="https://..."
+                  value={formData.file_url}
+                  onChange={e => setFormData({ ...formData, file_url: e.target.value })}
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, boxSizing: 'border-box' }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, display: 'block' }}>عدد التحميلات المسموح *</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={formData.max_downloads}
+                  onChange={e => setFormData({ ...formData, max_downloads: e.target.value })}
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, boxSizing: 'border-box' }}
+                  required
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={saving} 
+                style={{ padding: '14px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, cursor: 'pointer', fontSize: 15 }}
               >
-                <option value="">اختر المنتج...</option>
-                {products.map(p => (
-                  <option key={p.id} value={p.id}>{p.name} - {p.price} دج</option>
-                ))}
-              </select>
-
-              <input
-                type="url"
-                placeholder="رابط الملف (URL للتحميل)"
-                value={formData.file_url}
-                onChange={e => setFormData({ ...formData, file_url: e.target.value })}
-                style={{ padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14 }}
-                required
-              />
-
-              <input
-                type="number"
-                placeholder="عدد التحميلات المسموح"
-                value={formData.max_downloads}
-                onChange={e => setFormData({ ...formData, max_downloads: e.target.value })}
-                min="1"
-                max="100"
-                style={{ padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14 }}
-                required
-              />
-
-              <button type="submit" disabled={saving} style={{ padding: '12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>
                 {saving ? 'جاري...' : 'إنشاء السيريال'}
               </button>
             </form>
@@ -192,7 +196,7 @@ export default function AdminSerialsPage() {
               return (
                 <div key={serial.id} style={{ background: '#fff', borderRadius: 14, padding: 16, border: '1px solid #e2e8f0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <strong style={{ fontSize: 14 }}>{serial.products?.name || 'منتج'}</strong>
+                    <strong style={{ fontSize: 14 }}>{serial.file_name}</strong>
                     <span style={{ 
                       padding: '4px 12px', 
                       borderRadius: 20, 
