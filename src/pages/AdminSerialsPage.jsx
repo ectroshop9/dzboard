@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, RefreshCw, Loader2, Key, Copy, CheckCircle } from 'lucide-react';
+import { Plus, Trash2, RefreshCw, Loader2, Key, Copy, CheckCircle, Search } from 'lucide-react';
 
 const API = '/api';
 
@@ -20,8 +20,11 @@ export default function AdminSerialsPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [maxDownloads, setMaxDownloads] = useState(1);
+  const [bulkCount, setBulkCount] = useState(1);
   const [saving, setSaving] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     const token = getToken();
@@ -57,26 +60,27 @@ export default function AdminSerialsPage() {
 
     setSaving(true);
     try {
-      const res = await fetch(`${API}/serials/admin/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`
-        },
-        body: JSON.stringify({
-          serial_code: generateSerialCode(),
-          max_downloads: parseInt(maxDownloads) || 1
-        })
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        setShowForm(false);
-        setMaxDownloads(1);
-        loadData();
-      } else {
-        alert(data.message || 'فشل الإنشاء');
+      const count = parseInt(bulkCount) || 1;
+      
+      for (let i = 0; i < count; i++) {
+        await fetch(`${API}/serials/admin/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${getToken()}`
+          },
+          body: JSON.stringify({
+            serial_code: generateSerialCode(),
+            max_downloads: parseInt(maxDownloads) || 1
+          })
+        });
       }
+
+      setShowForm(false);
+      setMaxDownloads(1);
+      setBulkCount(1);
+      loadData();
+      alert(`تم إنشاء ${count} سيريال بنجاح`);
     } catch (err) {
       console.error('Create error:', err);
       alert('خطأ في الاتصال');
@@ -105,6 +109,24 @@ export default function AdminSerialsPage() {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
+  const filteredSerials = serials.filter(serial => {
+    const remaining = serial.max_downloads - serial.used_downloads;
+    const matchSearch = serial.serial_code.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchStatus = statusFilter === 'all' || 
+      (statusFilter === 'active' && remaining > 0) ||
+      (statusFilter === 'expired' && remaining <= 0);
+    return matchSearch && matchStatus;
+  });
+
+  const activeCount = serials.filter(s => (s.max_downloads - s.used_downloads) > 0).length;
+  const expiredCount = serials.filter(s => (s.max_downloads - s.used_downloads) <= 0).length;
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('ar-DZ', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', paddingBottom: 100, fontFamily: 'system-ui' }}>
       <main style={{ padding: 16, maxWidth: 800, margin: '0 auto' }}>
@@ -120,12 +142,41 @@ export default function AdminSerialsPage() {
           </div>
         </div>
 
+        {/* إحصائيات */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8, marginBottom: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 12, textAlign: 'center', border: '1px solid #e2e8f0' }}>
+            <div style={{ fontSize: 22, fontWeight: 900, color: '#0f172a' }}>{serials.length}</div>
+            <div style={{ fontSize: 11, color: '#64748b' }}>إجمالي</div>
+          </div>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 12, textAlign: 'center', border: '1px solid #e2e8f0' }}>
+            <div style={{ fontSize: 22, fontWeight: 900, color: '#10b981' }}>{activeCount}</div>
+            <div style={{ fontSize: 11, color: '#64748b' }}>نشطة</div>
+          </div>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 12, textAlign: 'center', border: '1px solid #e2e8f0' }}>
+            <div style={{ fontSize: 22, fontWeight: 900, color: '#ef4444' }}>{expiredCount}</div>
+            <div style={{ fontSize: 11, color: '#64748b' }}>منتهية</div>
+          </div>
+        </div>
+
         {showForm && (
           <div style={{ background: '#fff', border: '1px solid #3b82f6', borderRadius: 14, padding: 20, marginBottom: 20 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>إنشاء سيريال جديد</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>إنشاء سيريالات جديدة</h3>
             <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, display: 'block' }}>عدد التحميلات المسموح *</label>
+                <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, display: 'block' }}>عدد السيريالات *</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={bulkCount}
+                  onChange={e => setBulkCount(e.target.value)}
+                  style={{ width: '100%', padding: '14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 16, boxSizing: 'border-box', textAlign: 'center', fontWeight: 700 }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, display: 'block' }}>عدد التحميلات لكل سيريال *</label>
                 <input
                   type="number"
                   min="1"
@@ -142,22 +193,44 @@ export default function AdminSerialsPage() {
                 disabled={saving} 
                 style={{ padding: '14px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, cursor: 'pointer', fontSize: 15 }}
               >
-                {saving ? 'جاري...' : 'إنشاء السيريال'}
+                {saving ? 'جاري...' : `إنشاء ${bulkCount} سيريال`}
               </button>
             </form>
           </div>
         )}
 
+        {/* بحث وفلترة */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
+            <input
+              placeholder="🔍 بحث بالكود..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{ width: '100%', padding: '10px 35px 10px 10px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 13, boxSizing: 'border-box' }}
+            />
+            <Search size={15} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            style={{ padding: '10px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 13, cursor: 'pointer' }}
+          >
+            <option value="all">الكل</option>
+            <option value="active">نشطة</option>
+            <option value="expired">منتهية</option>
+          </select>
+        </div>
+
         {loading ? (
           <div style={{ textAlign: 'center', padding: 60 }}><Loader2 size={32} className="spin" /></div>
-        ) : serials.length === 0 ? (
+        ) : filteredSerials.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 50, background: '#fff', borderRadius: 14, color: '#64748b' }}>
             <Key size={40} style={{ marginBottom: 10, color: '#cbd5e1' }} />
-            <p>لا توجد سيريالات بعد</p>
+            <p>لا توجد سيريالات</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gap: 10 }}>
-            {serials.map(serial => {
+            {filteredSerials.map(serial => {
               const remaining = serial.max_downloads - serial.used_downloads;
               return (
                 <div key={serial.id} style={{ background: '#fff', borderRadius: 14, padding: 16, border: '1px solid #e2e8f0' }}>
@@ -184,9 +257,12 @@ export default function AdminSerialsPage() {
                     </button>
                   </div>
 
-                  <button onClick={() => handleDelete(serial.id)} style={{ background: '#fee2e2', border: 'none', color: '#b91c1c', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Trash2 size={14} /> حذف
-                  </button>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, color: '#94a3b8' }}>📅 {formatDate(serial.created_at)}</span>
+                    <button onClick={() => handleDelete(serial.id)} style={{ background: '#fee2e2', border: 'none', color: '#b91c1c', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Trash2 size={14} /> حذف
+                    </button>
+                  </div>
                 </div>
               );
             })}
