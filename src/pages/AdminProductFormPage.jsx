@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, Loader2, Upload, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import { Save, Loader2, Upload, CheckCircle, AlertCircle, ArrowRight, Link2 } from 'lucide-react';
 
 const CATEGORIES = [
   { key: 'tcon', label: 'كرت تيكون', color: '#3b82f6' },
@@ -35,6 +35,7 @@ export default function AdminProductFormPage() {
     image: '',
     file_url: '',
   });
+  const [driveUrl, setDriveUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [notification, setNotification] = useState(null);
@@ -76,6 +77,39 @@ export default function AdminProductFormPage() {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${getToken()}`
   });
+
+  // ✅ أداة تحويل رابط Drive
+  const convertDriveUrl = () => {
+    if (!driveUrl.trim()) {
+      showToast('الصق رابط Google Drive أولاً', 'error');
+      return;
+    }
+
+    // استخراج الـ ID من الرابط
+    const patterns = [
+      /\/file\/d\/([a-zA-Z0-9_-]+)/,
+      /[?&]id=([a-zA-Z0-9_-]+)/,
+      /\/d\/([a-zA-Z0-9_-]+)/
+    ];
+
+    let fileId = null;
+    for (const pattern of patterns) {
+      const match = driveUrl.match(pattern);
+      if (match && match[1]) {
+        fileId = match[1];
+        break;
+      }
+    }
+
+    if (!fileId) {
+      showToast('رابط غير صالح - تأكد من رابط Google Drive', 'error');
+      return;
+    }
+
+    const directUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+    setFormData(prev => ({ ...prev, file_url: directUrl }));
+    showToast('تم التحويل بنجاح! ✅');
+  };
 
   const compressImage = (file, maxWidth = 800, quality = 0.7) => {
     return new Promise((resolve, reject) => {
@@ -295,15 +329,43 @@ export default function AdminProductFormPage() {
               </label>
             </div>
 
+            {/* ✅ أداة تحويل رابط Drive */}
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16 }}>
+              <label style={{ fontSize: 13, fontWeight: 800, marginBottom: 8, display: 'block', color: '#334155' }}>
+                🔗 تحويل رابط Google Drive
+              </label>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <input
+                  className="field-input"
+                  placeholder="الصق رابط Drive هنا: https://drive.google.com/file/d/..."
+                  value={driveUrl}
+                  onChange={e => setDriveUrl(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  onClick={convertDriveUrl}
+                  style={{ padding: '10px 16px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}
+                >
+                  <Link2 size={16} /> تحويل
+                </button>
+              </div>
+              <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>
+                يدعم: drive.google.com/file/d/... أو ?id=...
+              </p>
+            </div>
+
+            {/* الرابط النهائي */}
             <div>
               <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>
-                رابط ملف الفلاش (للتحميل بالسيريال)
+                رابط الملف المباشر (للتحميل بالسيريال)
               </label>
               <input
                 className="field-input"
-                placeholder="https://..."
+                placeholder="https://drive.google.com/uc?export=download&id=..."
                 value={formData.file_url}
                 onChange={e => setFormData({ ...formData, file_url: e.target.value })}
+                style={{ direction: 'ltr', textAlign: 'left' }}
               />
             </div>
 
