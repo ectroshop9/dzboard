@@ -127,12 +127,17 @@ router.get('/download-temp/:token', async (req, res) => {
   tempTokens.delete(req.params.token);
   try {
     const fileResponse = await fetch(data.file_url);
+    
+    // ✅ استخراج اسم الملف من الرابط
+    const urlPath = new URL(data.file_url).pathname;
+    const extension = urlPath.split(".").pop();
+    const fileName = `${data.file_name || "download"}.${extension}`;
     if (!fileResponse.ok) {
       return res.status(500).send("فشل جلب الملف");
     }
     const buffer = await fileResponse.arrayBuffer();
     res.setHeader("Content-Type", fileResponse.headers.get("content-type") || "application/octet-stream");
-    res.setHeader("Content-Disposition", `attachment; filename="${data.file_name || "download"}"`);
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
     res.send(Buffer.from(buffer));
   } catch (error) {
     console.error("Proxy error:", error);
