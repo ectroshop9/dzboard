@@ -124,8 +124,8 @@ export default function StorePage() {
   // ✅ فتح رابط آمن
   const handleDownloadUpdate = (e, product) => {
     e.stopPropagation();
-    if (product.update_url && product.update_url.startsWith('https://')) {
-      window.open(product.update_url, '_blank', 'noopener,noreferrer');
+    if (product.file_url && product.file_url.startsWith('https://')) {
+      window.open(product.file_url, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -252,7 +252,7 @@ export default function StorePage() {
             {products.map(product => {
               const numericPrice = parseFloat(product.price) || 0;
               const isAvailable = parseInt(product.stock) > 0;
-              const hasUpdate = product.update_url && product.update_url.startsWith('https://');
+              const hasUpdate = product.file_url && product.file_url.startsWith('https://');
               const isParts = product.category === 'parts';
               const qty = parseInt(quantities[product.id]) || 1;
               const totalPrice = numericPrice * qty;
