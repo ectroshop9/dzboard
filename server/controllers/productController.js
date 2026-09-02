@@ -23,7 +23,7 @@ export const getById = async (req, res) => {
 
 export const create = async (req, res) => {
   try {
-    const { name, category, brand, price, stock, image, description, active, update_url } = req.body;
+    const { name, category, brand, price, stock, image, description, active, update_url, file_url } = req.body;
     
     // ✅ فحص التكرار - فقط يمنع إضافة نفس الاسم
     if (name && name.trim()) {
@@ -54,7 +54,7 @@ export const create = async (req, res) => {
 
 export const update = async (req, res) => {
   try {
-    const { name, category, brand, price, stock, image, description, active, update_url } = req.body;
+    const { name, category, brand, price, stock, image, description, active, update_url, file_url } = req.body;
     
     // ✅ فحص التكرار عند التحديث - فقط إذا تغير الاسم
     if (name && name.trim()) {
