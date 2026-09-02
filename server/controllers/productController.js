@@ -42,7 +42,7 @@ export const create = async (req, res) => {
       image: image || '',
       description: description || '',
       active: active !== undefined ? active : true,
-      update_url: update_url || null
+      update_url: update_url || null, file_url: file_url || null
     });
     
     res.json({ success: true, product: p });
@@ -76,7 +76,7 @@ export const update = async (req, res) => {
       image: image !== undefined ? (image || '') : existing?.image,
       description: description !== undefined ? (description || '') : existing?.description,
       active: active !== undefined ? active : existing?.active,
-      update_url: update_url !== undefined ? (update_url || null) : existing?.update_url
+      update_url: update_url !== undefined ? (update_url || null) : existing?.update_url, file_url: file_url !== undefined ? (file_url || null) : existing?.file_url
     });
     
     res.json({ success: true, product: p });
