@@ -38,7 +38,7 @@ function LayoutWrapper({ children }) {
     <>
       {children}
       {isAdminRoute && <MobileBottomNav />}
-      {/* <ChatBot /> */}
+      <ChatBot />
     </>
   );
 }
