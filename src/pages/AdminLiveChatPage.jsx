@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Send, ArrowRight, Loader2, User, Trash2, RefreshCw, MessageSquare } from 'lucide-react';
 
-const API = 'https://dzboard2.onrender.com/api';
+const API = '/api';
 
 export default function AdminLiveChatPage() {
   const navigate = useNavigate();

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ShoppingCart, ChevronRight, Package, Loader2, Shield, Truck, Plus, Minus } from 'lucide-react';
 
-const API = 'https://dzboard2.onrender.com/api';
+const API = '/api';
 
 export default function ProductDetailPage() {
   const { id } = useParams();

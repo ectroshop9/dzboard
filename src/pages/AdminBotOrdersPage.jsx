@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trash2, RefreshCw, Loader2, Search, Phone, Package, ArrowRight, Truck, Printer, QrCode } from 'lucide-react';
 
-const API = 'https://dzboard2.onrender.com/api';
+const API = '/api';
 
 export default function AdminBotOrdersPage() {
   const navigate = useNavigate();

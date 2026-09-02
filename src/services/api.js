@@ -1,4 +1,4 @@
-const API_BASE = 'https://dzboard2.onrender.com/api';
+const API_BASE = '/api';
 
 const headers = () => ({
   'Content-Type': 'application/json',

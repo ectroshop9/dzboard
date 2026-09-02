@@ -5,7 +5,7 @@ import {
   Database, Download, Upload
 } from 'lucide-react';
 
-const API = 'https://dzboard2.onrender.com/api';
+const API = '/api';
 
 export default function AdminSettingsPage() {
   const navigate = useNavigate();
