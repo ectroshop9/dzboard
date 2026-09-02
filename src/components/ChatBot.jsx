@@ -117,7 +117,7 @@ export default function ChatBot() {
     };
 
     fetchAdminReplies();
-    const interval = setInterval(fetchAdminReplies, 15000);
+    const interval = setInterval(fetchAdminReplies, 30000);
     return () => clearInterval(interval);
   }, [shownReplies, open]);
 

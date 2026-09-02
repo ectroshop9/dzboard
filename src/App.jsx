@@ -24,7 +24,7 @@ import AdminLiveChatPage from './pages/AdminLiveChatPage';
 import MobileBottomNav from './components/MobileBottomNav';
 
 // استيراد البوت
-// import ChatBot from './components/ChatBot';
+import ChatBot from './components/ChatBot';
 
 // مكون فرعي لإظهار الشريط السفلي فقط في صفحات الأدمن (باستثناء صفحة التسجيل)
 function LayoutWrapper({ children }) {
