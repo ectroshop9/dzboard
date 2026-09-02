@@ -34,7 +34,6 @@ export default function AdminProductFormPage() {
     description: '',
     image: '',
     file_url: '',
-    update_url: ''
   });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -61,7 +60,6 @@ export default function AdminProductFormPage() {
               description: p.description || '',
               image: p.image || '',
               file_url: p.file_url || '',
-              update_url: p.update_url || ''
             });
           }
         })
@@ -163,7 +161,6 @@ export default function AdminProductFormPage() {
         image: formData.image || '',
         description: formData.description || '',
         file_url: formData.file_url || null,
-        update_url: formData.update_url || null
       };
 
       const url = isEditing ? `${API}/products/${id}` : `${API}/inventory/items`;
@@ -313,14 +310,6 @@ export default function AdminProductFormPage() {
 
             <div>
               <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>
-                رابط التحديث
-              </label>
-              <input
-                className="field-input"
-                placeholder="https://..."
-                value={formData.update_url}
-                onChange={e => setFormData({ ...formData, update_url: e.target.value })}
-              />
             </div>
 
             <div>
