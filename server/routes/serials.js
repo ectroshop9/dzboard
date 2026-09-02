@@ -1,7 +1,11 @@
 import express from 'express';
+import crypto from 'crypto';
 import { supabase } from '../supabase.js';
 
 const router = express.Router();
+
+// ✅ تخزين التوكنات المؤقتة
+const tempTokens = new Map();
 
 // ✅ التحقق من السيريال
 router.post('/verify', async (req, res) => {
@@ -37,7 +41,7 @@ router.post('/verify', async (req, res) => {
   });
 });
 
-// ✅ التحميل - السيريال + المنتج
+// ✅ التحميل - يولد توكن مؤقت
 router.post('/download', async (req, res) => {
   const { serial_code, product_id } = req.body;
   const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
@@ -46,7 +50,6 @@ router.post('/download', async (req, res) => {
     return res.status(400).json({ success: false, message: 'يرجى إدخال السيريال واختيار المنتج' });
   }
 
-  // البحث عن السيريال
   const { data: serial, error: serialError } = await supabase
     .from('serials')
     .select('*')
@@ -63,7 +66,6 @@ router.post('/download', async (req, res) => {
     return res.status(400).json({ success: false, message: 'استنفدت التحميلات' });
   }
 
-  // البحث عن المنتج وملفه
   const { data: product, error: productError } = await supabase
     .from('products')
     .select('id, name, file_url')
@@ -74,7 +76,7 @@ router.post('/download', async (req, res) => {
     return res.status(404).json({ success: false, message: 'لا يوجد ملف لهذا المنتج' });
   }
 
-  // زيادة العداد
+  // ✅ زيادة العداد
   const { error: updateError } = await supabase
     .from('serials')
     .update({ used_downloads: serial.used_downloads + 1 })
@@ -84,19 +86,46 @@ router.post('/download', async (req, res) => {
     return res.status(500).json({ success: false, message: 'خطأ في التحديث' });
   }
 
-  // تسجيل التحميل
+  // ✅ تسجيل التحميل
   await supabase.from('download_logs').insert({
     serial_id: serial.id,
     product_id: product.id,
     ip_address: ip
   });
 
+  // ✅ توليد توكن مؤقت - لا يكشف file_url
+  const token = crypto.randomBytes(32).toString('hex');
+  tempTokens.set(token, {
+    file_url: product.file_url,
+    expires: Date.now() + (5 * 60 * 1000) // 5 دقائق
+  });
+
+  // ✅ تنظيف التوكنات المنتهية
+  for (const [key, value] of tempTokens) {
+    if (Date.now() > value.expires) {
+      tempTokens.delete(key);
+    }
+  }
+
   res.json({
     success: true,
-    file_url: product.file_url,
+    download_url: `/api/serials/download-temp/${token}`,
     file_name: product.name,
     remaining_downloads: remaining - 1
   });
+});
+
+// ✅ تحميل بالتوكن المؤقت
+router.get('/download-temp/:token', async (req, res) => {
+  const data = tempTokens.get(req.params.token);
+
+  if (!data || Date.now() > data.expires) {
+    tempTokens.delete(req.params.token);
+    return res.status(410).send('الرابط منتهي أو غير صالح');
+  }
+
+  tempTokens.delete(req.params.token);
+  res.redirect(data.file_url);
 });
 
 // ✅ قائمة السيريالات للأدمن
@@ -151,6 +180,29 @@ router.post('/admin/create', async (req, res) => {
   }
 
   res.json({ success: true, serial: data });
+});
+
+// ✅ تفعيل/تعطيل سيريال
+router.put('/admin/toggle/:id', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  const validToken = process.env.ADMIN_TOKEN || 'dzboard_admin_2026';
+  
+  if (!token || token !== validToken) {
+    return res.status(401).json({ success: false, message: 'غير مصرح' });
+  }
+
+  const { is_active } = req.body;
+
+  const { error } = await supabase
+    .from('serials')
+    .update({ is_active: Boolean(is_active) })
+    .eq('id', req.params.id);
+
+  if (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+
+  res.json({ success: true });
 });
 
 // ✅ حذف سيريال
