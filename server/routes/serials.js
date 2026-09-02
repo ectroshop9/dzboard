@@ -85,3 +85,82 @@ router.post('/download', async (req, res) => {
 });
 
 export default router;
+
+// ✅ قائمة السيريالات للأدمن
+router.get('/admin/list', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  const validToken = process.env.ADMIN_TOKEN || 'dzboard_admin_2026';
+  
+  if (!token || token !== validToken) {
+    return res.status(401).json({ success: false, message: 'غير مصرح' });
+  }
+
+  const { data: serials, error } = await supabase
+    .from('serials')
+    .select('*, products(name)')
+    .order('id', { ascending: false });
+
+  if (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+
+  res.json({ success: true, serials: serials || [] });
+});
+
+// ✅ إنشاء سيريال جديد
+router.post('/admin/create', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  const validToken = process.env.ADMIN_TOKEN || 'dzboard_admin_2026';
+  
+  if (!token || token !== validToken) {
+    return res.status(401).json({ success: false, message: 'غير مصرح' });
+  }
+
+  const { serial_code, product_id, file_url, max_downloads } = req.body;
+
+  if (!serial_code || !product_id || !file_url) {
+    return res.status(400).json({ success: false, message: 'بيانات ناقصة' });
+  }
+
+  const { data, error } = await supabase
+    .from('serials')
+    .insert({
+      serial_code,
+      product_id: parseInt(product_id),
+      file_url,
+      max_downloads: parseInt(max_downloads) || 1,
+      used_downloads: 0,
+      is_active: true
+    })
+    .select()
+    .single();
+
+  if (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+
+  res.json({ success: true, serial: data });
+});
+
+// ✅ حذف سيريال
+router.delete('/admin/delete/:id', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  const validToken = process.env.ADMIN_TOKEN || 'dzboard_admin_2026';
+  
+  if (!token || token !== validToken) {
+    return res.status(401).json({ success: false, message: 'غير مصرح' });
+  }
+
+  const { error } = await supabase
+    .from('serials')
+    .delete()
+    .eq('id', req.params.id);
+
+  if (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+
+  res.json({ success: true, message: 'تم الحذف' });
+});
+
+export default router;
