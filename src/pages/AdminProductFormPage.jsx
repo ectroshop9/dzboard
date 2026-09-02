@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, Loader2, Upload, X, CheckCircle, AlertCircle, ArrowRight, Package } from 'lucide-react';
+import { Save, Loader2, Upload, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 
 const CATEGORIES = [
   { key: 'tcon', label: 'كرت تيكون', color: '#3b82f6' },
@@ -33,8 +33,8 @@ export default function AdminProductFormPage() {
     stock: '1',
     description: '',
     image: '',
-    brand: 'generic',
-    file_url: ''
+    file_url: '',
+    update_url: ''
   });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -60,8 +60,8 @@ export default function AdminProductFormPage() {
               stock: p.stock || '1',
               description: p.description || '',
               image: p.image || '',
-              brand: p.brand || 'generic',
-              file_url: p.file_url || ''
+              file_url: p.file_url || '',
+              update_url: p.update_url || ''
             });
           }
         })
@@ -79,31 +79,63 @@ export default function AdminProductFormPage() {
     Authorization: `Bearer ${getToken()}`
   });
 
+  // ✅ ضغط الصورة في المتصفح
+  const compressImage = (file, maxWidth = 800, quality = 0.7) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = reject;
+      };
+      reader.onerror = reject;
+    });
+  };
+
   const handleImageUpload = async (file) => {
     if (!file) return;
     setUploading(true);
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-      try {
-        const res = await fetch(`${API}/products/upload`, {
-          method: 'POST',
-          headers: getAuthHeader(),
-          body: JSON.stringify({ image: reader.result })
-        });
-        const data = await res.json();
-        if (data.success) {
-          setFormData(p => ({ ...p, image: data.url }));
-          showToast('تم رفع الصورة بنجاح');
-        } else {
-          showToast('فشل رفع الصورة', 'error');
-        }
-      } catch {
-        showToast('خطأ أثناء رفع الصورة', 'error');
-      } finally {
-        setUploading(false);
+    
+    try {
+      const compressedImage = await compressImage(file);
+      
+      const res = await fetch(`${API}/products/upload`, {
+        method: 'POST',
+        headers: getAuthHeader(),
+        body: JSON.stringify({ image: compressedImage })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setFormData(p => ({ ...p, image: data.url }));
+        showToast('تم رفع الصورة بنجاح');
+      } else {
+        showToast('فشل رفع الصورة', 'error');
       }
-    };
+    } catch {
+      showToast('خطأ أثناء رفع الصورة', 'error');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSave = async (e) => {
@@ -129,9 +161,9 @@ export default function AdminProductFormPage() {
         price: priceNum,
         stock: parseInt(formData.stock, 10) || 0,
         image: formData.image || '',
-        brand: formData.brand || 'generic',
         description: formData.description || '',
-        file_url: formData.file_url || null
+        file_url: formData.file_url || null,
+        update_url: formData.update_url || null
       };
 
       const url = isEditing ? `${API}/products/${id}` : `${API}/inventory/items`;
@@ -169,7 +201,6 @@ export default function AdminProductFormPage() {
       )}
 
       <main style={{ padding: 16, maxWidth: 700, margin: '0 auto' }}>
-        {/* الهيدر */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
           <button onClick={() => navigate('/admin/products')} style={{ background: '#f1f5f9', border: 'none', borderRadius: 10, width: 40, height: 40, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ArrowRight size={20} />
@@ -184,10 +215,9 @@ export default function AdminProductFormPage() {
           </div>
         </div>
 
-        {/* النموذج */}
         <form onSubmit={handleSave} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 24 }}>
           <div style={{ display: 'grid', gap: 16 }}>
-            {/* اسم المنتج */}
+            
             <div>
               <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>
                 اسم المنتج <span style={{ color: '#ef4444' }}>*</span>
@@ -201,7 +231,6 @@ export default function AdminProductFormPage() {
               />
             </div>
 
-            {/* التصنيف والمخزون */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
               <div>
                 <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>
@@ -231,36 +260,20 @@ export default function AdminProductFormPage() {
               </div>
             </div>
 
-            {/* السعر والماركة */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>
-                  السعر (دج) <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                <input
-                  className="field-input"
-                  type="number"
-                  min="0"
-                  value={formData.price}
-                  onChange={e => setFormData({ ...formData, price: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>
-                  الماركة
-                </label>
-                <input
-                  className="field-input"
-                  placeholder="generic"
-                  value={formData.brand}
-                  onChange={e => setFormData({ ...formData, brand: e.target.value })}
-                />
-              </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>
+                السعر (دج) <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <input
+                className="field-input"
+                type="number"
+                min="0"
+                value={formData.price}
+                onChange={e => setFormData({ ...formData, price: e.target.value })}
+                required
+              />
             </div>
 
-            {/* رابط الصورة */}
             <div>
               <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>
                 رابط الصورة
@@ -276,7 +289,6 @@ export default function AdminProductFormPage() {
               )}
             </div>
 
-            {/* رفع صورة */}
             <div>
               <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>
                 رفع صورة جديدة
@@ -287,7 +299,6 @@ export default function AdminProductFormPage() {
               </label>
             </div>
 
-            {/* رابط ملف الفلاش */}
             <div>
               <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>
                 رابط ملف الفلاش (للتحميل بالسيريال)
@@ -300,7 +311,18 @@ export default function AdminProductFormPage() {
               />
             </div>
 
-            {/* الوصف */}
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>
+                رابط التحديث
+              </label>
+              <input
+                className="field-input"
+                placeholder="https://..."
+                value={formData.update_url}
+                onChange={e => setFormData({ ...formData, update_url: e.target.value })}
+              />
+            </div>
+
             <div>
               <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>
                 الوصف
@@ -315,7 +337,6 @@ export default function AdminProductFormPage() {
               />
             </div>
 
-            {/* الأزرار */}
             <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
               <button
                 type="button"
