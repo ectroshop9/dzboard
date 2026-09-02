@@ -340,7 +340,7 @@ export default function StorePage() {
                       <div style={{ display: 'flex', gap: 4 }}>
                         {hasUpdate && (
                           <button
-                            onClick={(e) => handleDownloadUpdate(e, product)}
+                            onClick={(e) => { e.stopPropagation(); navigate('/download'); }}
                             style={{
                               padding: '6px 10px',
                               background: '#3b82f6',
@@ -355,7 +355,7 @@ export default function StorePage() {
                               gap: 4
                             }}
                           >
-                            <Download size={13} /> تحديث
+                            <Download size={13} /> تحميل
                           </button>
                         )}
 
