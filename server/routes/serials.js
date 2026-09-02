@@ -129,9 +129,9 @@ router.get('/download-temp/:token', async (req, res) => {
     const fileResponse = await fetch(data.file_url);
     
     // ✅ استخراج اسم الملف من الرابط
-    const urlPath = new URL(data.file_url).pathname;
+    const urlPath = data.file_url;
     const extension = urlPath.split(".").pop();
-    const fileName = `${data.file_name || "download"}.${extension}`;
+    const fileName = data.file_name || "download";
     if (!fileResponse.ok) {
       return res.status(500).send("فشل جلب الملف");
     }
