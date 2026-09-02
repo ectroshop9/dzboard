@@ -446,7 +446,7 @@ export default function AdminProductsPage() {
             <button onClick={handlePrintAllBarcodes} style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
               <Printer size={16} /> طباعة الكل
             </button>
-            <button onClick={handleOpenAdd} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+            <button onClick={() => navigate('/admin/products/add')} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
               <Plus size={16} /> إضافة منتج
             </button>
           </div>
@@ -533,7 +533,7 @@ export default function AdminProductsPage() {
                       <button onClick={() => handlePrintBarcode(product, barcode)} className="btn btn-ghost btn-sm" title="طباعة" style={{ color: '#059669' }}>
                         <Printer size={16} />
                       </button>
-                      <button onClick={() => handleOpenEdit(product)} className="btn btn-ghost btn-sm" style={{ color: '#2563eb' }}>
+                      <button onClick={() => navigate(`/admin/products/edit/${product.id}`)} className="btn btn-ghost btn-sm" style={{ color: '#2563eb' }}>
                         <Edit3 size={14} />
                       </button>
                       <button onClick={() => handleDelete(product.id)} className="btn btn-ghost btn-sm" style={{ color: '#ef4444' }}>
