@@ -47,12 +47,12 @@ export default function DownloadPage() {
       });
       const data = await res.json();
 
-      if (data.success && data.file_url) {
+      if (data.success && (data.download_url || data.file_url)) {
         setResult({
           file_name: data.file_name,
           remaining_downloads: data.remaining_downloads
         });
-        window.open(data.file_url, '_blank', 'noopener,noreferrer');
+        window.open(data.download_url || data.file_url, '_blank', 'noopener,noreferrer');
       } else {
         setError(data.message || 'فشل التحميل');
       }
