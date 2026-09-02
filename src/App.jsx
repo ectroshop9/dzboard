@@ -25,6 +25,7 @@ import MobileBottomNav from './components/MobileBottomNav';
 
 // استيراد البوت
 import ChatBot from './components/ChatBot';
+import DownloadPage from './pages/DownloadPage';
 
 // مكون فرعي لإظهار الشريط السفلي فقط في صفحات الأدمن (باستثناء صفحة التسجيل)
 function LayoutWrapper({ children }) {
@@ -52,6 +53,7 @@ function App() {
           <Route path="/thank-you" element={<ThankYouPage />} />
           <Route path="/request-part" element={<RequestPartPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/download" element={<DownloadPage />} />
 
           {/* صفحات لوحة التحكم الأدمن */}
           <Route path="/admin" element={<AdminLoginPage />} />
