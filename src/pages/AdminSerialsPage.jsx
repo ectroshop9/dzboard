@@ -19,11 +19,7 @@ export default function AdminSerialsPage() {
   const [serials, setSerials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
-    file_name: '',
-    file_url: '',
-    max_downloads: 1
-  });
+  const [maxDownloads, setMaxDownloads] = useState(1);
   const [saving, setSaving] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
 
@@ -58,10 +54,6 @@ export default function AdminSerialsPage() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!formData.file_name || !formData.file_url) {
-      alert('أدخل اسم الملف ورابط التحميل');
-      return;
-    }
 
     setSaving(true);
     try {
@@ -73,16 +65,14 @@ export default function AdminSerialsPage() {
         },
         body: JSON.stringify({
           serial_code: generateSerialCode(),
-          file_name: formData.file_name.trim(),
-          file_url: formData.file_url.trim(),
-          max_downloads: parseInt(formData.max_downloads) || 1
+          max_downloads: parseInt(maxDownloads) || 1
         })
       });
       const data = await res.json();
 
       if (data.success) {
         setShowForm(false);
-        setFormData({ file_name: '', file_url: '', max_downloads: 1 });
+        setMaxDownloads(1);
         loadData();
       } else {
         alert(data.message || 'فشل الإنشاء');
@@ -135,38 +125,14 @@ export default function AdminSerialsPage() {
             <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>إنشاء سيريال جديد</h3>
             <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, display: 'block' }}>اسم الملف *</label>
-                <input
-                  type="text"
-                  placeholder="مثال: Iris 32E3100 Firmware V1.0"
-                  value={formData.file_name}
-                  onChange={e => setFormData({ ...formData, file_name: e.target.value })}
-                  style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, boxSizing: 'border-box' }}
-                  required
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, display: 'block' }}>رابط التحميل *</label>
-                <input
-                  type="url"
-                  placeholder="https://..."
-                  value={formData.file_url}
-                  onChange={e => setFormData({ ...formData, file_url: e.target.value })}
-                  style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, boxSizing: 'border-box' }}
-                  required
-                />
-              </div>
-
-              <div>
                 <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, display: 'block' }}>عدد التحميلات المسموح *</label>
                 <input
                   type="number"
                   min="1"
-                  max="100"
-                  value={formData.max_downloads}
-                  onChange={e => setFormData({ ...formData, max_downloads: e.target.value })}
-                  style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, boxSizing: 'border-box' }}
+                  max="1000"
+                  value={maxDownloads}
+                  onChange={e => setMaxDownloads(e.target.value)}
+                  style={{ width: '100%', padding: '14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 16, boxSizing: 'border-box', textAlign: 'center', fontWeight: 700 }}
                   required
                 />
               </div>
@@ -196,7 +162,6 @@ export default function AdminSerialsPage() {
               return (
                 <div key={serial.id} style={{ background: '#fff', borderRadius: 14, padding: 16, border: '1px solid #e2e8f0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <strong style={{ fontSize: 14 }}>{serial.file_name}</strong>
                     <span style={{ 
                       padding: '4px 12px', 
                       borderRadius: 20, 
@@ -207,23 +172,21 @@ export default function AdminSerialsPage() {
                     }}>
                       {remaining > 0 ? `متبقي ${remaining}` : 'منتهي'}
                     </span>
+                    <span style={{ fontSize: 12, color: '#64748b' }}>
+                      {serial.used_downloads} / {serial.max_downloads} تحميل
+                    </span>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f1f5f9', padding: '10px', borderRadius: 8, marginBottom: 10 }}>
-                    <code style={{ fontSize: 14, fontWeight: 700, letterSpacing: 1, flex: 1 }}>{serial.serial_code}</code>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f1f5f9', padding: '12px', borderRadius: 8, marginBottom: 10 }}>
+                    <code style={{ fontSize: 15, fontWeight: 700, letterSpacing: 1, flex: 1 }}>{serial.serial_code}</code>
                     <button onClick={() => copySerial(serial.serial_code)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: copiedCode === serial.serial_code ? '#10b981' : '#64748b' }}>
                       {copiedCode === serial.serial_code ? <CheckCircle size={16} /> : <Copy size={16} />}
                     </button>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, color: '#64748b' }}>
-                      {serial.used_downloads} / {serial.max_downloads} تحميل
-                    </span>
-                    <button onClick={() => handleDelete(serial.id)} style={{ background: '#fee2e2', border: 'none', color: '#b91c1c', borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}>
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+                  <button onClick={() => handleDelete(serial.id)} style={{ background: '#fee2e2', border: 'none', color: '#b91c1c', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Trash2 size={14} /> حذف
+                  </button>
                 </div>
               );
             })}
