@@ -50,7 +50,7 @@ export default function AdminProductsPage() {
     description: '', 
     image: '', 
     brand: 'generic',
-    update_url: ''
+    update_url: '', file_url: ''
   };
   
   const [formData, setFormData] = useState(initialForm);
@@ -469,6 +469,7 @@ export default function AdminProductsPage() {
               <input className="field-input" type="number" placeholder="المخزون *" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
               <input className="field-input" placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
               <input className="field-input" placeholder="رابط التحديث (اختياري)" value={formData.update_url} onChange={e => setFormData({...formData, update_url: e.target.value})} />
+              <input className="field-input" placeholder="رابط ملف الفلاش (للتحميل)" value={formData.file_url} onChange={e => setFormData({...formData, file_url: e.target.value})} />
               <textarea className="field-input" placeholder="وصف المنتج (اختياري)" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} rows={2} style={{ gridColumn: '1 / -1' }} />
               <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', background: '#f1f5f9', borderRadius: 8, fontWeight: 600, fontSize: 13, width: 'fit-content' }}>
                 <Upload size={14} /> {uploading ? 'جاري...' : 'رفع صورة'}
