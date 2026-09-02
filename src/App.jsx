@@ -27,6 +27,7 @@ import MobileBottomNav from './components/MobileBottomNav';
 import ChatBot from './components/ChatBot';
 import DownloadPage from './pages/DownloadPage';
 import AdminSerialsPage from './pages/AdminSerialsPage';
+import AdminProductFormPage from './pages/AdminProductFormPage';
 
 // مكون فرعي لإظهار الشريط السفلي فقط في صفحات الأدمن (باستثناء صفحة التسجيل)
 function LayoutWrapper({ children }) {
@@ -61,6 +62,8 @@ function App() {
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/products" element={<AdminProductsPage />} />
+          <Route path="/admin/products/add" element={<AdminProductFormPage />} />
+          <Route path="/admin/products/edit/:id" element={<AdminProductFormPage />} />
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
           <Route path="/admin/orders-menu" element={<AdminOrdersMenuPage />} />
           <Route path="/admin/bot-orders" element={<AdminBotOrdersPage />} />
