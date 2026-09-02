@@ -77,7 +77,6 @@ export default function AdminProductFormPage() {
     Authorization: `Bearer ${getToken()}`
   });
 
-  // ✅ ضغط الصورة في المتصفح
   const compressImage = (file, maxWidth = 800, quality = 0.7) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -306,10 +305,6 @@ export default function AdminProductFormPage() {
                 value={formData.file_url}
                 onChange={e => setFormData({ ...formData, file_url: e.target.value })}
               />
-            </div>
-
-            <div>
-              <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>
             </div>
 
             <div>
