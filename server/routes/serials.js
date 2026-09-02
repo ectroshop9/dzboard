@@ -115,7 +115,7 @@ router.post('/download', async (req, res) => {
   });
 });
 
-// ✅ تحميل بالتوكن المؤقت
+// ✅ تحميل صحيح
 router.get('/download-temp/:token', async (req, res) => {
   const data = tempTokens.get(req.params.token);
 
@@ -125,25 +125,48 @@ router.get('/download-temp/:token', async (req, res) => {
   }
 
   tempTokens.delete(req.params.token);
+
   try {
-    const fileResponse = await fetch(data.file_url);
-    
-    // ✅ استخراج اسم الملف من الرابط
-    const urlPath = data.file_url;
-    const extension = urlPath.split(".").pop();
-    const fileName = data.file_name || "download";
+    const fileResponse = await fetch(data.file_url, {
+      redirect: 'follow'
+    });
+
     if (!fileResponse.ok) {
-      return res.status(500).send("فشل جلب الملف");
+      return res.status(500).send('فشل جلب الملف');
     }
+
     const buffer = await fileResponse.arrayBuffer();
-    res.setHeader("Content-Type", fileResponse.headers.get("content-type") || "application/octet-stream");
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+
+    // ✅ استخدام الاسم من data.file_name
+    let fileName = data.file_name || 'download';
+    
+    // ✅ محاولة معرفة الامتداد من Content-Type
+    const contentType = fileResponse.headers.get('content-type') || 'application/octet-stream';
+    const extMap = {
+      'image/jpeg': '.jpg',
+      'image/png': '.png',
+      'image/webp': '.webp',
+      'application/pdf': '.pdf',
+      'application/zip': '.zip',
+      'application/x-rar': '.rar',
+      'application/octet-stream': '.bin'
+    };
+    
+    const ext = extMap[contentType] || '';
+    if (ext && !fileName.endsWith(ext)) {
+      fileName += ext;
+    }
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Length', buffer.byteLength);
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     res.send(Buffer.from(buffer));
   } catch (error) {
-    console.error("Proxy error:", error);
-    res.status(500).send("خطأ في التحميل");
+    console.error('Proxy error:', error);
+    res.status(500).send('خطأ في التحميل');
   }
 });
+
 
 // ✅ قائمة السيريالات للأدمن
 router.get('/admin/list', async (req, res) => {
