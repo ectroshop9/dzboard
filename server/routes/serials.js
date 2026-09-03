@@ -97,6 +97,7 @@ router.post('/download', async (req, res) => {
   const token = crypto.randomBytes(32).toString('hex');
   tempTokens.set(token, {
     file_url: product.file_url,
+    file_name: product.name,
     expires: Date.now() + (5 * 60 * 1000) // 5 دقائق
   });
 
