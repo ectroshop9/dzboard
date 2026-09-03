@@ -356,21 +356,55 @@ export default function AdminScanPage() {
               </div>
               
               <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                <button 
-                  onClick={toggleItemStatus} 
-                  style={{ 
-                    flex: 1, 
-                    background: item.status === 'available' ? '#f59e0b' : '#2563eb',
-                    color: '#fff', 
-                    border: 'none', 
-                    borderRadius: 8, 
-                    padding: '10px', 
-                    fontWeight: 800, 
-                    cursor: 'pointer' 
-                  }}
-                >
-                  {item.status === 'available' ? 'تحديد كمباع' : 'إرجاع للمخزون'}
-                </button>
+                {item.status === 'available' ? (
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <button 
+                      onClick={() => setShowCustomerModal(true)} 
+                      style={{ 
+                        background: '#f59e0b',
+                        color: '#fff', 
+                        border: 'none', 
+                        borderRadius: 8, 
+                        padding: '10px', 
+                        fontWeight: 800, 
+                        cursor: 'pointer' 
+                      }}
+                    >
+                      💰 بيع مباشر
+                    </button>
+                    <button 
+                      onClick={toggleItemStatus} 
+                      style={{ 
+                        background: '#ef4444',
+                        color: '#fff', 
+                        border: 'none', 
+                        borderRadius: 8, 
+                        padding: '8px', 
+                        fontWeight: 700,
+                        fontSize: 12,
+                        cursor: 'pointer' 
+                      }}
+                    >
+                      تحديد كمباع فقط
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={toggleItemStatus} 
+                    style={{ 
+                      flex: 1, 
+                      background: '#2563eb',
+                      color: '#fff', 
+                      border: 'none', 
+                      borderRadius: 8, 
+                      padding: '10px', 
+                      fontWeight: 800, 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    إرجاع للمخزون
+                  </button>
+                )}
                 
                 <button 
                   onClick={() => { setItem(null); setManualCode(''); setScannedCode(''); }} 
