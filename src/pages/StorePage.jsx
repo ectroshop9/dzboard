@@ -158,6 +158,7 @@ export default function StorePage() {
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           💵 الدفع عند الاستلام
         </span>
+        </div>
       </div>
       
       {/* الهيدر العلوي - بدون "الرئيسية" و"المتجر" */}
@@ -233,7 +234,11 @@ export default function StorePage() {
             {[1, 2, 3, 4, 5, 6].map(n => (
               <div key={n} style={{ background: '#fff', borderRadius: 12, height: 220, border: '1px solid #e2e8f0', animation: 'pulse 1.5s infinite ease-in-out' }} />
             ))}
-            <style>{`@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }`}</style>
+            <style>{`@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }
+      @keyframes marquee {
+        0% { transform: translateX(100%); }
+        100% { transform: translateX(-100%); }
+      }`}</style>
           </div>
         ) : products.length === 0 ? (
           <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, textAlign: 'center', padding: '48px 16px' }}>
