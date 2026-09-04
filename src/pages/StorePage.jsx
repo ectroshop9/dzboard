@@ -220,9 +220,7 @@ export default function StorePage() {
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '10px 12px 24px' }}>
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <div style={{ color: '#64748b', fontSize: 12, fontWeight: 700 }}>
-            {loading ? 'جاري البحث...' : `${products.length} قطعة`}
-          </div>
+          <div></div>
           {selectedCategory !== 'all' && (
             <button onClick={() => setSelectedCategory('all')} style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
               عرض الكل
