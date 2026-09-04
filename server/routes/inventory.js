@@ -13,7 +13,7 @@ router.get('/items', async (req, res) => {
     
     if (search) {
       const cleanSearch = search.trim();
-      query = query.or(`sku.eq.${cleanSearch},barcode.eq.${cleanSearch},name.ilike.%${cleanSearch}%`);
+      query = query.or(`sku.eq."${cleanSearch}",barcode.eq."${cleanSearch}",name.ilike.%${cleanSearch}%`);
     }
     
     const { data: items, error } = await query;
@@ -26,7 +26,6 @@ router.get('/items', async (req, res) => {
       });
     }
 
-    // دمج تفاصيل المنتج مع كل قطعة مخزون
     for (let item of (items || [])) {
       if (item.product_id) {
         const { data: product } = await supabase
