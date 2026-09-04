@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Key, Download, Loader2, CheckCircle, XCircle, Package } from 'lucide-react';
 
 export default function DownloadPage() {
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [searchParams] = useSearchParams();
+  const productParam = searchParams.get('product');
   const [serialCode, setSerialCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -61,6 +64,18 @@ export default function DownloadPage() {
     }
     setLoading(false);
   };
+
+  if (!productParam) {
+    return (
+      <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'system-ui' }}>
+        <div style={{ textAlign: 'center', background: '#fff', borderRadius: 14, padding: 30, maxWidth: 400, border: '1px solid #e2e8f0' }}>
+          <Package size={48} style={{ color: '#94a3b8', marginBottom: 12 }} />
+          <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>لا يمكن الوصول المباشر</h2>
+          <p style={{ fontSize: 13, color: '#64748b' }}>يرجى الضغط على زر تحميل من المتجر</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', padding: 16, fontFamily: "'Cairo', system-ui, sans-serif" }}>

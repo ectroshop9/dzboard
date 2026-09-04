@@ -340,7 +340,7 @@ export default function StorePage() {
                       <div style={{ display: 'flex', gap: 4 }}>
                         {hasUpdate && (
                           <button
-                            onClick={(e) => { e.stopPropagation(); navigate('/download'); }}
+                            onClick={(e) => { e.stopPropagation(); navigate(`/download?product=${product.id}`); }}
                             style={{
                               padding: '6px 10px',
                               background: '#3b82f6',
