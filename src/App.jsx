@@ -33,12 +33,13 @@ import AdminProductFormPage from './pages/AdminProductFormPage';
 function LayoutWrapper({ children }) {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin') && location.pathname !== '/admin/login' && location.pathname !== '/admin';
+  const isAdminPage = location.pathname.startsWith('/admin');
 
   return (
     <>
       {children}
       {isAdminRoute && <MobileBottomNav />}
-      <ChatBot />
+      {!isAdminPage && <ChatBot />}
     </>
   );
 }
