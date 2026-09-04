@@ -9,7 +9,8 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 دقائق
 
 // ✅ مسار الحصول على المنتجات - مع كاش
 router.get('/', async (req, res) => {
-  const cacheKey = 'products_all';
+  const includeInactive = req.query.include_inactive === 'true';
+  const cacheKey = includeInactive ? 'products_all_including_inactive' : 'products_all';
   
   try {
     // جلب من الكاش
