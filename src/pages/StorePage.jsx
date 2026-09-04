@@ -141,6 +141,28 @@ export default function StorePage() {
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '10px 12px', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           
+          {/* ✅ القائمة المنسدلة بالجنب */}
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            style={{
+              padding: '8px 12px',
+              borderRadius: 20,
+              border: '1px solid #cbd5e1',
+              background: '#fff',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              outline: 'none',
+              color: '#334155',
+              flexShrink: 0
+            }}
+          >
+            {categories.map(cat => (
+              <option key={cat.key} value={cat.key}>{cat.label}</option>
+            ))}
+          </select>
+          
           {/* ✅ البحث في الوسط */}
           <div style={{ position: 'relative', width: '100%', maxWidth: 400 }}>
             <input
@@ -167,30 +189,7 @@ export default function StorePage() {
           </button>
         </div>
 
-        {/* ✅ قائمة التصنيفات المنسدلة */}
-        <div style={{ maxWidth: 1100, margin: '8px auto 0', display: 'flex', justifyContent: 'center' }}>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            style={{
-              padding: '8px 16px',
-              borderRadius: 20,
-              border: '1px solid #cbd5e1',
-              background: '#fff',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-              outline: 'none',
-              color: '#334155',
-              minWidth: 150,
-              textAlign: 'center'
-            }}
-          >
-            {categories.map(cat => (
-              <option key={cat.key} value={cat.key}>{cat.label}</option>
-            ))}
-          </select>
-        </div>
+
       </div>
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '10px 12px 24px' }}>
