@@ -356,7 +356,7 @@ export default function AdminScanPage() {
                 {item.status === 'available' ? (
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <button 
-                      onClick={() => setShowCustomerModal(true)} 
+                      onClick={() => navigate('/admin/checkout-form', { state: { item } })} 
                       style={{ 
                         background: '#f59e0b',
                         color: '#fff', 
