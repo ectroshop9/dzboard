@@ -72,7 +72,25 @@ export default function DownloadPage() {
         <div style={{ textAlign: 'center', background: '#fff', borderRadius: 14, padding: 30, maxWidth: 400, border: '1px solid #e2e8f0' }}>
           <Package size={48} style={{ color: '#94a3b8', marginBottom: 12 }} />
           <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>لا يمكن الوصول المباشر</h2>
-          <p style={{ fontSize: 13, color: '#64748b' }}>يرجى الضغط على زر تحميل من المتجر</p>
+          <p style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>يرجى الضغط على زر تحميل من المتجر</p>
+          <button 
+            onClick={() => navigate('/store')}
+            style={{
+              background: '#2563eb',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 10,
+              padding: '10px 24px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 14
+            }}
+          >
+            <ArrowRight size={16} style={{ transform: 'rotate(180deg)' }} /> العودة للمتجر
+          </button>
         </div>
       </div>
     );
