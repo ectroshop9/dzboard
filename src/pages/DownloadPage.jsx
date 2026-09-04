@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Key, Download, Loader2, CheckCircle, XCircle, Package, Search } from 'lucide-react';
+import { Key, Download, Loader2, CheckCircle, XCircle, Package } from 'lucide-react';
 
 export default function DownloadPage() {
   const [products, setProducts] = useState([]);
@@ -75,16 +75,6 @@ export default function DownloadPage() {
 
         {/* اختيار المنتج */}
         <div style={{ background: '#fff', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid #e2e8f0' }}>
-          <div style={{ position: 'relative', marginBottom: 12 }}>
-            <input
-              type="text"
-              placeholder="🔍 ابحث عن المنتج..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              style={{ width: '100%', padding: '12px 36px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, boxSizing: 'border-box' }}
-            />
-            <Search size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-          </div>
 
           <div style={{ maxHeight: 200, overflowY: 'auto', display: 'grid', gap: 6 }}>
             {filteredProducts.map(p => (
