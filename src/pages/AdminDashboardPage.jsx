@@ -89,10 +89,6 @@ export default function AdminDashboardPage() {
             { icon: Clock, label: 'معلقة', value: stats?.pendingOrders || 0, color: '#f59e0b', bg: '#fef3c7' },
             { icon: Package, label: 'المنتجات', value: stats?.totalProducts || 0, color: '#10b981', bg: '#ecfdf5' },
             { icon: Package, label: 'المخزون', value: stats?.totalStock || 0, color: '#6366f1', bg: '#eef2ff' },
-            { icon: TrendingUp, label: 'الإيرادات', value: `${(stats?.totalRevenue || 0).toLocaleString('en-US')} دج`, color: '#059669', bg: '#e6fffa' },
-            { icon: Truck, label: 'نسبة التوصيل', value: `${stats?.deliveryRate || 0}%`, color: '#8b5cf6', bg: '#f5f3ff' },
-            { icon: Users, label: 'العملاء', value: stats?.totalCustomers || 0, color: '#ec4899', bg: '#fdf2f8' },
-            { icon: Bot, label: 'طلبات البوت', value: stats?.botOrdersCount || 0, color: '#06b6d4', bg: '#ecfeff' },
           ].map((s, i) => {
             const Icon = s.icon;
             return (
@@ -107,6 +103,17 @@ export default function AdminDashboardPage() {
               </div>
             );
           })}
+          
+          {/* ✅ رابط السيريالات */}
+          <div onClick={() => navigate('/admin/serials')} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, borderRight: '4px solid #06b6d4', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.borderColor = '#06b6d4'} onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontSize: 12, color: '#64748b' }}>السيريالات</span>
+              <div style={{ background: '#ecfeff', color: '#06b6d4', width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Bot size={18} />
+              </div>
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 900, color: '#06b6d4' }}>إدارة السيريالات 🔑</div>
+          </div>
         </div>
 
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden' }}>
