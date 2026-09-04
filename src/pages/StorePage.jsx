@@ -137,27 +137,34 @@ export default function StorePage() {
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', system-ui, sans-serif", paddingBottom: 40 }}>
       
-      {/* ✅ شريط ترويجي أحمر */}
+      {/* ✅ شريط ترويجي متحرك */}
       <div style={{
         background: '#dc2626',
         color: '#fff',
         textAlign: 'center',
-        padding: '8px 12px',
-        fontSize: 12,
+        padding: '8px 0',
+        fontSize: 11,
         fontWeight: 700,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 16,
-        flexWrap: 'wrap'
+        overflow: 'hidden',
+        position: 'relative'
       }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          🚚 توصيل 58 ولاية
-        </span>
-        <span style={{ opacity: 0.6 }}>|</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          💵 الدفع عند الاستلام
-        </span>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 30,
+          whiteSpace: 'nowrap',
+          animation: 'marquee 20s linear infinite',
+          width: 'max-content'
+        }}>
+          <span>✅ قطع مجربة ومضمونة</span>
+          <span style={{ opacity: 0.5 }}>|</span>
+          <span>🚚 توصيل 69 ولاية</span>
+          <span style={{ opacity: 0.5 }}>|</span>
+          <span>💵 الدفع عند الاستلام</span>
+          <span style={{ opacity: 0.5 }}>|</span>
+          <span style={{ background: '#f59e0b', padding: '2px 10px', borderRadius: 12 }}>🎁 هدية: سيريال تحميل الدامب مجاناً</span>
+          <span style={{ opacity: 0.5 }}>|</span>
+          <span>🛠️ خدمة بعد البيع 7/24</span>
         </div>
       </div>
       
@@ -234,7 +241,11 @@ export default function StorePage() {
             {[1, 2, 3, 4, 5, 6].map(n => (
               <div key={n} style={{ background: '#fff', borderRadius: 12, height: 220, border: '1px solid #e2e8f0', animation: 'pulse 1.5s infinite ease-in-out' }} />
             ))}
-            <style>{`@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }
+            <style>{`@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+      @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }
       @keyframes marquee {
         0% { transform: translateX(100%); }
         100% { transform: translateX(-100%); }
