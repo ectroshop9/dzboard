@@ -188,7 +188,7 @@ export default function AdminGiftCardPage() {
               {formData.tracking_number && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
                   <Truck size={16} />
-                  <span style={{ fontSize: 14 }}>رقم التتبع: #{formData.tracking_number}</span>
+                  <span style={{ fontSize: 14 }}>رقم تتبع شركة التوصيل: {formData.tracking_number}</span>
                 </div>
               )}
             </div>
@@ -197,7 +197,7 @@ export default function AdminGiftCardPage() {
               <div style={{ border: '1px solid #000', borderRadius: 12, padding: 14, marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4 }}>
                   <Key size={16} />
-                  <span style={{ fontSize: 12, fontWeight: 700 }}>السيريال المجاني للتحميل</span>
+                  <span style={{ fontSize: 12, fontWeight: 700 }}>سيريال تحميل الدامب للكرت مار</span>
                 </div>
                 <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: 1, fontFamily: 'monospace' }}>
                   {formData.serial_code}
