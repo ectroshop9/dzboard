@@ -152,7 +152,7 @@ export default function AdminGiftCardPage() {
 
         {/* البطاقة */}
         {generated && (
-          <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #1d4ed8 100%)', borderRadius: 20, padding: 24, color: '#fff', textAlign: 'center', position: 'relative', overflow: 'hidden', boxShadow: '0 20px 40px -10px rgba(59, 130, 246, 0.4)' }}>
+          <div style={{ background: '#fff', border: '3px dashed #000', borderRadius: 16, padding: 24, color: '#000', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
             
             {/* زخارف */}
             <div style={{ position: 'absolute', top: -30, left: -30, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
@@ -168,13 +168,13 @@ export default function AdminGiftCardPage() {
             </div>
 
             <div style={{ fontSize: 22, fontWeight: 900, marginBottom: 4, letterSpacing: -0.5 }}>
-              DZ<span style={{ color: '#f59e0b' }}>Board</span>
+              DZ<span>Board</span>
             </div>
             <div style={{ fontSize: 14, opacity: 0.9, marginBottom: 20 }}>
               🎁 بطاقة هدية للزبون
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 12, padding: 16, marginBottom: 12, backdropFilter: 'blur(10px)' }}>
+            <div style={{ border: '1px solid #000', borderRadius: 12, padding: 16, marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
                 <User size={16} />
                 <span style={{ fontSize: 16, fontWeight: 800 }}>{formData.customer_name || 'اسم الزبون'}</span>
@@ -194,7 +194,7 @@ export default function AdminGiftCardPage() {
             </div>
 
             {formData.serial_code && (
-              <div style={{ background: '#f59e0b', borderRadius: 12, padding: 14, marginBottom: 8 }}>
+              <div style={{ border: '1px solid #000', borderRadius: 12, padding: 14, marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4 }}>
                   <Key size={16} />
                   <span style={{ fontSize: 12, fontWeight: 700 }}>السيريال المجاني للتحميل</span>
