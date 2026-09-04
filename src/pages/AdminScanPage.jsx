@@ -170,21 +170,23 @@ export default function AdminScanPage() {
     
     setLoading(true);
     try {
+      const newStatus = item.status === 'available' ? 'sold' : 'available';
+      
       const res = await fetch(`${API}/inventory/items/${item.id}/status`, { 
         method: 'PUT', 
         headers: { 
           'Content-Type': 'application/json', 
           Authorization: `Bearer ${token}` 
         }, 
-        body: JSON.stringify({ status: 'available' }) 
+        body: JSON.stringify({ status: newStatus }) 
       });
       
       const data = await res.json();
       
       if (data.success) {
-        setItem(prev => ({ ...prev, status: 'available' }));
+        setItem(prev => ({ ...prev, status: newStatus }));
       } else {
-        setErrorMsg(data.error || 'فشل الإرجاع');
+        setErrorMsg(data.error || 'فشل تغيير الحالة');
       }
     } catch (err) {
       setErrorMsg('خطأ في الاتصال');
