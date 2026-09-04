@@ -152,7 +152,7 @@ export default function AdminGiftCardPage() {
 
         {/* البطاقة */}
         {generated && (
-          <div style={{ background: '#fff', border: '3px dashed #000', borderRadius: 16, padding: 24, color: '#000', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+          <div className="gift-card-print" style={{ background: '#fff', border: '3px dashed #000', borderRadius: 16, padding: 24, color: '#000', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
             
             {/* زخارف */}
             <div style={{ position: 'absolute', top: -30, left: -30, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
