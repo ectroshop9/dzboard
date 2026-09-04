@@ -17,6 +17,12 @@ export default function AdminScanPage() {
   const [itemType, setItemType] = useState('product');
   const [errorMsg, setErrorMsg] = useState('');
   const [showFullImage, setShowFullImage] = useState(false);
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [customerData, setCustomerData] = useState({ name: '', phone: '', wilaya: '', commune: '', address: '' });
+  const [savingOrder, setSavingOrder] = useState(false);
+  const [shippingType, setShippingType] = useState('domicile');
+  const [communes, setCommunes] = useState([]);
+  const [loadingCommunes, setLoadingCommunes] = useState(false);
   const html5QrCodeRef = useRef(null);
 
   const wilayas = [
@@ -189,7 +195,65 @@ export default function AdminScanPage() {
     }
   };
 
-    return (
+  const handleSaveOrder = async () => {
+    if (!customerData.name || !customerData.phone || !customerData.wilaya) {
+      setErrorMsg('الاسم والهاتف والولاية مطلوبة');
+      return;
+    }
+    
+    if (!customerData.commune) {
+      setErrorMsg('اختر البلدية');
+      return;
+    }
+
+    setSavingOrder(true);
+    
+    try {
+      await fetch(`${API}/inventory/items/${item.id}/status`, { 
+        method: 'PUT', 
+        headers: { 
+          'Content-Type': 'application/json', 
+          Authorization: `Bearer ${token}` 
+        }, 
+        body: JSON.stringify({ status: 'sold' }) 
+      });
+
+      const orderRes = await fetch(`${API}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: customerData.name,
+          phone: customerData.phone,
+          wilaya_id: parseInt(customerData.wilaya),
+          commune: customerData.commune,
+          address: customerData.address || '',
+          shipping_type: shippingType,
+          items: [{ id: item.id, name: item.name, quantity: 1 }],
+          total_price: Number(item.price) || 500,
+          shipping_cost: 500
+        })
+      });
+
+      const orderData = await orderRes.json();
+      
+      if (orderData.success) {
+        setItem(prev => ({ ...prev, status: 'sold' }));
+        setShowCustomerModal(false);
+        setCustomerData({ name: '', phone: '', wilaya: '', commune: '', address: '' });
+        setShippingType('domicile');
+        alert(`تم البيع بنجاح! رقم الطلب: #${orderData.orderId}${orderData.trackingNumber ? `\nرقم التتبع: ${orderData.trackingNumber}` : ''}`);
+      } else {
+        setErrorMsg(orderData.message || 'فشل إنشاء الطلب');
+      }
+    } catch (err) {
+      console.error('Save order error:', err);
+      setErrorMsg('خطأ في الاتصال');
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
+  return (
     <div style={{ background: '#f8fafc', direction: 'rtl', minHeight: '100vh', paddingBottom: 120, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <main style={{ padding: 16, maxWidth: 500, margin: '0 auto' }}>
         
@@ -376,4 +440,190 @@ export default function AdminScanPage() {
         </div>
       )}
 
-      
+      {showCustomerModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.6)',
+          zIndex: 999,
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            background: '#fff',
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            padding: '16px 16px 20px 16px',
+            width: '100%',
+            maxWidth: 500,
+            maxHeight: '88vh',
+            display: 'flex',
+            flexDirection: 'column',
+            direction: 'rtl',
+            boxShadow: '0 -4px 20px rgba(0,0,0,0.15)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f1f5f9' }}>
+              <h3 style={{ fontSize: 16, fontWeight: 900, margin: 0 }}>معلومات الزبون</h3>
+              <button onClick={() => setShowCustomerModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, paddingLeft: 4, paddingRight: 4 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>اسم الزبون *</label>
+                <div style={{ position: 'relative' }}>
+                  <User size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                  <input 
+                    style={{ width: '100%', padding: '10px 35px 10px 10px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' }}
+                    placeholder="الاسم الكامل"
+                    value={customerData.name}
+                    onChange={e => setCustomerData({...customerData, name: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>الهاتف *</label>
+                <div style={{ position: 'relative' }}>
+                  <Phone size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                  <input 
+                    type="tel"
+                    inputMode="tel"
+                    style={{ width: '100%', padding: '10px 35px 10px 10px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', direction: 'ltr', textAlign: 'right', boxSizing: 'border-box' }}
+                    placeholder="06XXXXXXXX"
+                    value={customerData.phone}
+                    onChange={e => setCustomerData({...customerData, phone: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>الولاية *</label>
+                <div style={{ position: 'relative' }}>
+                  <MapPin size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                  <select 
+                    style={{ width: '100%', padding: '10px 35px 10px 10px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', background: '#fff', boxSizing: 'border-box' }}
+                    value={customerData.wilaya}
+                    onChange={e => setCustomerData({...customerData, wilaya: e.target.value})}
+                  >
+                    <option value="">اختر الولاية</option>
+                    {wilayas.map(w => (
+                      <option key={w.id} value={w.id}>{w.id} - {w.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>البلدية *</label>
+                <select 
+                  style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', background: '#fff', boxSizing: 'border-box' }}
+                  value={customerData.commune}
+                  onChange={e => setCustomerData({...customerData, commune: e.target.value})}
+                  disabled={!customerData.wilaya || loadingCommunes}
+                >
+                  <option value="">
+                    {!customerData.wilaya ? 'اختر الولاية أولاً' : loadingCommunes ? 'جاري تحميل البلديات...' : communes.length === 0 ? 'لا توجد بلديات' : 'اختر البلدية'}
+                  </option>
+                  {communes.map(c => (
+                    <option key={c.id || c.name_ar || c.name_fr} value={c.name_ar || c.name_fr}>
+                      {c.name_ar || c.name_fr}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>نوع التوصيل</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => setShippingType('domicile')}
+                    style={{
+                      padding: '10px',
+                      borderRadius: 8,
+                      border: shippingType === 'domicile' ? '2px solid #f59e0b' : '1px solid #cbd5e1',
+                      background: shippingType === 'domicile' ? '#fff9f0' : '#fff',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                      fontSize: 12,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <Home size={16} /> منزل
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShippingType('stopdesk')}
+                    style={{
+                      padding: '10px',
+                      borderRadius: 8,
+                      border: shippingType === 'stopdesk' ? '2px solid #f59e0b' : '1px solid #cbd5e1',
+                      background: shippingType === 'stopdesk' ? '#fff9f0' : '#fff',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                      fontSize: 12,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <MapPin size={16} /> مكتب
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>العنوان</label>
+                <div style={{ position: 'relative' }}>
+                  <Home size={16} style={{ position: 'absolute', right: 10, top: 12, color: '#94a3b8' }} />
+                  <textarea 
+                    style={{ width: '100%', padding: '10px 35px 10px 10px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', resize: 'none', minHeight: 45, boxSizing: 'border-box' }}
+                    placeholder="العنوان التفصيلي"
+                    value={customerData.address}
+                    onChange={e => setCustomerData({...customerData, address: e.target.value})}
+                    rows={2}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ paddingTop: 12, marginTop: 8, borderTop: '1px solid #f1f5f9', background: '#fff' }}>
+              <button 
+                onClick={handleSaveOrder}
+                disabled={savingOrder}
+                style={{
+                  width: '100%',
+                  padding: 13,
+                  background: '#f59e0b',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 10,
+                  fontWeight: 800,
+                  fontSize: 14,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  opacity: savingOrder ? 0.7 : 1,
+                  boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
+                }}
+              >
+                {savingOrder ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={18} />}
+                {savingOrder ? 'جاري الحفظ...' : 'تأكيد البيع وإرسال للشحن'}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
