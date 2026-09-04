@@ -15,6 +15,7 @@ export default function CheckoutFormPage() {
   const [communes, setCommunes] = useState([]);
   const [loadingCommunes, setLoadingCommunes] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState(null);
   const [error, setError] = useState('');
 
   const wilayas = [
@@ -127,7 +128,12 @@ export default function CheckoutFormPage() {
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {item.image ? (
-              <img src={item.image} alt={item.name} style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }} />
+              <img 
+                src={item.image} 
+                alt={item.name} 
+                onClick={() => setZoomedImage(item.image)}
+                style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover', cursor: 'zoom-in' }} 
+              />
             ) : (
               <div style={{ width: 60, height: 60, borderRadius: 8, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Package size={28} style={{ color: '#94a3b8' }} />
@@ -293,6 +299,28 @@ export default function CheckoutFormPage() {
           </div>
         </div>
       </div>
+      {zoomedImage && (
+        <div 
+          onClick={() => setZoomedImage(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.85)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20,
+            cursor: 'zoom-out'
+          }}
+        >
+          <img 
+            src={zoomedImage} 
+            alt="تكبير"
+            style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 16, objectFit: 'contain' }}
+          />
+        </div>
+      )}
     </div>
   );
 }
