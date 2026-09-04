@@ -137,35 +137,29 @@ export default function StorePage() {
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', system-ui, sans-serif", paddingBottom: 40 }}>
       
-      {/* ✅ شريط ترويجي متحرك */}
+      {/* ✅ شريط ترويجي ثابت */}
       <div style={{
         background: '#dc2626',
         color: '#fff',
         textAlign: 'center',
-        padding: '8px 0',
+        padding: '8px 12px',
         fontSize: 11,
         fontWeight: 700,
-        overflow: 'hidden',
-        position: 'relative'
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 12,
+        flexWrap: 'wrap'
       }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 30,
-          whiteSpace: 'nowrap',
-          animation: 'marquee 20s linear infinite',
-          width: 'max-content'
-        }}>
-          <span>✅ قطع مجربة ومضمونة</span>
-          <span style={{ opacity: 0.5 }}>|</span>
-          <span>🚚 توصيل 69 ولاية</span>
-          <span style={{ opacity: 0.5 }}>|</span>
-          <span>💵 الدفع عند الاستلام</span>
-          <span style={{ opacity: 0.5 }}>|</span>
-          <span style={{ background: '#f59e0b', padding: '2px 10px', borderRadius: 12 }}>🎁 هدية: سيريال تحميل الدامب مجاناً</span>
-          <span style={{ opacity: 0.5 }}>|</span>
-          <span>🛠️ خدمة بعد البيع 7/24</span>
-        </div>
+        <span>✅ قطع مجربة ومضمونة</span>
+        <span style={{ opacity: 0.5 }}>|</span>
+        <span>🚚 توصيل 69 ولاية</span>
+        <span style={{ opacity: 0.5 }}>|</span>
+        <span>💵 الدفع عند الاستلام</span>
+        <span style={{ opacity: 0.5 }}>|</span>
+        <span style={{ background: '#f59e0b', padding: '2px 10px', borderRadius: 12 }}>🎁 هدية: سيريال تحميل الدامب مجاناً</span>
+        <span style={{ opacity: 0.5 }}>|</span>
+        <span>🛠️ خدمة بعد البيع 7/24</span>
       </div>
       
       {/* الهيدر العلوي - بدون "الرئيسية" و"المتجر" */}
