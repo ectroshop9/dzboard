@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Key, Download, Loader2, CheckCircle, XCircle, Package } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Key, Download, Loader2, CheckCircle, XCircle, Package, ArrowRight } from 'lucide-react';
 
 export default function DownloadPage() {
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const productParam = searchParams.get('product');
   const [serialCode, setSerialCode] = useState('');
@@ -80,7 +81,28 @@ export default function DownloadPage() {
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', padding: 16, fontFamily: "'Cairo', system-ui, sans-serif" }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <div style={{ textAlign: 'center', marginBottom: 24, position: 'relative' }}>
+          <button 
+            onClick={() => navigate('/store')}
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              background: '#f1f5f9',
+              border: 'none',
+              borderRadius: 10,
+              padding: '8px 14px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 13,
+              fontWeight: 700,
+              color: '#334155'
+            }}
+          >
+            <ArrowRight size={16} /> المتجر
+          </button>
           <div style={{ background: '#eff6ff', color: '#2563eb', margin: '0 auto 16px', width: 64, height: 64, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Key size={32} />
           </div>
