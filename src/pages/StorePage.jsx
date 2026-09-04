@@ -137,6 +137,29 @@ export default function StorePage() {
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', system-ui, sans-serif", paddingBottom: 40 }}>
       
+      {/* ✅ شريط ترويجي أحمر */}
+      <div style={{
+        background: '#dc2626',
+        color: '#fff',
+        textAlign: 'center',
+        padding: '8px 12px',
+        fontSize: 12,
+        fontWeight: 700,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 16,
+        flexWrap: 'wrap'
+      }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          🚚 توصيل 58 ولاية
+        </span>
+        <span style={{ opacity: 0.6 }}>|</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          💵 الدفع عند الاستلام
+        </span>
+      </div>
+      
       {/* الهيدر العلوي - بدون "الرئيسية" و"المتجر" */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '10px 12px', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
