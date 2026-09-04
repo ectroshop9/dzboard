@@ -168,11 +168,6 @@ export default function AdminScanPage() {
   const toggleItemStatus = async () => {
     if (!item) return;
     
-    if (item.status === 'available') {
-      navigate('/admin/checkout-form', { state: { item } });
-      return;
-    }
-    
     setLoading(true);
     try {
       const res = await fetch(`${API}/inventory/items/${item.id}/status`, { 
