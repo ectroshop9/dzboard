@@ -27,6 +27,7 @@ import MobileBottomNav from './components/MobileBottomNav';
 import ChatBot from './components/ChatBot';
 import DownloadPage from './pages/DownloadPage';
 import AdminSerialsPage from './pages/AdminSerialsPage';
+import AdminGiftCardPage from './pages/AdminGiftCardPage';
 import AdminProductFormPage from './pages/AdminProductFormPage';
 
 // مكون فرعي لإظهار الشريط السفلي فقط في صفحات الأدمن (باستثناء صفحة التسجيل)
@@ -70,6 +71,7 @@ function App() {
           <Route path="/admin/bot-orders" element={<AdminBotOrdersPage />} />
           <Route path="/admin/chat-logs" element={<AdminChatLogsPage />} />
           <Route path="/admin/serials" element={<AdminSerialsPage />} />
+          <Route path="/admin/gift-card" element={<AdminGiftCardPage />} />
           <Route path="/admin/live-chat" element={<AdminLiveChatPage />} />
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
           <Route path="/admin/scan" element={<AdminScanPage />} />
