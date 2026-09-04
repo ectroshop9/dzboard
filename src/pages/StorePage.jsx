@@ -139,10 +139,10 @@ export default function StorePage() {
       
       {/* الهيدر العلوي - بدون "الرئيسية" و"المتجر" */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '10px 12px', position: 'sticky', top: 0, zIndex: 30 }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           
-          {/* ✅ بحث فقط - بدون روابط */}
-          <div style={{ position: 'relative', flex: 1, maxWidth: 350 }}>
+          {/* ✅ البحث في الوسط */}
+          <div style={{ position: 'relative', width: '100%', maxWidth: 400 }}>
             <input
               type="text"
               placeholder="ابحث بالاسم، الموديل، الرقم..."
@@ -167,47 +167,29 @@ export default function StorePage() {
           </button>
         </div>
 
-        {/* شريط التصنيفات */}
-        <div style={{ 
-          maxWidth: 1100, 
-          margin: '8px auto 0', 
-          display: 'flex', 
-          gap: 6, 
-          overflowX: 'auto', 
-          paddingBottom: 2, 
-          scrollbarWidth: 'none',
-          WebkitOverflowScrolling: 'touch',
-          justifyContent: 'center'
-        }}>
-          {categories.map(cat => {
-            const Icon = cat.icon;
-            const isActive = selectedCategory === cat.key;
-            return (
-              <button
-                key={cat.key}
-                onClick={() => setSelectedCategory(cat.key)}
-                style={{
-                  padding: '6px 10px',
-                  borderRadius: 16,
-                  border: isActive ? '2px solid #3b82f6' : '1px solid #e2e8f0',
-                  background: isActive ? '#eff6ff' : '#fff',
-                  color: isActive ? '#2563eb' : '#64748b',
-                  cursor: 'pointer',
-                  fontWeight: isActive ? 700 : 600,
-                  fontSize: 11,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <Icon size={12} style={{ color: isActive ? '#2563eb' : cat.color }} />
-                {cat.label}
-              </button>
-            );
-          })}
+        {/* ✅ قائمة التصنيفات المنسدلة */}
+        <div style={{ maxWidth: 1100, margin: '8px auto 0', display: 'flex', justifyContent: 'center' }}>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            style={{
+              padding: '8px 16px',
+              borderRadius: 20,
+              border: '1px solid #cbd5e1',
+              background: '#fff',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              outline: 'none',
+              color: '#334155',
+              minWidth: 150,
+              textAlign: 'center'
+            }}
+          >
+            {categories.map(cat => (
+              <option key={cat.key} value={cat.key}>{cat.label}</option>
+            ))}
+          </select>
         </div>
       </div>
 
