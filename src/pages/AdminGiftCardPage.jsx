@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Gift, Printer, User, Phone, Truck, Key } from 'lucide-react';
 
 const API = '/api';
-const LOGO = 'https://res.cloudinary.com/rsmjekym/image/upload/v1788539079/logo-removebg-preview_n4bew1.png';
 
 const getToken = () => {
   const tokenData = localStorage.getItem('dzboard_admin_token');
@@ -160,11 +159,7 @@ export default function AdminGiftCardPage() {
 
             {/* الشعار */}
             <div style={{ marginBottom: 16 }}>
-              <img 
-                src={LOGO} 
-                alt="DZBoard Logo"
-                style={{ width: 80, height: 80, objectFit: 'contain', margin: '0 auto', display: 'block' }}
-              />
+              
             </div>
 
             <div style={{ fontSize: 22, fontWeight: 900, marginBottom: 4, letterSpacing: -0.5 }}>
