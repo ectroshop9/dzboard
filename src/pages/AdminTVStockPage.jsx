@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, RefreshCw, Loader2, Search, Camera, X, Package, Save } from 'lucide-react';
+import ImageUploader from '../components/ImageUploader';
 
 const API = '/api';
 
@@ -144,10 +145,10 @@ export default function AdminTVStockPage() {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-                <input placeholder="صورة الكرت مير (رابط)" value={formData.image_carte} onChange={e => setFormData({...formData, image_carte: e.target.value})} style={{ padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1' }} />
-                <input placeholder="صورة التيكون (رابط)" value={formData.image_tcon} onChange={e => setFormData({...formData, image_tcon: e.target.value})} style={{ padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1' }} />
-                <input placeholder="صورة اليمونتاسيون (رابط)" value={formData.image_alimentation} onChange={e => setFormData({...formData, image_alimentation: e.target.value})} style={{ padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1' }} />
-                <input placeholder="صورة درايفر لاد (رابط)" value={formData.image_driver_led} onChange={e => setFormData({...formData, image_driver_led: e.target.value})} style={{ padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1' }} />
+                <ImageUploader label="صورة الكرت مير" value={formData.image_carte} onChange={url => setFormData({...formData, image_carte: url})} placeholder="ارفع صورة الكرت مير" />
+                <ImageUploader label="صورة التيكون" value={formData.image_tcon} onChange={url => setFormData({...formData, image_tcon: url})} placeholder="ارفع صورة التيكون" />
+                <ImageUploader label="صورة اليمونتاسيون" value={formData.image_alimentation} onChange={url => setFormData({...formData, image_alimentation: url})} placeholder="ارفع صورة اليمونتاسيون" />
+                <ImageUploader label="صورة درايفر لاد" value={formData.image_driver_led} onChange={url => setFormData({...formData, image_driver_led: url})} placeholder="ارفع صورة درايفر لاد" />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
