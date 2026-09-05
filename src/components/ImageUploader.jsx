@@ -19,25 +19,41 @@ export default function ImageUploader({ value, onChange, label, placeholder }) {
     if (!file) return;
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append('image', file);
-
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${getToken()}` },
-        body: formData
-      });
-      const data = await res.json();
-      if (data.success) {
-        onChange(data.url);
-      } else {
-        alert(data.message || 'فشل الرفع');
+    
+    // ✅ تحويل الصورة إلى Base64
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    
+    reader.onload = async () => {
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${getToken()}`
+          },
+          body: JSON.stringify({ image: reader.result })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          onChange(data.url);
+        } else {
+          alert(data.message || 'فشل الرفع');
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+        alert('خطأ في الرفع');
+      } finally {
+        setUploading(false);
       }
-    } catch (err) {
-      alert('خطأ في الرفع');
-    }
-    setUploading(false);
+    };
+    
+    reader.onerror = () => {
+      alert('خطأ في قراءة الملف');
+      setUploading(false);
+    };
   };
 
   return (
@@ -47,16 +63,51 @@ export default function ImageUploader({ value, onChange, label, placeholder }) {
       </label>
       
       {value ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src={value} alt={label} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 8, border: '1px solid #cbd5e1' }} />
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 10,
+          padding: '10px',
+          background: '#f0fdf4',
+          border: '1px solid #86efac',
+          borderRadius: 10
+        }}>
+          <img 
+            src={value} 
+            alt={label} 
+            style={{ 
+              width: 60, 
+              height: 60, 
+              objectFit: 'cover', 
+              borderRadius: 8, 
+              border: '1px solid #cbd5e1',
+              cursor: 'pointer'
+            }}
+            onClick={() => window.open(value, '_blank')}
+          />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: '#10b981', fontWeight: 700 }}>✓ تم الرفع</div>
+            <div style={{ fontSize: 10, color: '#64748b', wordBreak: 'break-all', maxWidth: 150, maxHeight: 30, overflow: 'hidden' }}>
+              {value}
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => onChange('')}
-            style={{ background: '#fee2e2', border: 'none', color: '#b91c1c', borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}
+            style={{ 
+              background: '#fee2e2', 
+              border: 'none', 
+              color: '#b91c1c', 
+              borderRadius: 6, 
+              padding: '6px 10px', 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4
+            }}
           >
-            <X size={14} />
+            <X size={14} /> حذف
           </button>
-          <span style={{ fontSize: 11, color: '#10b981' }}>تم الرفع ✓</span>
         </div>
       ) : (
         <label style={{
@@ -70,10 +121,30 @@ export default function ImageUploader({ value, onChange, label, placeholder }) {
           cursor: 'pointer',
           background: '#f8fafc',
           fontSize: 13,
-          color: '#64748b'
-        }}>
-          {uploading ? <Loader2 size={16} className="spin" /> : <Upload size={16} />}
-          {uploading ? 'جاري الرفع...' : placeholder || 'اضغط لرفع صورة'}
+          color: '#64748b',
+          transition: 'all 0.3s',
+          minHeight: 45
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = '#3b82f6';
+          e.currentTarget.style.background = '#eff6ff';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = '#cbd5e1';
+          e.currentTarget.style.background = '#f8fafc';
+        }}
+        >
+          {uploading ? (
+            <>
+              <Loader2 size={16} className="spin" />
+              <span>جاري الرفع...</span>
+            </>
+          ) : (
+            <>
+              <Upload size={16} />
+              <span>{placeholder || 'اضغط لرفع صورة'}</span>
+            </>
+          )}
           <input
             type="file"
             accept="image/*"
