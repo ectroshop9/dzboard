@@ -102,3 +102,24 @@ textarea.field-input { resize: vertical; }
     font-size: 16px;
   }
 }
+
+/* Spin animation */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* تحسينات للهاتف */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important; /* منع التكبير التلقائي في iOS */
+  }
+  
+  button {
+    touch-action: manipulation;
+  }
+}
