@@ -122,7 +122,7 @@ export default function StorePage() {
     });
   };
 
-  // ✅ تحسين وتحضير الصورة (أبيض وأسود + تباين عالي)
+  // ✅ تحسين الصورة بشكل متوازن (رمادي بدون تدمير النصوص)
   const processAndCompressImage = (file) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -147,15 +147,14 @@ export default function StorePage() {
           
           ctx.drawImage(img, 0, 0, width, height);
 
-          // تحويل إلى أبيض وأسود مع تباين عالي
+          // تحويل للرمادي فقط مع الحفاظ على النصوص الباهتة
           const imageData = ctx.getImageData(0, 0, width, height);
           const data = imageData.data;
           for (let i = 0; i < data.length; i += 4) {
             const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-            const color = avg > 110 ? 255 : 0;
-            data[i] = color;
-            data[i + 1] = color;
-            data[i + 2] = color;
+            data[i] = avg;
+            data[i + 1] = avg;
+            data[i + 2] = avg;
           }
           ctx.putImageData(imageData, 0, 0);
 
@@ -165,7 +164,7 @@ export default function StorePage() {
     });
   };
 
-  // ✅ البحث بالصورة مع Whitelist وفلترة دقيقة
+  // ✅ البحث بالصورة - قراءة متساهلة متعددة المراحل
   const handleImageSearch = async (e) => {
     const file = e.target.files?.[0];
     if (e.target) e.target.value = '';
@@ -174,42 +173,55 @@ export default function StorePage() {
     setImageSearching(true);
 
     try {
-      // 1. معالجة الصورة
       const processedImage = await processAndCompressImage(file);
 
-      // 2. قراءة النص مع Whitelist
       const result = await Tesseract.recognize(
         processedImage,
         'eng',
-        {
-          logger: () => {},
-          tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-./'
-        }
+        { logger: () => {} }
       );
 
       const rawText = result?.data?.text || '';
 
-      // 3. تنظيف وتفكيك الكلمات
-      const words = rawText
-        .replace(/[^A-Z0-9.\-_]/gi, ' ')
+      const cleanWords = rawText
+        .replace(/[^a-zA-Z0-9.\-_]/g, ' ')
         .split(/\s+/)
+        .map(w => w.replace(/^[.\-_]+|[.\-_]+$/g, ''))
         .filter(w => w.length >= 4);
 
-      // 4. فلتر دقيق لأرقام القطع
-      const exactModelRegex = /^[A-Z0-9]{2,6}[.\-_][A-Z0-9]{2,8}([.\-_][A-Z0-9]{2,8})?$/i;
-      
-      let matchedCode = words.find(w => exactModelRegex.test(w));
+      // أ) أنماط كروت الشاشات الشهيرة
+      const exactModelRegex = /[A-Z0-9]{2,6}[.\-_][A-Z0-9]{2,8}([.\-_][A-Z0-9]{2,8})?/i;
+      const matchExact = rawText.match(exactModelRegex);
 
-      if (!matchedCode) {
-        matchedCode = words.find(w => /[A-Z]/i.test(w) && /\d/.test(w) && w.length >= 6);
+      if (matchExact && matchExact[0].length >= 5) {
+        setSearchQuery(matchExact[0]);
+        return;
       }
 
-      if (matchedCode) {
-        const cleanCode = matchedCode.replace(/^[.\-_]+|[.\-_]+$/g, '');
-        setSearchQuery(cleanCode);
-      } else {
-        alert('لم يتم التعرّف على كود أو موديل واضح. يرجى التقاط صورة مكبّرة ومباشرة للكود المكتوب على الكرت.');
+      // ب) كلمة تجمع حروف وأرقام
+      const mixedWord = cleanWords.find(w => 
+        /[A-Za-z]/.test(w) && 
+        /\d/.test(w) && 
+        w.length >= 5 && 
+        w.length <= 16
+      );
+
+      if (mixedWord) {
+        setSearchQuery(mixedWord);
+        return;
       }
+
+      // ج) أطول كلمة
+      const longestCandidate = cleanWords
+        .filter(w => w.length >= 5)
+        .sort((a, b) => b.length - a.length)[0];
+
+      if (longestCandidate) {
+        setSearchQuery(longestCandidate);
+        return;
+      }
+
+      alert('لم يتم التعرّف على الموديل. حاول التقاط صورة أوضح أو كتابة الموديل يدوياً.');
 
     } catch (error) {
       console.error('خطأ في معالجة الصورة:', error);
