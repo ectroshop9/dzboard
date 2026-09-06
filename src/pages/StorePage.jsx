@@ -122,11 +122,41 @@ export default function StorePage() {
     });
   };
 
-  // ✅ البحث بالصورة (OCR) - استخدام مباشر بدون Worker
+  // ✅ ضغط الصورة قبل المعالجة
+  const compressImage = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 1000;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8);
+        };
+      };
+    });
+  };
+
+  // ✅ البحث بالصورة (OCR) - سريع وبدون تعليق
   const handleImageSearch = async (e) => {
     const file = e.target.files?.[0];
 
-    // تصفير الحقل فوراً لمنع التعليق
+    // تصفير الحقل فوراً
     if (e.target) e.target.value = '';
 
     if (!file) return;
@@ -134,12 +164,14 @@ export default function StorePage() {
     setImageSearching(true);
 
     try {
+      // ضغط الصورة أولاً
+      const optimizedImage = await compressImage(file);
+
+      // قراءة النص مع إيقاف logger
       const result = await Tesseract.recognize(
-        file,
+        optimizedImage,
         'eng',
-        {
-          logger: (m) => console.log(m)
-        }
+        { logger: () => {} }
       );
 
       const cleanText = (result?.data?.text || '').replace(/\s+/g, ' ').replace(/[|]/g, 'I');
@@ -175,7 +207,7 @@ export default function StorePage() {
       }
     } catch (error) {
       console.error('خطأ في معالجة الصورة:', error);
-      alert('تعذر قراءة الصورة، يرجى المحاولة مرة أخرى أو اختيار صورة أوضح.');
+      alert('تعذر قراءة الصورة، حاول التقاط صورة أقرب للرمز.');
     } finally {
       setImageSearching(false);
     }
