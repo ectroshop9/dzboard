@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Search, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, Download, Plus, Minus, ChevronLeft } from 'lucide-react';
 import { api } from '../services/api';
+import Tesseract from 'tesseract.js';
 
 export default function StorePage() {
   const navigate = useNavigate();
@@ -137,9 +138,7 @@ export default function StorePage() {
 
     try {
       // 1. قراءة النص من الصورة
-      // ✅ استخدام Tesseract من CDN (ديناميكي)
-      const Tesseract = await import('https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.esm.min.js');
-      const result = await Tesseract.default.recognize(file, 'eng');
+      const result = await Tesseract.recognize(file, 'eng');
       const cleanText = result.data.text.replace(/\s+/g, ' ').replace(/[|]/g, 'I');
 
       // 2. أنماط أرقام الموديلات
