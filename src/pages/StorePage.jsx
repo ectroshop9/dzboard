@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Search, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, Download, Plus, Minus, ChevronLeft } from 'lucide-react';
 import { api } from '../services/api';
+import Tesseract from 'tesseract.js';
 
 export default function StorePage() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export default function StorePage() {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+  const [imageSearching, setImageSearching] = useState(false);
 
   const categories = [
     { key: 'all', label: 'الكل', icon: Grid, color: '#94a3b8' },
@@ -129,6 +131,72 @@ export default function StorePage() {
     }
   };
 
+  // ✅ البحث بالصورة (OCR)
+  const handleImageSearch = async (file) => {
+    if (!file) return;
+    setImageSearching(true);
+
+    try {
+      // 1. قراءة النص من الصورة
+      const result = await Tesseract.recognize(file, 'eng');
+      const cleanText = result.data.text.replace(/\s+/g, ' ').replace(/[|]/g, 'I');
+
+      // 2. أنماط أرقام الموديلات
+      const patterns = [
+        /[A-Z]{2,4}\d{2}[.\-_]\d{4,6}/gi,
+        /[A-Z]{3}\d?[.\-_]\d{3}[.\-_]\d{6}/gi,
+        /[A-Z0-9]{2,8}[.\-_]?[A-Z0-9]{3,8}[.\-_]?[A-Z0-9]{2,8}/gi,
+      ];
+
+      let modelNumber = null;
+      for (const pattern of patterns) {
+        const match = cleanText.match(pattern);
+        if (match) {
+          modelNumber = match[0];
+          break;
+        }
+      }
+
+      // 3. التنفيذ المباشر إذا تم العثور على النمط
+      if (modelNumber) {
+        setSearchQuery(modelNumber);
+        setImageSearching(false);
+        return;
+      }
+
+      // 4. الخطة البديلة (Fallback)
+      const candidateWords = cleanText
+        .split(' ')
+        .filter(word => /[A-Za-z]/.test(word) && /\d/.test(word) && word.length >= 5)
+        .slice(0, 3);
+
+      let found = false;
+      for (const word of candidateWords) {
+        try {
+          const res = await fetch(`/api/products/search?q=${encodeURIComponent(word)}`);
+          const data = await res.json();
+
+          if (data.success && data.products?.length > 0) {
+            setSearchQuery(word);
+            found = true;
+            break;
+          }
+        } catch (error) {
+          console.error("خطأ أثناء فحص الكلمة:", word, error);
+        }
+      }
+
+      if (!found && candidateWords.length > 0) {
+        setSearchQuery(candidateWords[0]);
+      }
+    } catch (error) {
+      console.error('خطأ في قراءة الصورة:', error);
+      alert('تعذر قراءة الصورة، حاول مرة أخرى');
+    } finally {
+      setImageSearching(false);
+    }
+  };
+
   const handleClearFilters = () => {
     setSelectedCategory('all');
     setSearchQuery('');
@@ -205,6 +273,25 @@ export default function StorePage() {
                 </button>
               )}
             </div>
+
+            <label
+              style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 20, padding: '7px 10px', cursor: 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, flexShrink: 0, position: 'relative' }}
+              title="بحث بالصورة"
+            >
+              {imageSearching ? (
+                <span style={{ fontSize: 10 }}>جاري...</span>
+              ) : (
+                <>📸 <span style={{ fontSize: 10 }}>صورة</span></>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                hidden
+                disabled={imageSearching}
+                onChange={(e) => handleImageSearch(e.target.files[0])}
+              />
+            </label>
 
             <button
               onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
