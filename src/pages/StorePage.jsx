@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Search, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, Download, Plus, Minus, ChevronLeft } from 'lucide-react';
 import { api } from '../services/api';
-import Tesseract from 'tesseract.js';
+import { createWorker } from 'tesseract.js';
 
 export default function StorePage() {
   const navigate = useNavigate();
@@ -122,17 +122,27 @@ export default function StorePage() {
     });
   };
 
-  // ✅ البحث بالصورة (OCR) المحدث والمعالج لجميع أسباب التعليق
+  // ✅ البحث بالصورة (OCR) مع إنهاء Worker لمنع Memory Leak
   const handleImageSearch = async (e) => {
     const file = e.target.files?.[0];
+    
+    // تصفير قيمة الحقل فوراً لتجنب التكرار
+    if (e.target) e.target.value = '';
+
     if (!file) return;
 
     setImageSearching(true);
+    let worker = null;
 
     try {
-      const result = await Tesseract.recognize(file, 'eng');
-      const cleanText = result.data.text.replace(/\s+/g, ' ').replace(/[|]/g, 'I');
+      // 1. إنشاء Worker خاص بالعملية الحالية فقط
+      worker = await createWorker('eng');
+      
+      // 2. قراءة الصورة
+      const ret = await worker.recognize(file);
+      const cleanText = ret.data.text.replace(/\s+/g, ' ').replace(/[|]/g, 'I');
 
+      // 3. استخراج الموديل أو الأرقام
       const patterns = [
         /[A-Z]{2,4}\d{2}[.\-_]\d{4,6}/gi,
         /[A-Z]{3}\d?[.\-_]\d{3}[.\-_]\d{6}/gi,
@@ -150,42 +160,27 @@ export default function StorePage() {
 
       if (modelNumber) {
         setSearchQuery(modelNumber);
-        return;
-      }
+      } else {
+        const candidateWords = cleanText
+          .split(' ')
+          .filter(word => /[A-Za-z]/.test(word) && /\d/.test(word) && word.length >= 5)
+          .slice(0, 3);
 
-      const candidateWords = cleanText
-        .split(' ')
-        .filter(word => /[A-Za-z]/.test(word) && /\d/.test(word) && word.length >= 5)
-        .slice(0, 3);
-
-      let found = false;
-      for (const word of candidateWords) {
-        try {
-          const res = await fetch(`/api/products/search?q=${encodeURIComponent(word)}`);
-          const data = await res.json();
-
-          if (data.success && data.products?.length > 0) {
-            setSearchQuery(word);
-            found = true;
-            break;
-          }
-        } catch (error) {
-          console.error("خطأ:", word, error);
+        if (candidateWords.length > 0) {
+          setSearchQuery(candidateWords[0]);
+        } else {
+          alert('لم يتم العثور على رمز أو موديل واضح بالصورة');
         }
       }
-
-      if (!found && candidateWords.length > 0) {
-        setSearchQuery(candidateWords[0]);
-      }
     } catch (error) {
-      console.error('خطأ في قراءة الصورة:', error);
-      alert('تعذر قراءة الصورة، حاول مرة أخرى');
+      console.error('خطأ في معالجة الصورة:', error);
+      alert('حدث خطأ أثناء قراءة الصورة، يرجى المحاولة مرة أخرى');
     } finally {
-      // ✅ تصفير الحالة والـ Input دائماً
-      setImageSearching(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+      // 4. إنهاء الـ Worker وتحرير الذاكرة فوراً
+      if (worker) {
+        await worker.terminate();
       }
+      setImageSearching(false);
     }
   };
 
