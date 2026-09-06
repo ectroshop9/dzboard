@@ -122,8 +122,8 @@ export default function StorePage() {
     });
   };
 
-  // ✅ ضغط الصورة قبل المعالجة
-  const compressImage = (file) => {
+  // ✅ تحسين وتحضير الصورة (أبيض وأسود + تباين عالي)
+  const processAndCompressImage = (file) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -132,7 +132,7 @@ export default function StorePage() {
         img.src = event.target.result;
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 1000;
+          const MAX_WIDTH = 1200;
           let width = img.width;
           let height = img.height;
 
@@ -144,70 +144,76 @@ export default function StorePage() {
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
           
-          canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8);
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // تحويل إلى أبيض وأسود مع تباين عالي
+          const imageData = ctx.getImageData(0, 0, width, height);
+          const data = imageData.data;
+          for (let i = 0; i < data.length; i += 4) {
+            const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+            const color = avg > 110 ? 255 : 0;
+            data[i] = color;
+            data[i + 1] = color;
+            data[i + 2] = color;
+          }
+          ctx.putImageData(imageData, 0, 0);
+
+          canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.85);
         };
       };
     });
   };
 
-  // ✅ البحث بالصورة (OCR) - سريع وبدون تعليق
+  // ✅ البحث بالصورة مع Whitelist وفلترة دقيقة
   const handleImageSearch = async (e) => {
     const file = e.target.files?.[0];
-
-    // تصفير الحقل فوراً
     if (e.target) e.target.value = '';
-
     if (!file) return;
 
     setImageSearching(true);
 
     try {
-      // ضغط الصورة أولاً
-      const optimizedImage = await compressImage(file);
+      // 1. معالجة الصورة
+      const processedImage = await processAndCompressImage(file);
 
-      // قراءة النص مع إيقاف logger
+      // 2. قراءة النص مع Whitelist
       const result = await Tesseract.recognize(
-        optimizedImage,
+        processedImage,
         'eng',
-        { logger: () => {} }
+        {
+          logger: () => {},
+          tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-./'
+        }
       );
 
-      const cleanText = (result?.data?.text || '').replace(/\s+/g, ' ').replace(/[|]/g, 'I');
+      const rawText = result?.data?.text || '';
 
-      const patterns = [
-        /[A-Z]{2,4}\d{2}[.\-_]\d{4,6}/gi,
-        /[A-Z]{3}\d?[.\-_]\d{3}[.\-_]\d{6}/gi,
-        /[A-Z0-9]{2,8}[.\-_]?[A-Z0-9]{3,8}[.\-_]?[A-Z0-9]{2,8}/gi,
-      ];
+      // 3. تنظيف وتفكيك الكلمات
+      const words = rawText
+        .replace(/[^A-Z0-9.\-_]/gi, ' ')
+        .split(/\s+/)
+        .filter(w => w.length >= 4);
 
-      let modelNumber = null;
-      for (const pattern of patterns) {
-        const match = cleanText.match(pattern);
-        if (match) {
-          modelNumber = match[0];
-          break;
-        }
+      // 4. فلتر دقيق لأرقام القطع
+      const exactModelRegex = /^[A-Z0-9]{2,6}[.\-_][A-Z0-9]{2,8}([.\-_][A-Z0-9]{2,8})?$/i;
+      
+      let matchedCode = words.find(w => exactModelRegex.test(w));
+
+      if (!matchedCode) {
+        matchedCode = words.find(w => /[A-Z]/i.test(w) && /\d/.test(w) && w.length >= 6);
       }
 
-      if (modelNumber) {
-        setSearchQuery(modelNumber);
+      if (matchedCode) {
+        const cleanCode = matchedCode.replace(/^[.\-_]+|[.\-_]+$/g, '');
+        setSearchQuery(cleanCode);
       } else {
-        const candidateWords = cleanText
-          .split(' ')
-          .filter(word => /[A-Za-z]/.test(word) && /\d/.test(word) && word.length >= 5)
-          .slice(0, 3);
-
-        if (candidateWords.length > 0) {
-          setSearchQuery(candidateWords[0]);
-        } else {
-          alert('لم يتم العثور على رمز أو موديل واضح بالصورة');
-        }
+        alert('لم يتم التعرّف على كود أو موديل واضح. يرجى التقاط صورة مكبّرة ومباشرة للكود المكتوب على الكرت.');
       }
+
     } catch (error) {
       console.error('خطأ في معالجة الصورة:', error);
-      alert('تعذر قراءة الصورة، حاول التقاط صورة أقرب للرمز.');
+      alert('حدث خطأ أثناء قراءة الصورة، حاول مرة أخرى.');
     } finally {
       setImageSearching(false);
     }
