@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Search, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, Download, Plus, Minus, ChevronLeft } from 'lucide-react';
 import { api } from '../services/api';
@@ -7,6 +7,7 @@ import Tesseract from 'tesseract.js';
 export default function StorePage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const fileInputRef = useRef(null); // ✅ مرجع لحقل الملفات
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +27,6 @@ export default function StorePage() {
     { key: 'parts', label: 'قطع غيار', icon: Package, color: '#10b981' },
   ];
 
-  // ✅ تنقية النص من XSS
   const sanitizeText = (text) => {
     if (!text) return '';
     return String(text).replace(/<[^>]*>/g, '').replace(/[<>]/g, '');
@@ -94,7 +94,6 @@ export default function StorePage() {
     return () => { isMounted = false; };
   }, [selectedCategory, debouncedQuery]);
 
-  // ✅ تغيير الكمية مع حماية
   const changeQuantity = (e, productId, delta) => {
     e.stopPropagation();
     setQuantities(prev => {
@@ -123,15 +122,7 @@ export default function StorePage() {
     });
   };
 
-  // ✅ فتح رابط آمن
-  const handleDownloadUpdate = (e, product) => {
-    e.stopPropagation();
-    if (product.file_url && product.file_url.startsWith('https://')) {
-      window.open(product.file_url, '_blank', 'noopener,noreferrer');
-    }
-  };
-
-  // ✅ البحث بالصورة (OCR)
+  // ✅ البحث بالصورة (OCR) المحدث والمعالج لجميع أسباب التعليق
   const handleImageSearch = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -190,8 +181,11 @@ export default function StorePage() {
       console.error('خطأ في قراءة الصورة:', error);
       alert('تعذر قراءة الصورة، حاول مرة أخرى');
     } finally {
+      // ✅ تصفير الحالة والـ Input دائماً
       setImageSearching(false);
-      e.target.value = '';
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -203,7 +197,7 @@ export default function StorePage() {
   return (
     <div style={{ background: '#f8fafc', color: '#1e293b', direction: 'rtl', minHeight: '100vh', fontFamily: "'Cairo', system-ui, sans-serif", paddingBottom: 40 }}>
       
-      {/* ✅ شريط ترويجي ثابت */}
+      {/* الشريط الترويجي */}
       <div style={{
         background: '#dc2626',
         color: '#fff',
@@ -213,7 +207,7 @@ export default function StorePage() {
         fontWeight: 700,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
+        justify: 'center',
         gap: 12,
         flexWrap: 'wrap'
       }}>
@@ -228,7 +222,7 @@ export default function StorePage() {
         <span>🛠️ خدمة بعد البيع 7/24</span>
       </div>
       
-      {/* الهيدر العلوي - بدون "الرئيسية" و"المتجر" */}
+      {/* الهيدر العلوي */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '10px 12px', position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
           <Link to="/" style={{ textDecoration: 'none', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 2, fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
@@ -272,8 +266,11 @@ export default function StorePage() {
               )}
             </div>
 
-            <label
-              style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 20, padding: '7px 10px', cursor: imageSearching ? 'wait' : 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, flexShrink: 0, position: 'relative' }}
+            {/* ✅ زر البحث بالصورة المحدث مع المرجع (useRef) */}
+            <button
+              type="button"
+              onClick={() => !imageSearching && fileInputRef.current?.click()}
+              style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 20, padding: '7px 10px', cursor: imageSearching ? 'wait' : 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, flexShrink: 0 }}
               title="بحث بالصورة"
             >
               {imageSearching ? (
@@ -281,15 +278,17 @@ export default function StorePage() {
               ) : (
                 <>📸 <span style={{ fontSize: 10 }}>صورة</span></>
               )}
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                hidden
-                disabled={imageSearching}
-                onChange={handleImageSearch}
-              />
-            </label>
+            </button>
+
+            {/* ✅ عنصر الـ input مفصول وخارج الـ button/label */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style={{ display: 'none' }}
+              onChange={handleImageSearch}
+            />
 
             <button
               onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
@@ -299,9 +298,6 @@ export default function StorePage() {
             </button>
           </div>
         </div>
-
-
-
       </div>
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '10px 12px 24px' }}>
@@ -320,15 +316,9 @@ export default function StorePage() {
             {[1, 2, 3, 4, 5, 6].map(n => (
               <div key={n} style={{ background: '#fff', borderRadius: 12, height: 220, border: '1px solid #e2e8f0', animation: 'pulse 1.5s infinite ease-in-out' }} />
             ))}
-            <style>{`@keyframes marquee {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
-}
-      @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }
-      @keyframes marquee {
-        0% { transform: translateX(100%); }
-        100% { transform: translateX(-100%); }
-      }`}</style>
+            <style>{`
+              @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }
+            `}</style>
           </div>
         ) : products.length === 0 ? (
           <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, textAlign: 'center', padding: '48px 16px' }}>
