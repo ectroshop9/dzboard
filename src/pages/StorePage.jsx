@@ -273,25 +273,6 @@ export default function StorePage() {
             </div>
 
             <label
-              style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 20, padding: '7px 10px', cursor: 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, flexShrink: 0, position: 'relative' }}
-              title="بحث بالصورة"
-            >
-              {imageSearching ? (
-                <span style={{ fontSize: 10 }}>جاري...</span>
-              ) : (
-                <>📸 <span style={{ fontSize: 10 }}>صورة</span></>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                hidden
-                disabled={imageSearching}
-                onChange={(e) => handleImageSearch(e.target.files[0])}
-              />
-            </label>
-
-            <label
               style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 20, padding: '7px 10px', cursor: imageSearching ? 'wait' : 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, flexShrink: 0, position: 'relative' }}
               title="بحث بالصورة"
             >
