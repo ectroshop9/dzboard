@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Search, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, Download, Plus, Minus, ChevronLeft } from 'lucide-react';
 import { api } from '../services/api';
-import { createWorker } from 'tesseract.js';
+import Tesseract from 'tesseract.js';
 
 export default function StorePage() {
   const navigate = useNavigate();
@@ -122,27 +122,28 @@ export default function StorePage() {
     });
   };
 
-  // ✅ البحث بالصورة (OCR) مع إنهاء Worker لمنع Memory Leak
+  // ✅ البحث بالصورة (OCR) - استخدام مباشر بدون Worker
   const handleImageSearch = async (e) => {
     const file = e.target.files?.[0];
-    
-    // تصفير قيمة الحقل فوراً لتجنب التكرار
+
+    // تصفير الحقل فوراً لمنع التعليق
     if (e.target) e.target.value = '';
 
     if (!file) return;
 
     setImageSearching(true);
-    let worker = null;
 
     try {
-      // 1. إنشاء Worker خاص بالعملية الحالية فقط
-      worker = await createWorker('eng');
-      
-      // 2. قراءة الصورة
-      const ret = await worker.recognize(file);
-      const cleanText = ret.data.text.replace(/\s+/g, ' ').replace(/[|]/g, 'I');
+      const result = await Tesseract.recognize(
+        file,
+        'eng',
+        {
+          logger: (m) => console.log(m)
+        }
+      );
 
-      // 3. استخراج الموديل أو الأرقام
+      const cleanText = (result?.data?.text || '').replace(/\s+/g, ' ').replace(/[|]/g, 'I');
+
       const patterns = [
         /[A-Z]{2,4}\d{2}[.\-_]\d{4,6}/gi,
         /[A-Z]{3}\d?[.\-_]\d{3}[.\-_]\d{6}/gi,
@@ -174,12 +175,8 @@ export default function StorePage() {
       }
     } catch (error) {
       console.error('خطأ في معالجة الصورة:', error);
-      alert('حدث خطأ أثناء قراءة الصورة، يرجى المحاولة مرة أخرى');
+      alert('تعذر قراءة الصورة، يرجى المحاولة مرة أخرى أو اختيار صورة أوضح.');
     } finally {
-      // 4. إنهاء الـ Worker وتحرير الذاكرة فوراً
-      if (worker) {
-        await worker.terminate();
-      }
       setImageSearching(false);
     }
   };
