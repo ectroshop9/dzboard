@@ -142,13 +142,13 @@ export default function StorePage() {
         flexWrap: 'wrap'
       }}>
         <span>✅ قطع مجربة ومضمونة</span>
-        <span style={{ opacity: 0.5 }}>|</span>
+        <span style={{ opacity: 0.3 }}>•</span>
         <span>🚚 توصيل 69 ولاية</span>
-        <span style={{ opacity: 0.5 }}>|</span>
+        <span style={{ opacity: 0.3 }}>•</span>
         <span>💵 الدفع عند الاستلام</span>
-        <span style={{ opacity: 0.5 }}>|</span>
-        <span style={{ background: '#f59e0b', padding: '2px 10px', borderRadius: 12 }}>🎁 هدية: سيريال تحميل الدامب مجاناً</span>
-        <span style={{ opacity: 0.5 }}>|</span>
+        <span style={{ opacity: 0.3 }}>•</span>
+        <span style={{ background: '#f59e0b', padding: '2px 10px', borderRadius: 12, whiteSpace: 'nowrap' }}>🎁 هدية: سيريال تحميل الدامب مجاناً</span>
+        <span style={{ opacity: 0.3 }}>•</span>
         <span>🛠️ خدمة بعد البيع 7/24</span>
       </div>
       
