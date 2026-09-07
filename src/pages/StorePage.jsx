@@ -137,9 +137,10 @@ export default function StorePage() {
         fontWeight: 700,
         display: 'flex',
         alignItems: 'center',
-        justify: 'center',
-        gap: 12,
-        flexWrap: 'wrap'
+        justifyContent: 'center',
+        gap: 8,
+        flexWrap: 'wrap',
+        whiteSpace: 'nowrap'
       }}>
         <span>✅ قطع مجربة ومضمونة</span>
         <span style={{ opacity: 0.3 }}>•</span>
