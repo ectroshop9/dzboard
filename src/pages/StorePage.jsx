@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Search, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, Download, Plus, Minus, ChevronLeft } from 'lucide-react';
 import { api } from '../services/api';
@@ -195,18 +195,6 @@ export default function StorePage() {
                 </button>
               )}
             </div>
-
-            {/* ✅ زر البحث بالصورة المحدث مع المرجع (useRef) */}
-
-            {/* ✅ عنصر الـ input مفصول وخارج الـ button/label */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              style={{ display: 'none' }}
-              onChange={handleImageSearch}
-            />
 
             <button
               onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
