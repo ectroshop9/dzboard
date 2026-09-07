@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Search, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, Download, Plus, Minus, ChevronLeft } from 'lucide-react';
 import { api } from '../services/api';
@@ -15,6 +15,8 @@ export default function StorePage() {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+  const [imageSearching, setImageSearching] = useState(false);
+  const fileInputRef = useRef(null);
 
   const categories = [
     { key: 'all', label: 'الكل', icon: Grid, color: '#94a3b8' },
@@ -119,6 +121,38 @@ export default function StorePage() {
     });
   };
 
+  // ✅ البحث بالصورة
+  const handleImageSearch = async (e) => {
+    const file = e.target.files?.[0];
+    if (e.target) e.target.value = '';
+    if (!file) return;
+
+    setImageSearching(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('https://dzboard-search-tau.vercel.app/search-by-image', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.product?.name) {
+        setSearchQuery(data.product.name);
+      } else {
+        alert('لم يتم العثور على قطعة مطابقة، حاول تصوير الكارت كاملاً');
+      }
+    } catch (error) {
+      console.error('خطأ في البحث بالصورة:', error);
+      alert('حدث خطأ، حاول مرة أخرى');
+    } finally {
+      setImageSearching(false);
+    }
+  };
+
   const handleClearFilters = () => {
     setSelectedCategory('all');
     setSearchQuery('');
@@ -196,6 +230,28 @@ export default function StorePage() {
                 </button>
               )}
             </div>
+
+            <button
+              type="button"
+              onClick={() => !imageSearching && fileInputRef.current?.click()}
+              style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 20, padding: '7px 10px', cursor: imageSearching ? 'wait' : 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, flexShrink: 0 }}
+              title="بحث بالصورة"
+            >
+              {imageSearching ? (
+                <span style={{ fontSize: 10, color: '#f59e0b' }}>جاري...</span>
+              ) : (
+                <>📸 <span style={{ fontSize: 10 }}>صورة</span></>
+              )}
+            </button>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style={{ display: 'none' }}
+              onChange={handleImageSearch}
+            />
 
             <button
               onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
