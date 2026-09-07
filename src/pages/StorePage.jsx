@@ -2,12 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Search, ShoppingCart, Package, Monitor, Zap, Cpu, Grid, List, X, Download, Plus, Minus, ChevronLeft } from 'lucide-react';
 import { api } from '../services/api';
-import Tesseract from 'tesseract.js';
 
 export default function StorePage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const fileInputRef = useRef(null); // ✅ مرجع لحقل الملفات
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +15,6 @@ export default function StorePage() {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
-  const [imageSearching, setImageSearching] = useState(false);
 
   const categories = [
     { key: 'all', label: 'الكل', icon: Grid, color: '#94a3b8' },
@@ -120,115 +117,6 @@ export default function StorePage() {
         }]
       }
     });
-  };
-
-  // ✅ تحسين الصورة بشكل متوازن (رمادي بدون تدمير النصوص)
-  const processAndCompressImage = (file) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 1200;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > MAX_WIDTH) {
-            height = Math.round((height * MAX_WIDTH) / width);
-            width = MAX_WIDTH;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // تحويل للرمادي فقط مع الحفاظ على النصوص الباهتة
-          const imageData = ctx.getImageData(0, 0, width, height);
-          const data = imageData.data;
-          for (let i = 0; i < data.length; i += 4) {
-            const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-            data[i] = avg;
-            data[i + 1] = avg;
-            data[i + 2] = avg;
-          }
-          ctx.putImageData(imageData, 0, 0);
-
-          canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.85);
-        };
-      };
-    });
-  };
-
-  // ✅ البحث بالصورة - قراءة متساهلة متعددة المراحل
-  const handleImageSearch = async (e) => {
-    const file = e.target.files?.[0];
-    if (e.target) e.target.value = '';
-    if (!file) return;
-
-    setImageSearching(true);
-
-    try {
-      const processedImage = await processAndCompressImage(file);
-
-      const result = await Tesseract.recognize(
-        processedImage,
-        'eng',
-        { logger: () => {} }
-      );
-
-      const rawText = result?.data?.text || '';
-
-      const cleanWords = rawText
-        .replace(/[^a-zA-Z0-9.\-_]/g, ' ')
-        .split(/\s+/)
-        .map(w => w.replace(/^[.\-_]+|[.\-_]+$/g, ''))
-        .filter(w => w.length >= 4);
-
-      // أ) أنماط كروت الشاشات الشهيرة
-      const exactModelRegex = /[A-Z0-9]{2,6}[.\-_][A-Z0-9]{2,8}([.\-_][A-Z0-9]{2,8})?/i;
-      const matchExact = rawText.match(exactModelRegex);
-
-      if (matchExact && matchExact[0].length >= 5) {
-        setSearchQuery(matchExact[0]);
-        return;
-      }
-
-      // ب) كلمة تجمع حروف وأرقام
-      const mixedWord = cleanWords.find(w => 
-        /[A-Za-z]/.test(w) && 
-        /\d/.test(w) && 
-        w.length >= 5 && 
-        w.length <= 16
-      );
-
-      if (mixedWord) {
-        setSearchQuery(mixedWord);
-        return;
-      }
-
-      // ج) أطول كلمة
-      const longestCandidate = cleanWords
-        .filter(w => w.length >= 5)
-        .sort((a, b) => b.length - a.length)[0];
-
-      if (longestCandidate) {
-        setSearchQuery(longestCandidate);
-        return;
-      }
-
-      alert('لم يتم التعرّف على الموديل. حاول التقاط صورة أوضح أو كتابة الموديل يدوياً.');
-
-    } catch (error) {
-      console.error('خطأ في معالجة الصورة:', error);
-      alert('حدث خطأ أثناء قراءة الصورة، حاول مرة أخرى.');
-    } finally {
-      setImageSearching(false);
-    }
   };
 
   const handleClearFilters = () => {
