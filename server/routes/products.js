@@ -43,22 +43,6 @@ router.get('/', async (req, res) => {
   };
 });
 
-    }
-
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('active', true)
-      .or(`name.ilike.%${q.trim()}%,description.ilike.%${q.trim()}%,brand.ilike.%${q.trim()}%`)
-      .limit(10);
-
-    if (error) throw error;
-    res.json({ success: true, products: data || [] });
-  } catch (err) {
-    res.json({ success: true, products: [] });
-  }
-});
-
 router.get('/:id', ctrl.getById);
 router.post('/', verifyAdmin, ctrl.create);
 router.put('/:id', verifyAdmin, ctrl.update);
