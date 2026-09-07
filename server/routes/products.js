@@ -43,12 +43,6 @@ router.get('/', async (req, res) => {
   };
 });
 
-// ✅ البحث في المنتجات
-router.get('/search', async (req, res) => {
-  try {
-    const { q } = req.query;
-    if (!q || !q.trim()) {
-      return res.json({ success: true, products: [] });
     }
 
     const { data, error } = await supabase
