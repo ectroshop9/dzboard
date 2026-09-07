@@ -197,18 +197,6 @@ export default function StorePage() {
             </div>
 
             {/* ✅ زر البحث بالصورة المحدث مع المرجع (useRef) */}
-            <button
-              type="button"
-              onClick={() => !imageSearching && fileInputRef.current?.click()}
-              style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 20, padding: '7px 10px', cursor: imageSearching ? 'wait' : 'pointer', color: '#475569', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, flexShrink: 0 }}
-              title="بحث بالصورة"
-            >
-              {imageSearching ? (
-                <span style={{ fontSize: 10, color: '#f59e0b' }}>جاري القراءة...</span>
-              ) : (
-                <>📸 <span style={{ fontSize: 10 }}>صورة</span></>
-              )}
-            </button>
 
             {/* ✅ عنصر الـ input مفصول وخارج الـ button/label */}
             <input
