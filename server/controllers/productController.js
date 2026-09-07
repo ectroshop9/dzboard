@@ -1,5 +1,27 @@
 import Product from '../models/Product.js';
 
+// ✅ حساب بصمة المنتج تلقائياً
+const generateHashes = async (imageUrl) => {
+  try {
+    const imgResponse = await fetch(imageUrl);
+    const blob = await imgResponse.blob();
+    
+    const formData = new FormData();
+    formData.append('file', blob, 'image.jpg');
+    
+    const res = await fetch('https://dzboard-search-tau.vercel.app/generate-hashes', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await res.json();
+    return data;
+  } catch (e) {
+    console.error('Hash generation error:', e);
+    return null;
+  }
+};
+
 export const getAll = async (req, res) => {
   try {
     const includeInactive = req.query.include_inactive === 'true';
@@ -45,6 +67,20 @@ export const create = async (req, res) => {
       update_url: update_url || null, file_url: file_url || null
     });
     
+    // ✅ حساب البصمة تلقائياً
+    if (p?.image) {
+      generateHashes(p.image).then(hashData => {
+        if (hashData?.success) {
+          Product.update(p.id, {
+            phash: hashData.phash,
+            dhash: hashData.dhash
+          }).then(() => {
+            console.log('✅ تم حساب بصمة المنتج:', p.id);
+          });
+        }
+      });
+    }
+
     res.json({ success: true, product: p });
   } catch (e) {
     console.error('Create error:', e);
@@ -79,6 +115,18 @@ export const update = async (req, res) => {
       update_url: update_url !== undefined ? (update_url || null) : existing?.update_url, file_url: file_url !== undefined ? (file_url || null) : existing?.file_url
     });
     
+    // ✅ إعادة حساب البصمة إذا تغيرت الصورة
+    if (image && p?.image) {
+      generateHashes(p.image).then(hashData => {
+        if (hashData?.success) {
+          Product.update(p.id, {
+            phash: hashData.phash,
+            dhash: hashData.dhash
+          });
+        }
+      });
+    }
+
     res.json({ success: true, product: p });
   } catch (e) {
     console.error('Update error:', e);
