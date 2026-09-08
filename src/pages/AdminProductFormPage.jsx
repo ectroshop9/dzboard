@@ -34,7 +34,10 @@ export default function AdminProductFormPage() {
     description: '',
     image: '',
     file_url: '',
+    shelf_code: '',
   });
+
+  const SHELVES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
   const [driveUrl, setDriveUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -61,6 +64,7 @@ export default function AdminProductFormPage() {
               description: p.description || '',
               image: p.image || '',
               file_url: p.file_url || '',
+              shelf_code: p.shelf_code || '',
             });
           }
         })
@@ -194,6 +198,7 @@ export default function AdminProductFormPage() {
         image: formData.image || '',
         description: formData.description || '',
         file_url: formData.file_url || null,
+        shelf_code: formData.shelf_code || null,
       };
 
       const url = isEditing ? `${API}/products/${id}` : `${API}/inventory/items`;
