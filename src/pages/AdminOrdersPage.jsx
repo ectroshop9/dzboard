@@ -149,6 +149,7 @@ export default function AdminOrdersPage() {
                 <tr style={{ background: '#f8fafc', color: '#64748b' }}>
                   <th style={{ padding: '12px 14px' }}>#</th>
                   <th style={{ padding: '12px 14px' }}>العميل</th>
+                  <th style={{ padding: '12px 14px' }}>المنتجات</th>
                   <th style={{ padding: '12px 14px' }}>الهاتف</th>
                   <th style={{ padding: '12px 14px' }}>المبلغ</th>
                   <th style={{ padding: '12px 14px' }}>الحالة</th>
@@ -162,6 +163,19 @@ export default function AdminOrdersPage() {
                     <tr key={o.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                       <td style={{ padding: '12px 14px', fontWeight: 800 }}>#{o.id}</td>
                       <td style={{ padding: '12px 14px' }}>{o.customer}</td>
+                      <td style={{ padding: '12px 14px', maxWidth: 200 }}>
+                        {o.items ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            {o.items.map((item, i) => (
+                              <span key={i} style={{ fontSize: 11, background: '#f1f5f9', padding: '3px 8px', borderRadius: 6, display: 'inline-block' }}>
+                                {item.name || item.title} × {item.quantity || 1}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span style={{ color: '#94a3b8' }}>-</span>
+                        )}
+                      </td>
                       <td style={{ padding: '12px 14px', direction: 'ltr', textAlign: 'right' }}>{o.phone}</td>
                       <td style={{ padding: '12px 14px', fontWeight: 800, color: '#10b981' }}>
                         {(parseFloat(o.amount||0)+parseFloat(o.shipping||0)).toLocaleString('en-US')} دج
