@@ -45,7 +45,7 @@ export const getById = async (req, res) => {
 
 export const create = async (req, res) => {
   try {
-    const { name, category, brand, price, stock, image, description, active, update_url, file_url } = req.body;
+    const { name, category, brand, price, stock, image, description, active, update_url, file_url, shelf_code } = req.body;
     
     // ✅ فحص التكرار - فقط يمنع إضافة نفس الاسم
     if (name && name.trim()) {
@@ -64,7 +64,7 @@ export const create = async (req, res) => {
       image: image || '',
       description: description || '',
       active: active !== undefined ? active : true,
-      update_url: update_url || null, file_url: file_url || null
+      update_url: update_url || null, file_url: file_url || null, shelf_code: shelf_code || null
     });
     
     // ✅ حساب البصمة تلقائياً
@@ -90,7 +90,7 @@ export const create = async (req, res) => {
 
 export const update = async (req, res) => {
   try {
-    const { name, category, brand, price, stock, image, description, active, update_url, file_url } = req.body;
+    const { name, category, brand, price, stock, image, description, active, update_url, file_url, shelf_code } = req.body;
     
     // ✅ فحص التكرار عند التحديث - فقط إذا تغير الاسم
     if (name && name.trim()) {
@@ -112,7 +112,7 @@ export const update = async (req, res) => {
       image: image !== undefined ? (image || '') : existing?.image,
       description: description !== undefined ? (description || '') : existing?.description,
       active: active !== undefined ? active : existing?.active,
-      update_url: update_url !== undefined ? (update_url || null) : existing?.update_url, file_url: file_url !== undefined ? (file_url || null) : existing?.file_url
+      update_url: update_url !== undefined ? (update_url || null) : existing?.update_url, file_url: file_url !== undefined ? (file_url || null) : existing?.file_url, shelf_code: shelf_code !== undefined ? (shelf_code || null) : existing?.shelf_code
     });
     
     // ✅ إعادة حساب البصمة إذا تغيرت الصورة

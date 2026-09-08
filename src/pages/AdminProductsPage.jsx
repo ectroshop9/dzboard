@@ -50,8 +50,11 @@ export default function AdminProductsPage() {
     description: '', 
     image: '', 
     brand: 'generic',
-    file_url: ''
+    file_url: '',
+    shelf_code: ''
   };
+
+  const SHELVES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
   
   const [formData, setFormData] = useState(initialForm);
 
@@ -136,7 +139,8 @@ export default function AdminProductsPage() {
       description: p.description || '', 
       image: p.image || '', 
       brand: p.brand || 'generic',
-      update_url: p.update_url || ''
+      update_url: p.update_url || '',
+      shelf_code: p.shelf_code || ''
     }); 
     setShowForm(true); 
   };
@@ -165,7 +169,8 @@ export default function AdminProductsPage() {
           image: formData.image || '',
           brand: formData.brand || 'generic',
           description: formData.description || '',
-          update_url: formData.update_url || null
+          update_url: formData.update_url || null,
+          shelf_code: formData.shelf_code || null
         };
 
         const res = await fetch(`${API}/products/${editingProduct.id}`, { 
@@ -191,7 +196,8 @@ export default function AdminProductsPage() {
           quantity: validQuantity,
           image: formData.image || '',
           description: formData.description || '',
-          update_url: formData.update_url || null
+          update_url: formData.update_url || null,
+          shelf_code: formData.shelf_code || null
         };
 
         const res = await fetch(`${API}/inventory/items`, { 
@@ -469,6 +475,10 @@ export default function AdminProductsPage() {
               <input className="field-input" type="number" placeholder="المخزون *" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
               <input className="field-input" placeholder="رابط الصورة" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
               <input className="field-input" placeholder="رابط ملف الفلاش (للتحميل)" value={formData.file_url} onChange={e => setFormData({...formData, file_url: e.target.value})} />
+              <select className="field-input" value={formData.shelf_code} onChange={e => setFormData({...formData, shelf_code: e.target.value})}>
+                <option value="">اختر الرف</option>
+                {SHELVES.map(s => <option key={s} value={s}>رف {s}</option>)}
+              </select>
               <textarea className="field-input" placeholder="وصف المنتج (اختياري)" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} rows={2} style={{ gridColumn: '1 / -1' }} />
               <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', background: '#f1f5f9', borderRadius: 8, fontWeight: 600, fontSize: 13, width: 'fit-content' }}>
                 <Upload size={14} /> {uploading ? 'جاري...' : 'رفع صورة'}
@@ -523,6 +533,11 @@ export default function AdminProductsPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <span style={{ fontSize: 12, color: '#64748b' }}>المخزون: <strong>{product.stock || 0}</strong></span>
+                      {product.shelf_code && (
+                        <span style={{ fontSize: 11, background: '#fef3c7', color: '#b45309', padding: '3px 8px', borderRadius: 6, fontWeight: 800, display: 'inline-block', width: 'fit-content' }}>
+                          📦 رف {product.shelf_code}
+                        </span>
+                      )}
                       <span style={{ fontSize: 11, color: '#94a3b8' }}>🗓️ {formatDate(product.created_at)}</span>
                       <span style={{ fontSize: 11, color: isVisible ? '#10b981' : '#ef4444', fontWeight: 700 }}>{isVisible ? '👁️ ظاهر' : '🚫 مخفي'}</span>
                     </div>
