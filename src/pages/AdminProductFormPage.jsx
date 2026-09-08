@@ -297,6 +297,20 @@ export default function AdminProductFormPage() {
 
             <div>
               <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>
+                الرف
+              </label>
+              <select
+                className="field-input"
+                value={formData.shelf_code}
+                onChange={e => setFormData({ ...formData, shelf_code: e.target.value })}
+              >
+                <option value="">اختر الرف</option>
+                {SHELVES.map(s => <option key={s} value={s}>رف {s}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block', color: '#334155' }}>
                 السعر (دج) <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input
