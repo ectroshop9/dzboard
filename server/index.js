@@ -15,6 +15,7 @@ import botOrdersRoutes from './routes/botOrders.js';
 import chatLogsRoutes from './routes/chatLogs.js';
 import liveChatRoutes from './routes/liveChat.js';
 import serialsRoutes from './routes/serials.js';
+import techniciansRoutes from './routes/technicians.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,6 +39,7 @@ app.use('/api/bot-orders', botOrdersRoutes);
 app.use('/api/chat-logs', chatLogsRoutes);
 app.use('/api/live-chat', liveChatRoutes);
 app.use('/api/serials', serialsRoutes);
+app.use('/api/technicians', techniciansRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
