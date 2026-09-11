@@ -39,9 +39,39 @@ export default function TechniciansMapPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const getWilayaIdFromCode = (code) => {
-    const num = parseInt(code, 10);
-    return num;
+  // خريطة الاسم العربي → wilaya_id (تشمل الولايات الجديدة)
+  const NAME_TO_ID = {
+    'أدرار': 1, 'الشلف': 2, 'الأغواط': 3, 'أم البواقي': 4, 'باتنة': 5, 'بجاية': 6,
+    'بسكرة': 7, 'بشار': 8, 'البليدة': 9, 'البويرة': 10, 'تمنراست': 11, 'تبسة': 12,
+    'تلمسان': 13, 'تيارت': 14, 'تيزي وزو': 15, 'الجزائر': 16, 'الجلفة': 17, 'جيجل': 18,
+    'سطيف': 19, 'سعيدة': 20, 'سكيكدة': 21, 'سيدي بلعباس': 22, 'عنابة': 23, 'قالمة': 24,
+    'قسنطينة': 25, 'المدية': 26, 'مستغانم': 27, 'المسيلة': 28, 'معسكر': 29, 'ورقلة': 30,
+    'وهران': 31, 'البيض': 32, 'إليزي': 33, 'برج بوعريريج': 34, 'بومرداس': 35, 'الطارف': 36,
+    'تندوف': 37, 'تيسمسيلت': 38, 'الوادي': 39, 'خنشلة': 40, 'سوق أهراس': 41, 'تيبازة': 42,
+    'ميلة': 43, 'عين الدفلى': 44, 'النعامة': 45, 'عين تموشنت': 46, 'غرداية': 47, 'غليزان': 48,
+    'تيميمون': 49, 'برج باجي مختار': 50, 'أولاد جلال': 51, 'اولاد جلال': 51,
+    'بني عباس': 52, 'عين صالح': 53, 'عين قزام': 54, 'تقرت': 55, 'جانت': 56,
+    'المغير': 57, 'المنيعة': 58
+  };
+
+  const getWilayaIdFromName = (nameAr, nameEn) => {
+    // جرب بالاسم العربي
+    if (NAME_TO_ID[nameAr]) return NAME_TO_ID[nameAr];
+    // جرب بالاسم الإنجليزي
+    const EN_TO_ID = {
+      'Adrar': 1, 'Chlef': 2, 'Laghouat': 3, 'Oum El Bouaghi': 4, 'Batna': 5, 'Béjaïa': 6,
+      'Biskra': 7, 'Béchar': 8, 'Blida': 9, 'Bouira': 10, 'Tamanrasset': 11, 'Tébessa': 12,
+      'Tlemcen': 13, 'Tiaret': 14, 'Tizi Ouzou': 15, 'Alger': 16, 'Djelfa': 17, 'Jijel': 18,
+      'Sétif': 19, 'Saïda': 20, 'Skikda': 21, 'Sidi Bel Abbès': 22, 'Annaba': 23, 'Guelma': 24,
+      'Constantine': 25, 'Médéa': 26, 'Mostaganem': 27, "M'Sila": 28, 'Mascara': 29, 'Ouargla': 30,
+      'Oran': 31, 'El Bayadh': 32, 'Illizi': 33, 'Bordj Bou Arreridj': 34, 'Boumerdès': 35, 'El Tarf': 36,
+      'Tindouf': 37, 'Tissemsilt': 38, 'El Oued': 39, 'Khenchela': 40, 'Souk Ahras': 41, 'Tipaza': 42,
+      'Mila': 43, 'Aïn Defla': 44, 'Naâma': 45, 'Aïn Témouchent': 46, 'Ghardaïa': 47, 'Relizane': 48,
+      'Timimoune': 49, 'Bordj Badji Mokhtar': 50, 'Ouled Djellal': 51,
+      'Béni Abbès': 52, 'In Salah': 53, 'In Guezzam': 54, 'Touggourt': 55, 'Djanet': 56,
+      'El M'Ghair': 57, 'El Meniaa': 58
+    };
+    return EN_TO_ID[nameEn] || null;
   };
 
   const handleWilayaClick = (wilayaId) => {
@@ -68,9 +98,8 @@ export default function TechniciansMapPage() {
 
   // تنسيق كل ولاية
   const wilayaStyle = (feature) => {
-    const code = feature.properties.city_code;
-    const wilayaId = getWilayaIdFromCode(code);
-    const count = stats[wilayaId] || 0;
+    const wilayaId = getWilayaIdFromName(feature.properties.name_ar, feature.properties.name);
+    const count = wilayaId ? (stats[wilayaId] || 0) : 0;
     const isSelected = selectedWilaya === wilayaId;
 
     return {
@@ -84,9 +113,8 @@ export default function TechniciansMapPage() {
 
   // أحداث كل ولاية
   const onEachWilaya = (feature, layer) => {
-    const code = feature.properties.city_code;
-    const wilayaId = getWilayaIdFromCode(code);
-    const count = stats[wilayaId] || 0;
+    const wilayaId = getWilayaIdFromName(feature.properties.name_ar, feature.properties.name);
+    const count = wilayaId ? (stats[wilayaId] || 0) : 0;
     const nameAr = feature.properties.name_ar || feature.properties.name;
 
     // Tooltip عند المرور
