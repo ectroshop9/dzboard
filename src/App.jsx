@@ -30,6 +30,7 @@ import AdminSerialsPage from './pages/AdminSerialsPage';
 import AdminGiftCardPage from './pages/AdminGiftCardPage';
 import AdminTVStockPage from './pages/AdminTVStockPage';
 import AdminTechniciansPage from './pages/AdminTechniciansPage';
+import TechniciansMapPage from './pages/TechniciansMapPage';
 import AdminProductFormPage from './pages/AdminProductFormPage';
 
 // مكون فرعي لإظهار الشريط السفلي فقط في صفحات الأدمن (باستثناء صفحة التسجيل)
@@ -59,6 +60,7 @@ function App() {
           <Route path="/thank-you" element={<ThankYouPage />} />
           <Route path="/request-part" element={<RequestPartPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/technicians" element={<TechniciansMapPage />} />
           <Route path="/download" element={<DownloadPage />} />
 
           {/* صفحات لوحة التحكم الأدمن */}
@@ -76,6 +78,7 @@ function App() {
           <Route path="/admin/gift-card" element={<AdminGiftCardPage />} />
           <Route path="/admin/tv-stock" element={<AdminTVStockPage />} />
           <Route path="/admin/technicians" element={<AdminTechniciansPage />} />
+          <Route path="/admin/technicians-map" element={<TechniciansMapPage />} />
           <Route path="/admin/live-chat" element={<AdminLiveChatPage />} />
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
           <Route path="/admin/scan" element={<AdminScanPage />} />
