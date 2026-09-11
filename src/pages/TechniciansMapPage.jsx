@@ -182,17 +182,15 @@ export default function TechniciansMapPage() {
             <MapContainer
               center={[28.0339, 1.6596]}
               zoom={5}
-              minZoom={5}
-              maxZoom={10}
+              minZoom={4}
+              maxZoom={8}
               maxBounds={[[18.0, -9.0], [38.0, 12.5]]}
               maxBoundsViscosity={1.0}
-              style={{ height: '100%', width: '100%', background: '#0a0a1a' }}
+              style={{ height: '100%', width: '100%', background: 'transparent' }}
               scrollWheelZoom={true}
               attributionControl={false}
+              zoomControl={false}
             >
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
-              />
               {geoData && (
                 <GeoJSON
                   data={geoData}
