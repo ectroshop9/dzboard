@@ -29,6 +29,7 @@ import DownloadPage from './pages/DownloadPage';
 import AdminSerialsPage from './pages/AdminSerialsPage';
 import AdminGiftCardPage from './pages/AdminGiftCardPage';
 import AdminTVStockPage from './pages/AdminTVStockPage';
+import AdminTechniciansPage from './pages/AdminTechniciansPage';
 import AdminProductFormPage from './pages/AdminProductFormPage';
 
 // مكون فرعي لإظهار الشريط السفلي فقط في صفحات الأدمن (باستثناء صفحة التسجيل)
@@ -74,6 +75,7 @@ function App() {
           <Route path="/admin/serials" element={<AdminSerialsPage />} />
           <Route path="/admin/gift-card" element={<AdminGiftCardPage />} />
           <Route path="/admin/tv-stock" element={<AdminTVStockPage />} />
+          <Route path="/admin/technicians" element={<AdminTechniciansPage />} />
           <Route path="/admin/live-chat" element={<AdminLiveChatPage />} />
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
           <Route path="/admin/scan" element={<AdminScanPage />} />
