@@ -200,12 +200,42 @@ export default function TechniciansMapPage() {
           </div>
         </div>
 
-        {/* قائمة المصلحين */}
-        {selectedWilaya && (
-          <div style={{ background: '#fff', borderRadius: 16, padding: 20, border: '1px solid #e2e8f0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+
+      </main>
+
+      {/* Modal منبثق */}
+      {selectedWilaya && (
+        <div 
+          onClick={() => { setSelectedWilaya(null); setSelectedTechs([]); }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.6)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            backdropFilter: 'blur(4px)'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#fff',
+              borderRadius: 20,
+              padding: 20,
+              maxWidth: 500,
+              width: '100%',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+              animation: 'popIn 0.3s ease'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid #f1f5f9' }}>
               <h2 style={{ fontSize: 17, fontWeight: 900, margin: 0 }}>
-                📍 {getWilayaName(selectedWilaya)} - {selectedTechs.length} مصلح
+                📍 {getWilayaName(selectedWilaya)}
               </h2>
               <button
                 onClick={() => { setSelectedWilaya(null); setSelectedTechs([]); }}
@@ -216,23 +246,24 @@ export default function TechniciansMapPage() {
             </div>
 
             {selectedTechs.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#94a3b8', padding: 30, fontSize: 14 }}>
-                😔 لا يوجد مصلحين في هذه الولاية بعد
-              </p>
+              <div style={{ textAlign: 'center', padding: 30 }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>😔</div>
+                <p style={{ color: '#64748b', fontWeight: 700 }}>لا يوجد مصلحين في هذه الولاية بعد</p>
+              </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {selectedTechs.map(t => (
                   <div key={t.id} style={{ 
                     background: '#f8fafc', 
                     borderRadius: 12, 
-                    padding: 16,
+                    padding: 14,
                     border: '1px solid #e2e8f0'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                      <div style={{ background: '#3b82f6', color: '#fff', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                      <div style={{ background: '#3b82f6', color: '#fff', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 16 }}>
                         {t.name?.charAt(0) || '?'}
                       </div>
-                      <strong style={{ fontSize: 15 }}>{t.name}</strong>
+                      <strong style={{ fontSize: 16 }}>{t.name}</strong>
                     </div>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
@@ -244,19 +275,20 @@ export default function TechniciansMapPage() {
                           gap: 6,
                           background: '#10b981',
                           color: '#fff',
-                          padding: '10px 14px',
-                          borderRadius: 8,
+                          padding: '12px 14px',
+                          borderRadius: 10,
                           textDecoration: 'none',
-                          fontWeight: 700,
+                          fontWeight: 800,
                           justifyContent: 'center',
-                          direction: 'ltr'
+                          direction: 'ltr',
+                          fontSize: 15
                         }}
                       >
-                        <Phone size={15} /> {t.phone}
+                        <Phone size={16} /> {t.phone}
                       </a>
                       
                       {t.commune && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#475569' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#475569', fontWeight: 600 }}>
                           <MapPin size={14} style={{ color: '#f59e0b' }} />
                           {t.commune}
                         </div>
@@ -286,8 +318,15 @@ export default function TechniciansMapPage() {
               </div>
             )}
           </div>
-        )}
-      </main>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes popIn {
+          from { opacity: 0; transform: scale(0.9) translateY(20px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
