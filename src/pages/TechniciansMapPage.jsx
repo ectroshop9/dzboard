@@ -69,7 +69,7 @@ export default function TechniciansMapPage() {
       'Mila': 43, 'Aïn Defla': 44, 'Naâma': 45, 'Aïn Témouchent': 46, 'Ghardaïa': 47, 'Relizane': 48,
       'Timimoune': 49, 'Bordj Badji Mokhtar': 50, 'Ouled Djellal': 51,
       'Béni Abbès': 52, 'In Salah': 53, 'In Guezzam': 54, 'Touggourt': 55, 'Djanet': 56,
-      'El M'Ghair': 57, 'El Meniaa': 58
+      "El M'Ghair": 57, 'El Meniaa': 58
     };
     return EN_TO_ID[nameEn] || null;
   };
