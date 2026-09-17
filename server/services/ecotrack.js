@@ -54,9 +54,36 @@ export const ecotrackService = {
       
       if (d.tracking) {
         return { success: true, tracking: d.tracking, raw: d };
-      } else {
-        return { success: false, error: d.message || d.error || 'فشل إنشاء الطلب في Ecotrack', raw: d };
       }
+      
+      // ✅ إذا رفض DHD stopdesk - جرب كـ domicile
+      if (shippingType === 'stopdesk' && d.message && d.message.includes('Stop desk')) {
+        console.log('⚠️ Stop desk غير متوفر - جرب كـ domicile');
+        
+        const p2 = new URLSearchParams({
+          reference: String(order.id), 
+          nom_client: order.customer || '', 
+          telephone: order.phone || '', 
+          adresse: order.address || '',
+          commune: order.commune || '', 
+          code_wilaya: String(wilayaId),
+          montant: String(parseFloat(order.amount || 0) + parseFloat(order.shipping || 0)),
+          produit: order.items?.map(i => `${i.name || i.title} x${i.quantity}`).join(', ') || '', 
+          type: '1',
+          stop_desk: '0',
+        });
+        
+        const r2 = await fetch(`${URL}/create/order?${p2}`, { method: 'POST', headers: H });
+        const d2 = await r2.json();
+        
+        if (d2.tracking) {
+          return { success: true, tracking: d2.tracking, raw: d2, fallback: true };
+        }
+        
+        return { success: false, error: d2.message || 'فشل الطلب', raw: d2 };
+      }
+      
+      return { success: false, error: d.message || d.error || 'فشل إنشاء الطلب في Ecotrack', raw: d };
     } catch (error) {
       console.error('Ecotrack createShipment Error:', error);
       return { success: false, error: error.message };
