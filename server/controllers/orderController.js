@@ -33,14 +33,22 @@ export const create = async (req, res) => {
     
     try { 
       const r = await ecotrackService.createShipment(order); 
-      console.log('Ecotrack Response:', r);
+      
+      // ✅ حفظ Response من DHD في Supabase
+      const { supabase } = await import('../supabase.js');
+      await supabase.from('orders').update({
+        ecotrack_response: JSON.stringify(r.raw || r)
+      }).eq('id', order.id);
       
       if (r.success && r.tracking) {
         trackingNumber = r.tracking;
         await Order.updateStatus(order.id, 'confirmed', r.tracking);
       }
     } catch (e) { 
-      console.error('Ecotrack error:', e);
+      const { supabase } = await import('../supabase.js');
+      await supabase.from('orders').update({
+        ecotrack_response: JSON.stringify({ error: e.message })
+      }).eq('id', order.id);
     }
     
     res.json({ 

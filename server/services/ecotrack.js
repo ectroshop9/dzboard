@@ -53,9 +53,9 @@ export const ecotrackService = {
       console.log('Ecotrack API Response:', JSON.stringify(d));
       
       if (d.tracking) {
-        return { success: true, tracking: d.tracking };
+        return { success: true, tracking: d.tracking, raw: d };
       } else {
-        return { success: false, error: d.message || d.error || 'فشل إنشاء الطلب في Ecotrack' };
+        return { success: false, error: d.message || d.error || 'فشل إنشاء الطلب في Ecotrack', raw: d };
       }
     } catch (error) {
       console.error('Ecotrack createShipment Error:', error);
