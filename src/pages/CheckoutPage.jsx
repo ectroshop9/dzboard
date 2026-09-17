@@ -153,7 +153,13 @@ export default function CheckoutPage() {
       if (res.success) {
         localStorage.removeItem('cartItems');
         ['checkout_name', 'checkout_phone', 'checkout_wilaya', 'checkout_commune', 'checkout_address'].forEach(k => localStorage.removeItem(k));
-        navigate('/thank-you', { state: { trackingNumber: res.trackingNumber, orderId: res.orderId } });
+        navigate('/thank-you', { 
+          state: { 
+            trackingNumber: res.trackingNumber, 
+            orderId: res.orderId,
+            wilaya_id: parseInt(wilayaId, 10)
+          } 
+        });
       } else {
         setError(res.message || 'فشل إنشاء الطلب');
       }

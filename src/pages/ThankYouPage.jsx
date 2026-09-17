@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { CheckCircle, Copy, Home, ShoppingBag, Truck } from 'lucide-react';
+import { CheckCircle, Copy, Home, ShoppingBag, Truck, Building2, MapPin, Phone } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export default function ThankYouPage() {
@@ -7,6 +7,7 @@ export default function ThankYouPage() {
   const location = useLocation();
   const { trackingNumber, orderId } = location.state || {};
   const [copied, setCopied] = useState(false);
+  const [stopdesk, setStopdesk] = useState(null);
 
   useEffect(() => {
     if (!location.state) {
@@ -16,6 +17,21 @@ export default function ThankYouPage() {
       return () => clearTimeout(timer);
     }
   }, [location.state, navigate]);
+
+  // ✅ جلب المكتب حسب الولاية
+  useEffect(() => {
+    const wilayaId = location.state?.wilaya_id;
+    if (wilayaId) {
+      fetch(`/api/stopdesks?wilaya_id=${wilayaId}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && data.stopdesks?.length > 0) {
+            setStopdesk(data.stopdesks[0]);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [location.state]);
 
   const handleCopyTracking = async () => {
     if (trackingNumber) {
@@ -92,6 +108,36 @@ export default function ThankYouPage() {
               </button>
             </div>
             {copied && <p style={{ fontSize: 11, color: '#16a34a', marginTop: 6, fontWeight: 700, margin: 0 }}>تم نسخ الرقم إلى الحافظة!</p>}
+          </div>
+        )}
+
+        {/* ✅ معلومات المكتب حسب الولاية */}
+        {stopdesk && (
+          <div style={{ background: '#fef3c7', padding: '14px 12px', borderRadius: 12, marginBottom: 16, border: '1px solid #fcd34d' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 10 }}>
+              <Building2 size={18} style={{ color: '#b45309' }} />
+              <p style={{ fontWeight: 800, fontSize: 14, color: '#92400e', margin: 0 }}>📍 مكتب الاستلام في ولايتك</p>
+            </div>
+            
+            <div style={{ background: '#fff', borderRadius: 10, padding: 12, textAlign: 'right' }}>
+              <div style={{ fontWeight: 800, fontSize: 14, color: '#0f172a', marginBottom: 8 }}>{stopdesk.name}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: '#475569' }}>
+                {stopdesk.commune && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <MapPin size={13} style={{ color: '#f59e0b' }} />
+                    <span>{stopdesk.commune}</span>
+                  </div>
+                )}
+                {stopdesk.address && (
+                  <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.5 }}>{stopdesk.address}</div>
+                )}
+                {stopdesk.phone && (
+                  <a href={`tel:${stopdesk.phone}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#10b981', color: '#fff', padding: '10px 14px', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 13, marginTop: 6, direction: 'ltr', justifyContent: 'center' }}>
+                    <Phone size={14} /> {stopdesk.phone}
+                  </a>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
