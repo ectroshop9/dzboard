@@ -19,6 +19,10 @@
       "dest": "server/index.js"
     },
     {
+      "src": "/webpushr-sw.js",
+      "dest": "/webpushr-sw.js"
+    },
+    {
       "handle": "filesystem"
     },
     {
