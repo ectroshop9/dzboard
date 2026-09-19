@@ -16,27 +16,58 @@ export default function RequestPartPage() {
     if (!file) return;
     setUploading(true);
     setError('');
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-      try {
-        const res = await fetch(`${API}/products/upload`, {
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: reader.result }),
-        });
-        const data = await res.json();
-        if (data.success) {
-          setForm(prev => ({ ...prev, image: data.url }));
-        } else {
-          setError('فشل رفع الصورة، يرجى المحاولة لاحقاً');
-        }
-      } catch (err) {
-        setError('حدث خطأ أثناء رفع الصورة');
-      } finally {
-        setUploading(false);
+
+    try {
+      // ✅ ضغط الصورة قبل الإرسال
+      const compressed = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800;
+            let width = img.width;
+            let height = img.height;
+            if (width > MAX_WIDTH) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.7);
+          };
+        };
+      });
+
+      // تحويل إلى Base64
+      const compressedBase64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(compressed);
+        reader.onload = () => resolve(reader.result);
+      });
+
+      const res = await fetch(`${API}/products/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: compressedBase64 })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        setForm(prev => ({ ...prev, image: data.url }));
+      } else {
+        setError('فشل رفع الصورة، يرجى المحاولة لاحقاً');
       }
-    };
+    } catch (err) {
+      console.error(err);
+      setError('حدث خطأ أثناء رفع الصورة');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
