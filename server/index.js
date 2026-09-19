@@ -8,7 +8,6 @@ import productRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
 import adminRoutes from './routes/admin.js';
 import shippingRoutes from './routes/shipping.js';
-import requestRoutes from './routes/requests.js';
 import inventoryRoutes from './routes/inventory.js';
 import backupRoutes from './routes/backup.js';
 import botOrdersRoutes from './routes/botOrders.js';
@@ -18,8 +17,6 @@ import serialsRoutes from './routes/serials.js';
 import techniciansRoutes from './routes/technicians.js';
 import stopdesksRoutes from './routes/stopdesks.js';
 import notificationsRoutes from './routes/notifications.js';
-import publicUploadRoutes from './routes/publicUpload.js';
-import { apiLimiter } from './middleware/rateLimit.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,7 +33,6 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/shipping', shippingRoutes);
-app.use('/api/requests', requestRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/backup', backupRoutes);
 app.use('/api/bot-orders', botOrdersRoutes);
@@ -46,7 +42,6 @@ app.use('/api/serials', serialsRoutes);
 app.use('/api/technicians', techniciansRoutes);
 app.use('/api/stopdesks', stopdesksRoutes);
 app.use('/api/notifications', notificationsRoutes);
-app.use('/api/public/upload', publicUploadRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 

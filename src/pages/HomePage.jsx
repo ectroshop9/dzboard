@@ -260,10 +260,6 @@ export default function HomePage() {
             <h3 style={{ fontSize: 16, fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0' }}>لم تجد القطعة التي تبحث عنها؟</h3>
             <p style={{ fontSize: 12, color: '#64748b', margin: 0, lineHeight: 1.5 }}>أرسل لنا تفاصيل وموديل القطعة وسنقوم بالبحث عنها وتوفيرها لك في أقرب وقت.</p>
           </div>
-          <Link to="/request-part" style={{ background: '#3b82f6', color: '#fff', padding: '10px 18px', borderRadius: 10, textDecoration: 'none', fontWeight: 800, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)' }}>
-            <span>اطلب قطعة خاصة</span>
-            <ArrowRight size={15} style={{ transform: 'rotate(180deg)' }} />
-          </Link>
         </div>
       </section>
 

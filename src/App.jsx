@@ -5,7 +5,6 @@ import HomePage from './pages/HomePage';
 import StorePage from './pages/StorePage';
 import CheckoutPage from './pages/CheckoutPage';
 import ThankYouPage from './pages/ThankYouPage';
-import RequestPartPage from './pages/RequestPartPage';
 import PrivacyPage from './pages/PrivacyPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
@@ -13,7 +12,6 @@ import AdminProductsPage from './pages/AdminProductsPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 import AdminScanPage from './pages/AdminScanPage';
-import AdminRequestsPage from './pages/AdminRequestsPage';
 import AdminOrdersMenuPage from './pages/AdminOrdersMenuPage';
 import AdminBotOrdersPage from './pages/AdminBotOrdersPage';
 
@@ -57,7 +55,6 @@ function App() {
           <Route path="/store" element={<StorePage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/thank-you" element={<ThankYouPage />} />
-          <Route path="/request-part" element={<RequestPartPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/technicians" element={<TechniciansMapPage />} />
           <Route path="/download" element={<DownloadPage />} />
@@ -79,7 +76,6 @@ function App() {
           <Route path="/admin/technicians-map" element={<TechniciansMapPage />} />
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
           <Route path="/admin/scan" element={<AdminScanPage />} />
-          <Route path="/admin/requests" element={<AdminRequestsPage />} />
           <Route path="/admin/stopdesks" element={<AdminStopdesksPage />} />
           <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
         </Routes>
