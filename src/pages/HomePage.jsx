@@ -32,26 +32,7 @@ export default function HomePage() {
   // ✅ إعداد Facebook Chat Plugin للمتصفح
   useEffect(() => {
     const chatbox = document.getElementById('fb-customer-chat');
-    if (chatbox) {
-      chatbox.setAttribute("page_id", PAGE_ID);
-      chatbox.setAttribute("attribution", "biz_inbox");
-    }
-
-    if (!document.getElementById('facebook-jssdk')) {
-      window.fbAsyncInit = function() {
-        window.FB.init({
-          xfbml: true,
-          version: 'v18.0'
-        });
-      };
-
-      const js = document.createElement('script');
-      js.id = 'facebook-jssdk';
-      js.src = 'https://connect.facebook.net/ar_AR/sdk/xfbml.customerchat.js';
-      js.async = true;
-      document.body.appendChild(js);
-    }
-  }, [PAGE_ID]);
+  }, []);
 
   // سلايدر الصور
   useEffect(() => {
@@ -297,10 +278,6 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
-
-      {/* Facebook Chat Plugin Container */}
-      <div id="fb-root"></div>
-      <div id="fb-customer-chat" className="fb-customerchat"></div>
 
       {/* الفوتر */}
       <footer style={{ background: '#fff', borderTop: '1px solid #e2e8f0', padding: '24px 16px 32px', textAlign: 'center' }}>
