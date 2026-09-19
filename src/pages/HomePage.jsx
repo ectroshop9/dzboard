@@ -133,8 +133,6 @@ export default function HomePage() {
     { name: 'Stream', code: 'stream', image: '/brands/stream.png' },
     { name: 'Maxtor', code: 'maxtor', image: '/brands/maxtor.png' },
     { name: 'Kiowa', code: 'kiowa', image: '/brands/kiowa.png' },
-    { name: 'TCL', code: 'tcl', image: '/brands/tcl.png' },
-    { name: 'Toshiba', code: 'toshiba', image: '/brands/toshiba.png' },
   ];
 
   return (
