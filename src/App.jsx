@@ -19,7 +19,6 @@ import AdminBotOrdersPage from './pages/AdminBotOrdersPage';
 import MobileBottomNav from './components/MobileBottomNav';
 
 // استيراد البوت
-import ChatBot from './components/ChatBot';
 import DownloadPage from './pages/DownloadPage';
 import AdminSerialsPage from './pages/AdminSerialsPage';
 import AdminGiftCardPage from './pages/AdminGiftCardPage';
@@ -40,7 +39,36 @@ function LayoutWrapper({ children }) {
     <>
       {children}
       {isAdminRoute && <MobileBottomNav />}
-      {!isAdminPage && <ChatBot />}
+      {!isAdminPage && (
+        <a 
+          href="viber://chat?number=213673310066"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            position: 'fixed',
+            bottom: 20,
+            left: 20,
+            width: 60,
+            height: 60,
+            background: '#7360F2',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 20px rgba(115, 96, 242, 0.4)',
+            zIndex: 9999,
+            textDecoration: 'none',
+            transition: 'transform 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          title="تواصل معنا على Viber"
+        >
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+            <path d="M11.4 0C9.473.028 5.333.344 3.02 2.467 1.302 4.187.696 6.7.633 9.817c-.06 3.11.526 5.7 2.183 7.355 1.837 1.945 5.227 2.295 7.68 2.355l.06 2.473s.04.99.996.99c.79 0 2.613-2.712 2.613-2.712l.024-.024c.064 0 5.475-.085 7.223-2.855.06-.09 1.192-2.117 1.192-6.15 0-.06.04-.98-.01-1.42C22.18 4.083 19.85.85 15.34.3 15.28.3 13.34.028 11.4 0zm.16 1.798c1.906.028 3.653.31 4.113.432 3.5.44 5.317 2.605 5.372 6.034.04.372 0 1.024.01 1.075 0 3.5-.95 5.11-1 5.2-1.4 2.22-5.9 2.28-5.9 2.28l-.12.04c-.4 0-1.6 1.5-1.9 1.9l-.06-1.88-.15-.03c-2.3-.06-5.3-.35-6.7-1.75-1.4-1.4-1.7-3.6-1.65-6.05.06-2.7.5-4.6 1.8-5.9C6.66 2.05 10.1 1.82 11.4 1.8c.16 0 .2-.002.16-.002zM7.5 3.5c-.3 0-.6.1-.9.4-.9.9-1.7 2.6-1.7 4.6 0 2 .8 3.6 2.3 5.1 1.5 1.5 3.8 2.8 6.4 3.2 2.6.4 4.5.2 5.5-.4.5-.3.8-.8.7-1.3-.1-.5-.5-.9-1-1.1-.7-.3-1.9-.6-2.6-.9-.7-.3-1-.1-1.4.3-.4.4-.9 1-1.2 1.2-.3.2-.6.2-1.1 0-2.5-1-4.4-2.9-5.4-5.4-.2-.5-.2-.8 0-1.1.2-.3.8-.8 1.2-1.2.4-.4.6-.7.3-1.4-.3-.7-.6-1.9-.9-2.6-.2-.5-.6-.9-1.1-1-.1-.1-.3-.1-.4-.1z"/>
+          </svg>
+        </a>
+      )}
     </>
   );
 }
