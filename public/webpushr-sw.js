@@ -1,1 +1,1 @@
-importScripts('https://cdn.webpushr.com/sw.min.js');
+// Webpushr Service Worker - يُدار تلقائياً
