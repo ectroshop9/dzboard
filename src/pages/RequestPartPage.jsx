@@ -50,7 +50,7 @@ export default function RequestPartPage() {
         reader.onload = () => resolve(reader.result);
       });
 
-      const res = await fetch(`${API}/products/upload`, {
+      const res = await fetch(`${API}/public/upload`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: compressedBase64 })
