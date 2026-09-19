@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Eye, EyeOff, CheckCircle2, AlertCircle, Loader2, KeyRound, Shield,
-  Database, Download, Upload
+  Database, Download, Upload, Building2, Truck, Bell, Users, Package, QrCode
 } from 'lucide-react';
 
 const API = '/api';
@@ -171,6 +171,64 @@ export default function AdminSettingsPage() {
     <div style={{ background: '#f8fafc', fontFamily: 'system-ui', direction: 'rtl', minHeight: '100vh', paddingBottom: 120 }}>
       <main style={{ padding: 16, maxWidth: 600, margin: '0 auto' }}>
         <h1 style={{ fontSize: 20, fontWeight: 900, marginBottom: 16, color: '#0f172a' }}>الإعدادات</h1>
+
+        {/* ✅ روابط سريعة */}
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <Building2 size={20} style={{ color: '#7c3aed' }} />
+            <h2 style={{ fontSize: 16, fontWeight: 800 }}>إدارة سريعة</h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+            <div 
+              onClick={() => navigate('/admin/companies')}
+              style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: 12, padding: 14, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, transition: 'all 0.2s' }}
+            >
+              <Building2 size={24} style={{ color: '#7c3aed' }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#5b21b6' }}>الشركات</span>
+            </div>
+
+            <div 
+              onClick={() => navigate('/admin/stopdesks')}
+              style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 12, padding: 14, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, transition: 'all 0.2s' }}
+            >
+              <Truck size={24} style={{ color: '#ea580c' }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#9a3412' }}>مكاتب التوصيل</span>
+            </div>
+
+            <div 
+              onClick={() => navigate('/admin/technicians')}
+              style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 12, padding: 14, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, transition: 'all 0.2s' }}
+            >
+              <Users size={24} style={{ color: '#2563eb' }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#1e40af' }}>المصلحين</span>
+            </div>
+
+            <div 
+              onClick={() => navigate('/admin/notifications')}
+              style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 12, padding: 14, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, transition: 'all 0.2s' }}
+            >
+              <Bell size={24} style={{ color: '#d97706' }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#92400e' }}>الإشعارات</span>
+            </div>
+
+            <div 
+              onClick={() => navigate('/admin/tv-stock')}
+              style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 12, padding: 14, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, transition: 'all 0.2s' }}
+            >
+              <Package size={24} style={{ color: '#059669' }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#065f46' }}>مخزون الشاشات</span>
+            </div>
+
+            <div 
+              onClick={() => navigate('/admin/serials')}
+              style={{ background: '#fce7f3', border: '1px solid #fbcfe8', borderRadius: 12, padding: 14, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, transition: 'all 0.2s' }}
+            >
+              <QrCode size={24} style={{ color: '#db2777' }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#9d174d' }}>السيريالات</span>
+            </div>
+          </div>
+        </div>
 
         {/* قسم النسخ الاحتياطي */}
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, marginBottom: 16 }}>
