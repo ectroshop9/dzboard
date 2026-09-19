@@ -46,8 +46,8 @@ function LayoutWrapper({ children }) {
           rel="noopener noreferrer"
           style={{
             position: 'fixed',
-            bottom: 20,
-            left: 20,
+            bottom: 100,
+            right: 20,
             width: 60,
             height: 60,
             background: '#7360F2',
