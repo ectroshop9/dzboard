@@ -13,12 +13,9 @@ import AdminProductsPage from './pages/AdminProductsPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 import AdminScanPage from './pages/AdminScanPage';
-import CheckoutFormPage from './pages/CheckoutFormPage';
 import AdminRequestsPage from './pages/AdminRequestsPage';
 import AdminOrdersMenuPage from './pages/AdminOrdersMenuPage';
 import AdminBotOrdersPage from './pages/AdminBotOrdersPage';
-import AdminChatLogsPage from './pages/AdminChatLogsPage';
-import AdminLiveChatPage from './pages/AdminLiveChatPage';
 
 // استيراد الشريط السفلي
 import MobileBottomNav from './components/MobileBottomNav';
@@ -32,6 +29,8 @@ import AdminTVStockPage from './pages/AdminTVStockPage';
 import AdminTechniciansPage from './pages/AdminTechniciansPage';
 import TechniciansMapPage from './pages/TechniciansMapPage';
 import AdminProductFormPage from './pages/AdminProductFormPage';
+import AdminStopdesksPage from './pages/AdminStopdesksPage';
+import AdminNotificationsPage from './pages/AdminNotificationsPage';
 
 // مكون فرعي لإظهار الشريط السفلي فقط في صفحات الأدمن (باستثناء صفحة التسجيل)
 function LayoutWrapper({ children }) {
@@ -73,17 +72,16 @@ function App() {
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
           <Route path="/admin/orders-menu" element={<AdminOrdersMenuPage />} />
           <Route path="/admin/bot-orders" element={<AdminBotOrdersPage />} />
-          <Route path="/admin/chat-logs" element={<AdminChatLogsPage />} />
           <Route path="/admin/serials" element={<AdminSerialsPage />} />
           <Route path="/admin/gift-card" element={<AdminGiftCardPage />} />
           <Route path="/admin/tv-stock" element={<AdminTVStockPage />} />
           <Route path="/admin/technicians" element={<AdminTechniciansPage />} />
           <Route path="/admin/technicians-map" element={<TechniciansMapPage />} />
-          <Route path="/admin/live-chat" element={<AdminLiveChatPage />} />
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
           <Route path="/admin/scan" element={<AdminScanPage />} />
-          <Route path="/admin/checkout-form" element={<CheckoutFormPage />} />
           <Route path="/admin/requests" element={<AdminRequestsPage />} />
+          <Route path="/admin/stopdesks" element={<AdminStopdesksPage />} />
+          <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
         </Routes>
       </LayoutWrapper>
     </BrowserRouter>
