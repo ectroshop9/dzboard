@@ -1,32 +1,98 @@
-# React + TypeScript + Vite
+# 🛒 DZBoard - متجر قطع غيار الشاشات
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+متجر إلكتروني متكامل لبيع قطع غيار الشاشات والتلفزيونات مع لوحة تحكم كاملة.
 
-Currently, two official plugins are available:
+## 🌐 الروابط
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| الرابط | الوصف |
+|--------|-------|
+| [المتجر](https://dzboard-dz.vercel.app) | واجهة العملاء |
+| [بحث الصور](https://dzboard-search-tau.vercel.app) | البحث بالصور |
+| [الإدارة](https://dzboard-dz.vercel.app/admin) | لوحة التحكم |
+| [صفحة التقني](https://dzboard-search-tau.vercel.app/uploadbytech) | للتقنيين |
 
-## React Compiler
+## ✨ الميزات
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- 🛍️ **متجر كامل** - 98 منتج
+- 📸 **بحث بالصورة** - pHash + dHash (دقة 99%)
+- 🚚 **DHD API** - توصيل لكل الولايات
+- 📍 **55 ولاية + 1548 بلدية**
+- 🏢 **89 مكتب توصيل**
+- 🔔 **إشعارات فورية** - Webpushr
+- 👨‍🔧 **خريطة المصلحين** - تفاعلية
+- 📱 **زر Viber** مباشر
+- 🔐 **أمان متكامل** - RLS + Cookies
 
-## Expanding the Oxlint configuration
+## 🛠️ التقنيات
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+**Frontend:**
+- React 19 + Vite 7
+- React Router 7
+- Lucide Icons
+- Leaflet (خرائط)
+- XLSX (تصدير Excel)
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+**Backend:**
+- Node.js + Express
+- Supabase (PostgreSQL)
+- Cloudinary (صور)
+- DHD/Ecotrack (شحن)
+- Webpushr (إشعارات)
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## 🔐 الأمان
+
+- ✅ RLS مفعّل على كل الجداول
+- ✅ HttpOnly Cookies
+- ✅ Timing-safe verifyAdmin
+- ✅ Rate Limiting (3 مستويات)
+- ✅ CORS صحيح
+- ✅ Security Headers (Helmet)
+- ✅ BOT_KEY للبوت
+
+## 📊 قاعدة البيانات
+
+| الجدول | الوصف |
+|--------|-------|
+| `products` | المنتجات + بصمات الصور |
+| `orders` | الطلبات |
+| `stopdesks` | مكاتب التوصيل |
+| `companies` | شركات التوصيل |
+| `technicians` | المصلحين |
+| `notifications` | سجل الإشعارات |
+| `serials` | السيريالات |
+| `wilayas` + `communes` | التوصيل |
+
+## 🚀 التشغيل المحلي
+
+```bash
+# تثبيت
+npm install
+
+# تشغيل التطوير
+npm run dev
+
+# بناء للإنتاج
+npm run build
+📦 النشر
+Frontend + Backend: Vercel
+
+بحث الصور: Vercel (Python)
+
+قاعدة البيانات: Supabase
+
+📝 المتغيرات البيئية
+ADMIN_USERNAME=xxx
+ADMIN_PASSWORD=xxx
+ADMIN_TOKEN=xxx
+SUPABASE_URL=xxx
+SUPABASE_ANON_KEY=xxx
+SUPABASE_SERVICE_KEY=xxx
+ECOTRACK_API_URL=xxx
+ECOTRACK_API_TOKEN=xxx
+WEBPUSHR_API_KEY=xxx
+WEBPUSHR_AUTH_TOKEN=xxx
+BOT_KEY=xxx
+📅 الإصدار
+DZBoard 2026 - Production Ready ✅
+
+© 2026 DZBoard - جميع الحقوق محفوظة
