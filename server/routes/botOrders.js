@@ -10,6 +10,13 @@ router.get('/', verifyAdmin, async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
+  // ✅ التحقق من مفتاح البوت
+  const botKey = req.headers['x-bot-key'];
+  const validKey = process.env.BOT_KEY;
+  
+  if (validKey && botKey !== validKey) {
+    return res.status(401).json({ success: false, message: 'غير مصرح' });
+  }
   const { customer_name, phone, product_name, price } = req.body;
   const { data, error } = await supabase.from('bot_orders').insert({ customer_name, phone, product_name, price }).select().single();
   if (error) return res.status(500).json({ success: false, error: error.message });

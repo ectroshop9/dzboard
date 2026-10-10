@@ -5,6 +5,13 @@ import { verifyAdmin } from '../middleware/auth.js';
 
 // حفظ محادثة
 router.post('/', async (req, res) => {
+  // ✅ التحقق من مفتاح البوت
+  const botKey = req.headers['x-bot-key'];
+  const validKey = process.env.BOT_KEY;
+  
+  if (validKey && botKey !== validKey) {
+    return res.status(401).json({ success: false, message: 'غير مصرح' });
+  }
   try {
     const { session_id, user_message, bot_response } = req.body;
     
