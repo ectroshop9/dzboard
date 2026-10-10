@@ -7,6 +7,9 @@ const CACHE_DURATION = 5 * 60 * 1000;
 
 router.get('/items', async (req, res) => {
   try {
+    // ✅ Vercel Edge Cache
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    
     const cacheKey = 'inventory_items_all';
     
     // جلب من الكاش
