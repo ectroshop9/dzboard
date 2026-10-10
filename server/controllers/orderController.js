@@ -1,5 +1,6 @@
 import Order from '../models/Order.js';
 import { ecotrackService } from '../services/ecotrack.js';
+import { supabase } from '../supabase.js';
 
 export const getAll = async (req, res) => {
   try {
@@ -35,7 +36,6 @@ export const create = async (req, res) => {
       const r = await ecotrackService.createShipment(order); 
       
       // ✅ حفظ Response من DHD في Supabase
-      const { supabase } = await import('../supabase.js');
       await supabase.from('orders').update({
         ecotrack_response: JSON.stringify(r.raw || r)
       }).eq('id', order.id);
@@ -45,7 +45,6 @@ export const create = async (req, res) => {
         await Order.updateStatus(order.id, 'confirmed', r.tracking);
       }
     } catch (e) { 
-      const { supabase } = await import('../supabase.js');
       await supabase.from('orders').update({
         ecotrack_response: JSON.stringify({ error: e.message })
       }).eq('id', order.id);
