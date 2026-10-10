@@ -1,6 +1,5 @@
 import Order from '../models/Order.js';
 import { ecotrackService } from '../services/ecotrack.js';
-import { supabase } from '../supabase.js';
 
 export const getAll = async (req, res) => {
   try {
@@ -16,6 +15,7 @@ export const create = async (req, res) => {
     const { full_name, phone, wilaya_id, commune, address, shipping_type, items, total_price, shipping_cost } = req.body;
     if (!full_name || !phone || !wilaya_id) return res.status(400).json({ success: false, message: 'حقول ناقصة' });
     
+    // ✅ 1. حفظ الطلب أولاً
     const order = await Order.create({ 
       customer: full_name, 
       phone, 
@@ -28,36 +28,27 @@ export const create = async (req, res) => {
       shipping: shipping_cost 
     });
     
+    // ✅ 2. الرد فوراً (بدون انتظار DHD)
+    res.json({ 
+      success: true, 
+      orderId: order.id,
+      trackingNumber: null  // سيُحدَّث لاحقاً
+    });
     
-    
-    let trackingNumber = null;
-    
+    // ✅ 3. محاولة إنشاء الشحنة في الخلفية
     try { 
       const r = await ecotrackService.createShipment(order); 
       
-      // ✅ حفظ Response من DHD في Supabase
-      await supabase.from('orders').update({
-        ecotrack_response: JSON.stringify(r.raw || r)
-      }).eq('id', order.id);
-      
       if (r.success && r.tracking) {
-        trackingNumber = r.tracking;
         await Order.updateStatus(order.id, 'confirmed', r.tracking);
       }
     } catch (e) { 
-      await supabase.from('orders').update({
-        ecotrack_response: JSON.stringify({ error: e.message })
-      }).eq('id', order.id);
+      // طلب بدون شحنة - سيتصل الأدمن
     }
-    
-    res.json({ 
-      success: true, 
-      orderId: order.id, 
-      trackingNumber: trackingNumber 
-    });
   } catch (e) {
-    console.error('Create order error:', e);
-    res.json({ success: true, orderId: 0, trackingNumber: null });
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: 'خطأ في إنشاء الطلب' });
+    }
   }
 };
 
