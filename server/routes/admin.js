@@ -41,7 +41,7 @@ async function verifyRecaptcha(token) {
 }
 
 // 1. مسار تسجيل الدخول (تسجيل الدخول وضبط الكوكي)
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   const { username, password, recaptchaToken } = req.body;
   const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
   const now = Date.now();

@@ -52,7 +52,8 @@ export default function AdminLoginPage() {
           token: data.token,
           expires: Date.now() + (24 * 60 * 60 * 1000)
         };
-        localStorage.setItem('dzboard_admin_token', JSON.stringify(tokenData));
+        localStorage.setItem('admin_logged_in', 'true');
+        localStorage.setItem('admin_expires', String(Date.now() + 24*60*60*1000));
         navigate('/admin/dashboard');
       } else {
         setAttempts(prev => prev + 1);

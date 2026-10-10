@@ -18,7 +18,7 @@ export const api = {
   updateOrderStatus: (id, status) => fetch(`${API_BASE}/orders/${id}/status`, { method: 'PUT', headers: headers(), body: JSON.stringify({ status }) }).then(r => r.json()),
   
   // ✅ تم التعديل - إضافة recaptchaToken
-  adminLogin: (username, password, recaptchaToken = '') => fetch(`${API_BASE}/admin/login`, { 
+  adminLogin: (username, password, recaptchaToken = '') => fetchWithCredentials(`${API_BASE}/admin/login`, { 
     method: 'POST', 
     headers: { 'Content-Type': 'application/json' }, 
     body: JSON.stringify({ username, password, recaptchaToken }) 
