@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import { generalLimiter, authLimiter } from './middleware/rateLimit.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import productRoutes from './routes/products.js';
@@ -32,9 +33,22 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-app.use(cors({ origin: ['https://dzboard.vercel.app', 'https://serialcotv.onrender.com', 'http://localhost:5173'], credentials: true }));
+app.use(cors({ 
+  origin: [
+    'https://dzboard-dz.vercel.app',
+    'https://dzboard.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ], 
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(morgan('combined'));
+
+// ✅ Rate Limiting
+app.use('/api/', generalLimiter);
 
 // ✅ API Routes - كلها قبل static
 app.use('/api/products', productRoutes);

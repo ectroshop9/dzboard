@@ -1,4 +1,5 @@
 import express from 'express';
+import { authLimiter } from '../middleware/rateLimit.js';
 const router = express.Router();
 import axios from 'axios';
 
