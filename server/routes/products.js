@@ -13,6 +13,11 @@ router.get('/', async (req, res) => {
   const noCache = req.query.no_cache === 'true';
   const cacheKey = includeInactive ? 'products_all_including_inactive' : 'products_all';
   
+  // ✅ Vercel Edge Cache - كاش 5 دقائق على CDN
+  if (!noCache && !includeInactive) {
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+  }
+  
   try {
     // جلب من الكاش (إذا لم يُطلب تجاوزه)
     if (!noCache) {
