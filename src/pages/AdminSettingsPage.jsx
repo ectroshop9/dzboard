@@ -9,7 +9,7 @@ const API = '/api';
 
 export default function AdminSettingsPage() {
   const navigate = useNavigate();
-  const token = localStorage.getItem('admin_logged_in') === 'true' ? 'cookie-based' : null;
+  // ✅ Cookie هو المسؤول عن الأمان - لا حاجة للتحقق من localStorage
   
   // حالة تغيير كلمة المرور
   const [currentPassword, setCurrentPassword] = useState('');
@@ -30,9 +30,7 @@ export default function AdminSettingsPage() {
   const [syncing, setSyncing] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState({ type: '', text: '' });
 
-  useEffect(() => { 
-    if (!token) navigate('/admin'); 
-  }, []);
+  // ✅ لا حاجة للتحقق - السيرفر يتحقق من Cookie
 
   // تغيير كلمة المرور
   const handleChangePassword = async (e) => {
@@ -50,7 +48,8 @@ export default function AdminSettingsPage() {
     try {
       const res = await fetch(`${API}/admin/change-password`, { 
         method: 'POST', 
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, 
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ currentPassword, newPassword }) 
       });
       const data = await res.json();
@@ -103,7 +102,7 @@ export default function AdminSettingsPage() {
     try {
       const res = await fetch(`${API}/backup`, {
         method: 'GET',
-        headers: { Authorization: `Bearer ${token}` }
+        
       });
       
       const blob = await res.blob();
@@ -166,9 +165,9 @@ export default function AdminSettingsPage() {
           const res = await fetch(`${API}/backup/restore`, {
             method: 'POST',
             headers: { 
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}` 
+              'Content-Type': 'application/json'
             },
+            credentials: 'include',
             body: JSON.stringify(backupData)
           });
           
