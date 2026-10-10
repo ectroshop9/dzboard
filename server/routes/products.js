@@ -10,19 +10,22 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 دقائق
 // ✅ مسار الحصول على المنتجات - مع كاش
 router.get('/', async (req, res) => {
   const includeInactive = req.query.include_inactive === 'true';
+  const noCache = req.query.no_cache === 'true';
   const cacheKey = includeInactive ? 'products_all_including_inactive' : 'products_all';
   
   try {
-    // جلب من الكاش
-    const { data: cached } = await supabase
-      .from('cache')
-      .select('*')
-      .eq('id', cacheKey)
-      .gt('expires_at', new Date().toISOString())
-      .single();
+    // جلب من الكاش (إذا لم يُطلب تجاوزه)
+    if (!noCache) {
+      const { data: cached } = await supabase
+        .from('cache')
+        .select('*')
+        .eq('id', cacheKey)
+        .gt('expires_at', new Date().toISOString())
+        .single();
 
-    if (cached && cached.data) {
-      return res.json(cached.data);
+      if (cached && cached.data) {
+        return res.json(cached.data);
+      }
     }
   } catch {}
 
