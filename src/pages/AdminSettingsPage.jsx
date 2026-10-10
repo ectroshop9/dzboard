@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Eye, EyeOff, CheckCircle2, AlertCircle, Loader2, KeyRound, Shield,
-  Database, Download, Upload, Building2, Truck, Bell, Users, Package, QrCode
+  Database, Download, Upload, Building2, Truck, Bell, Users, Package, QrCode, RefreshCw
 } from 'lucide-react';
 
 const API = '/api';
 
 export default function AdminSettingsPage() {
   const navigate = useNavigate();
-  const tokenData = localStorage.getItem('dzboard_admin_token'); const token = (() => { try { return JSON.parse(tokenData).token; } catch { return tokenData; } })();
+  const token = localStorage.getItem('admin_logged_in') === 'true' ? 'cookie-based' : null;
   
   // حالة تغيير كلمة المرور
   const [currentPassword, setCurrentPassword] = useState('');
@@ -25,6 +25,10 @@ export default function AdminSettingsPage() {
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [backupFeedback, setBackupFeedback] = useState({ type: '', text: '' });
   const [restoreFile, setRestoreFile] = useState(null);
+  
+  // حالة المزامنة
+  const [syncing, setSyncing] = useState(false);
+  const [syncFeedback, setSyncFeedback] = useState({ type: '', text: '' });
 
   useEffect(() => { 
     if (!token) navigate('/admin'); 
@@ -228,6 +232,54 @@ export default function AdminSettingsPage() {
               <span style={{ fontSize: 13, fontWeight: 700, color: '#9d174d' }}>السيريالات</span>
             </div>
           </div>
+        </div>
+
+        {/* ✅ قسم المزامنة */}
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <Truck size={20} style={{ color: '#ea580c' }} />
+            <h2 style={{ fontSize: 16, fontWeight: 800 }}>مزامنة بيانات التوصيل</h2>
+          </div>
+
+          {syncFeedback.text && (
+            <div style={{ 
+              padding: 12, 
+              borderRadius: 10, 
+              marginBottom: 16, 
+              fontSize: 13, 
+              fontWeight: 700, 
+              background: syncFeedback.type === 'success' ? '#ecfdf5' : '#fef2f2', 
+              color: syncFeedback.type === 'success' ? '#047857' : '#b91c1c'
+            }}>
+              {syncFeedback.text}
+            </div>
+          )}
+
+          <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12, lineHeight: 1.6 }}>
+            مزامنة البلديات من DHD API - قد تأخذ 1-2 دقيقة
+          </p>
+
+          <button 
+            onClick={handleSyncCommunes} 
+            disabled={syncing}
+            style={{ 
+              width: '100%', 
+              background: syncing ? '#94a3b8' : '#ea580c', 
+              color: '#fff', 
+              border: 'none', 
+              borderRadius: 10, 
+              padding: 12, 
+              fontWeight: 800, 
+              cursor: syncing ? 'not-allowed' : 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: 8 
+            }}
+          >
+            {syncing ? <Loader2 size={18} className="spin" /> : <RefreshCw size={18} />}
+            {syncing ? 'جاري المزامنة...' : 'مزامنة البلديات الآن'}
+          </button>
         </div>
 
         {/* قسم النسخ الاحتياطي */}
