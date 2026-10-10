@@ -48,10 +48,6 @@ export default function AdminLoginPage() {
     try {
       const data = await api.adminLogin(username, password, recaptchaToken);
       if (data && data.success) {
-        const tokenData = {
-          token: data.token,
-          expires: Date.now() + (24 * 60 * 60 * 1000)
-        };
         localStorage.setItem('admin_logged_in', 'true');
         localStorage.setItem('admin_expires', String(Date.now() + 24*60*60*1000));
         navigate('/admin/dashboard');
@@ -72,25 +68,18 @@ export default function AdminLoginPage() {
   };
 
   const checkTokenExpiry = () => {
-    const tokenData = localStorage.getItem('dzboard_admin_token');
-    if (tokenData) {
-      try {
-        const parsed = JSON.parse(tokenData);
-        if (parsed.expires && Date.now() > parsed.expires) {
-          localStorage.removeItem('dzboard_admin_token');
-          return true;
-        }
-      } catch {
-        localStorage.removeItem('dzboard_admin_token');
-        return true;
-      }
+    const expires = localStorage.getItem('admin_expires');
+    if (expires && Date.now() > parseInt(expires)) {
+      localStorage.removeItem('admin_logged_in');
+      localStorage.removeItem('admin_expires');
+      return true;
     }
     return false;
   };
 
   useEffect(() => {
-    const tokenData = localStorage.getItem('dzboard_admin_token'); const token = (() => { try { return JSON.parse(tokenData).token; } catch { return tokenData; } })();
-    if (token && !checkTokenExpiry()) {
+    const loggedIn = localStorage.getItem('admin_logged_in');
+    if (loggedIn === 'true' && !checkTokenExpiry()) {
       navigate('/admin/dashboard');
     }
   }, [navigate]);
