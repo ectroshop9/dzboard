@@ -27,7 +27,7 @@ const WILAYAS = [
 ];
 
 const getToken = () => {
-  const t = localStorage.getItem('dzboard_admin_token');
+  const t = localStorage.getItem('admin_logged_in') === 'true' ? 'cookie-based' : null;
   try { return JSON.parse(t).token || t; } catch { return t; }
 };
 

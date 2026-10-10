@@ -6,7 +6,7 @@ const API = '/api';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  const tokenData = localStorage.getItem('dzboard_admin_token'); const token = (() => { try { return JSON.parse(tokenData).token; } catch { return tokenData; } })();
+  const loggedIn = localStorage.getItem('admin_logged_in'); const token = loggedIn === 'true' ? 'cookie-based' : null;
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -54,7 +54,7 @@ export default function AdminDashboardPage() {
 
   // ✅ تسجيل الخروج
   const handleLogout = () => {
-    localStorage.removeItem('dzboard_admin_token');
+    localStorage.removeItem('admin_logged_in'); localStorage.removeItem('admin_expires');
     navigate('/admin');
   };
 

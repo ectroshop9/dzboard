@@ -6,7 +6,7 @@ const API = '/api';
 
 export default function AdminBotOrdersPage() {
   const navigate = useNavigate();
-  const tokenData = localStorage.getItem('dzboard_admin_token'); const token = (() => { try { return JSON.parse(tokenData).token; } catch { return tokenData; } })();
+  const loggedIn = localStorage.getItem('admin_logged_in'); const token = loggedIn === 'true' ? 'cookie-based' : null;
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');

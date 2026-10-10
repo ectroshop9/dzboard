@@ -18,7 +18,7 @@ const API = '/api';
 
 // ✅ دالة استخراج التوكن الصحيح
 const getToken = () => {
-  const tokenData = localStorage.getItem('dzboard_admin_token');
+  const loggedIn = localStorage.getItem('admin_logged_in'); const token = loggedIn === 'true' ? 'cookie-based' : null;
   try {
     const parsed = JSON.parse(tokenData);
     return parsed.token || tokenData;

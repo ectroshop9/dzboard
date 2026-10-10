@@ -7,7 +7,7 @@ const API = import.meta.env.VITE_API_URL || '/api';
 
 export default function AdminScanPage() {
   const navigate = useNavigate();
-  const tokenData = localStorage.getItem('dzboard_admin_token'); const token = (() => { try { return JSON.parse(tokenData).token; } catch { return tokenData; } })();
+  const loggedIn = localStorage.getItem('admin_logged_in'); const token = loggedIn === 'true' ? 'cookie-based' : null;
   
   const [scanning, setScanning] = useState(false);
   const [loading, setLoading] = useState(false);

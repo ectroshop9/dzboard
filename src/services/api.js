@@ -2,28 +2,36 @@ const API_BASE = '/api';
 
 const headers = () => ({
   'Content-Type': 'application/json',
-  ...(localStorage.getItem('dzboard_admin_token') && { 
-    Authorization: `Bearer ${localStorage.getItem('dzboard_admin_token')}` 
-  }),
 });
 
+// ✅ fetch مع credentials للكوكيز
+const fetchWithCred = (url, options = {}) => {
+  return fetch(url, {
+    ...options,
+    credentials: 'include',  // ✅ يرسل الكوكيز
+    headers: { ...headers(), ...(options.headers || {}) }
+  }).then(r => r.json());
+};
+
 export const api = {
-  getProducts: (params = {}) => fetch(`${API_BASE}/products?${new URLSearchParams(params)}`).then(r => r.json()),
-  getProduct: (id) => fetch(`${API_BASE}/products/${id}`).then(r => r.json()),
-  createProduct: (data) => fetch(`${API_BASE}/products`, { method: 'POST', headers: headers(), body: JSON.stringify(data) }).then(r => r.json()),
-  updateProduct: (id, data) => fetch(`${API_BASE}/products/${id}`, { method: 'PUT', headers: headers(), body: JSON.stringify(data) }).then(r => r.json()),
-  deleteProduct: (id) => fetch(`${API_BASE}/products/${id}`, { method: 'DELETE', headers: headers() }).then(r => r.json()),
-  createOrder: (data) => fetch(`${API_BASE}/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
-  getOrders: () => fetch(`${API_BASE}/orders`, { headers: headers() }).then(r => r.json()),
-  updateOrderStatus: (id, status) => fetch(`${API_BASE}/orders/${id}/status`, { method: 'PUT', headers: headers(), body: JSON.stringify({ status }) }).then(r => r.json()),
+  getProducts: (params = {}) => fetchWithCred(`${API_BASE}/products?${new URLSearchParams(params)}`),
+  getProduct: (id) => fetchWithCred(`${API_BASE}/products/${id}`),
+  createProduct: (data) => fetchWithCred(`${API_BASE}/products`, { method: 'POST', body: JSON.stringify(data) }),
+  updateProduct: (id, data) => fetchWithCred(`${API_BASE}/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteProduct: (id) => fetchWithCred(`${API_BASE}/products/${id}`, { method: 'DELETE' }),
+  createOrder: (data) => fetchWithCred(`${API_BASE}/orders`, { method: 'POST', body: JSON.stringify(data) }),
+  getOrders: () => fetchWithCred(`${API_BASE}/orders`),
+  updateOrderStatus: (id, status) => fetchWithCred(`${API_BASE}/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
   
-  // ✅ تم التعديل - إضافة recaptchaToken
-  adminLogin: (username, password, recaptchaToken = '') => fetchWithCredentials(`${API_BASE}/admin/login`, { 
+  adminLogin: (username, password, recaptchaToken = '') => fetchWithCred(`${API_BASE}/admin/login`, { 
     method: 'POST', 
-    headers: { 'Content-Type': 'application/json' }, 
     body: JSON.stringify({ username, password, recaptchaToken }) 
-  }).then(r => r.json()),
+  }),
   
-  verifyAdmin: () => fetch(`${API_BASE}/admin/verify`, { headers: headers() }).then(r => r.json()),
-  adminLogout: () => localStorage.removeItem('dzboard_admin_token'),
+  verifyAdmin: () => fetchWithCred(`${API_BASE}/admin/verify`),
+  adminLogout: () => {
+    localStorage.removeItem('admin_logged_in');
+    localStorage.removeItem('admin_expires');
+    return fetchWithCred(`${API_BASE}/admin/logout`, { method: 'POST' });
+  },
 };
