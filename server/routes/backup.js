@@ -1,4 +1,5 @@
 import express from 'express';
+import { verifyAdmin } from '../middleware/auth.js';
 const router = express.Router();
 import { supabase } from '../supabase.js';
 
@@ -53,7 +54,7 @@ setInterval(autoBackup, 24 * 60 * 60 * 1000);
 setTimeout(autoBackup, 30000);
 
 // ✅ جلب النسخ الاحتياطية التلقائية
-router.get('/auto', async (req, res) => {
+router.get('/auto', verifyAdmin, async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('backups')
@@ -69,7 +70,7 @@ router.get('/auto', async (req, res) => {
 });
 
 // ✅ استرجاع نسخة تلقائية محددة
-router.post('/auto/:id/restore', async (req, res) => {
+router.post('/auto/:id/restore', verifyAdmin, async (req, res) => {
   try {
     const { data: backup, error: fetchError } = await supabase
       .from('backups')
@@ -97,7 +98,7 @@ router.post('/auto/:id/restore', async (req, res) => {
 });
 
 // GET /backup - إنشاء نسخة احتياطية وتنزيلها (الموجود)
-router.get('/', async (req, res) => {
+router.get('/', verifyAdmin, async (req, res) => {
   try {
     console.log('Creating backup...');
     
@@ -148,7 +149,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /backup/restore - استرجاع البيانات (الموجود)
-router.post('/restore', async (req, res) => {
+router.post('/restore', verifyAdmin, async (req, res) => {
   // ... نفس الكود الموجود بدون تغيير
 });
 

@@ -1,4 +1,5 @@
 import express from 'express';
+import { verifyAdmin } from '../middleware/auth.js';
 const router = express.Router();
 import { supabase } from '../supabase.js';
 
@@ -28,7 +29,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST - إضافة قطعة
-router.post('/', async (req, res) => {
+router.post('/', verifyAdmin, async (req, res) => {
   const token = getToken(req);
   if (!token || token !== validToken) {
     return res.status(401).json({ success: false, message: 'غير مصرح' });
@@ -67,7 +68,7 @@ router.post('/', async (req, res) => {
 });
 
 // DELETE - حذف قطعة
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyAdmin, async (req, res) => {
   const token = getToken(req);
   if (!token || token !== validToken) {
     return res.status(401).json({ success: false, message: 'غير مصرح' });

@@ -1,4 +1,5 @@
 import express from 'express';
+import { verifyAdmin } from '../middleware/auth.js';
 import crypto from 'crypto';
 import { supabase } from '../supabase.js';
 
@@ -191,7 +192,7 @@ router.get('/admin/list', async (req, res) => {
 });
 
 // ✅ إنشاء سيريال جديد
-router.post('/admin/create', async (req, res) => {
+router.post('/admin/create', verifyAdmin, async (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
   const validToken = process.env.ADMIN_TOKEN || 'dzboard_admin_2026';
   
@@ -224,7 +225,7 @@ router.post('/admin/create', async (req, res) => {
 });
 
 // ✅ تفعيل/تعطيل سيريال
-router.put('/admin/toggle/:id', async (req, res) => {
+router.put('/admin/toggle/:id', verifyAdmin, async (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
   const validToken = process.env.ADMIN_TOKEN || 'dzboard_admin_2026';
   
@@ -247,7 +248,7 @@ router.put('/admin/toggle/:id', async (req, res) => {
 });
 
 // ✅ حذف سيريال
-router.delete('/admin/delete/:id', async (req, res) => {
+router.delete('/admin/delete/:id', verifyAdmin, async (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
   const validToken = process.env.ADMIN_TOKEN || 'dzboard_admin_2026';
   

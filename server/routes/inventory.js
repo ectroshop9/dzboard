@@ -1,4 +1,5 @@
 import express from 'express';
+import { verifyAdmin } from '../middleware/auth.js';
 const router = express.Router();
 import { supabase } from '../supabase.js';
 
@@ -114,7 +115,7 @@ router.get('/search', async (req, res) => {
   }
 });
 
-router.post('/items', async (req, res) => {
+router.post('/items', verifyAdmin, async (req, res) => {
   try {
     const { name, price, quantity, category, brand, image, update_url } = req.body;
     
@@ -182,7 +183,7 @@ router.post('/items', async (req, res) => {
   }
 });
 
-router.put('/items/:id/status', async (req, res) => {
+router.put('/items/:id/status', verifyAdmin, async (req, res) => {
   try {
     const { status } = req.body;
     const itemId = parseInt(req.params.id, 10);
