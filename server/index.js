@@ -1,5 +1,6 @@
 
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -33,6 +34,8 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+
+app.use(cookieParser());
 
 app.use(cors({ 
   origin: [
