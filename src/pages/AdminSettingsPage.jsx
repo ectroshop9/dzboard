@@ -70,6 +70,32 @@ export default function AdminSettingsPage() {
   };
 
   // إنشاء نسخة احتياطية
+  // ✅ مزامنة البلديات من DHD
+  const handleSyncCommunes = async () => {
+    setSyncing(true);
+    setSyncFeedback({ type: '', text: '' });
+    
+    try {
+      const res = await fetch(`${API}/sync-communes`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setSyncFeedback({ 
+          type: 'success', 
+          text: `✅ تم مزامنة ${data.total} بلدية بنجاح!`
+        });
+      } else {
+        setSyncFeedback({ type: 'error', text: data.error || 'فشل المزامنة' });
+      }
+    } catch (err) {
+      setSyncFeedback({ type: 'error', text: 'خطأ في الاتصال' });
+    }
+    setSyncing(false);
+  };
+
   const handleBackup = async () => {
     setBackupLoading(true);
     setBackupFeedback({ type: '', text: '' });
