@@ -27,7 +27,7 @@ export const create = async (req, res) => {
       shipping: shipping_cost 
     });
     
-    console.log('Order created:', order);
+    
     
     let trackingNumber = null;
     

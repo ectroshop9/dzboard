@@ -19,7 +19,7 @@ router.get('/search', verifyAdmin, async (req, res) => {
     const { data, error } = await supabase
       .from('orders')
       .select('*')
-      .or(`id.eq.${cleanQuery},tracking.eq.${query}`)
+      .or(`id.eq.${String(cleanQuery).replace(/[%,()]/g, '').slice(0, 50)},tracking.eq.${String(query).replace(/[%,()]/g, '').slice(0, 50)}`)
       .limit(1);
     
     if (error) throw error;

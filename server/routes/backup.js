@@ -6,7 +6,7 @@ import { supabase } from '../supabase.js';
 // ✅ النسخ الاحتياطي التلقائي اليومي - أضفته فقط
 const autoBackup = async () => {
   try {
-    console.log('🔄 Auto backup started...');
+    
     
     const [productsResult, itemsResult] = await Promise.all([
       supabase.from('products').select('*'),
@@ -35,7 +35,7 @@ const autoBackup = async () => {
     if (error) {
       console.error('Auto backup save error:', error.message);
     } else {
-      console.log('✅ Auto backup saved successfully at', new Date().toISOString());
+      
     }
 
     // حذف النسخ القديمة (الاحتفاظ بآخر 7 أيام فقط)
@@ -100,7 +100,7 @@ router.post('/auto/:id/restore', verifyAdmin, async (req, res) => {
 // GET /backup - إنشاء نسخة احتياطية وتنزيلها (الموجود)
 router.get('/', verifyAdmin, async (req, res) => {
   try {
-    console.log('Creating backup...');
+    
     
     const [productsResult, itemsResult] = await Promise.all([
       supabase.from('products').select('*'),
@@ -117,14 +117,14 @@ router.get('/', verifyAdmin, async (req, res) => {
       const ordersResult = await supabase.from('orders').select('*');
       if (!ordersResult.error) ordersData = ordersResult.data || [];
     } catch (e) {
-      console.log('Orders table not found');
+      
     }
     
     try {
       const requestsResult = await supabase.from('special_requests').select('*');
       if (!requestsResult.error) requestsData = requestsResult.data || [];
     } catch (e) {
-      console.log('Special requests table not found');
+      
     }
 
     const backupData = {

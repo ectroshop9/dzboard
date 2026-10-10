@@ -25,8 +25,8 @@ export const ecotrackService = {
 
   createShipment: async (order) => {
     try {
-      console.log('=== Ecotrack createShipment ===');
-      console.log('Order received:', JSON.stringify(order, null, 2));
+      
+      
       
       // إصلاح أسماء الحقول
       const wilayaId = order.wilayaId || order.wilaya_id;
@@ -45,12 +45,12 @@ export const ecotrackService = {
         stop_desk: shippingType === 'stopdesk' ? '1' : '0',
       });
 
-      console.log('URL params:', p.toString());
+      
       
       const r = await fetch(`${URL}/create/order?${p}`, { method: 'POST', headers: H });
       const d = await r.json();
       
-      console.log('Ecotrack API Response:', JSON.stringify(d));
+      
       
       if (d.tracking) {
         return { success: true, tracking: d.tracking, raw: d };
@@ -58,7 +58,7 @@ export const ecotrackService = {
       
       // ✅ إذا رفض DHD stopdesk - جرب كـ domicile
       if (shippingType === 'stopdesk' && d.message && d.message.includes('Stop desk')) {
-        console.log('⚠️ Stop desk غير متوفر - جرب كـ domicile');
+        
         
         const p2 = new URLSearchParams({
           reference: String(order.id), 

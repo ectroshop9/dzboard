@@ -83,7 +83,7 @@ router.get('/search', async (req, res) => {
     const { data: items, error } = await supabase
       .from('inventory_items')
       .select('*')
-      .or(`barcode.eq."${cleanQuery}",sku.eq."${cleanQuery}"`)
+      .or(`barcode.eq."${String(cleanQuery).replace(/"/g, '').slice(0, 50)}",sku.eq."${String(cleanQuery).replace(/"/g, '').slice(0, 50)}"`)
       .limit(1);
     
     if (error) throw error;

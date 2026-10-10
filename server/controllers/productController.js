@@ -75,7 +75,7 @@ export const create = async (req, res) => {
             phash: hashData.phash,
             dhash: hashData.dhash
           }).then(() => {
-            console.log('✅ تم حساب بصمة المنتج:', p.id);
+            
           });
         }
       });

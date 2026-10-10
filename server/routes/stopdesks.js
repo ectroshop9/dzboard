@@ -8,7 +8,13 @@ router.get('/', async (req, res) => {
     let query = supabase.from('stopdesks').select('*').eq('active', true).order('wilaya_id');
     if (wilaya_id) query = query.eq('wilaya_id', parseInt(wilaya_id));
     if (company_id) query = query.eq('company_id', parseInt(company_id));
-    if (search) query = query.or(`name.ilike.%${search}%,commune.ilike.%${search}%,address.ilike.%${search}%,phone.ilike.%${search}%`);
+    if (search) {
+      // ✅ تنظيف المدخلات من الأحرف الخطرة
+      const safeSearch = String(search).replace(/[%,()\[\]{}]/g, '').slice(0, 50);
+      if (safeSearch) {
+        query = query.or(`name.ilike.%${safeSearch}%,commune.ilike.%${safeSearch}%,address.ilike.%${safeSearch}%,phone.ilike.%${safeSearch}%`);
+      }
+    }
     
     const { data, error } = await query;
     if (error) throw error;
