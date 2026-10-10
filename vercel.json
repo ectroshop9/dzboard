@@ -48,5 +48,10 @@
         }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "server/index.js": {
+      "maxDuration": 60
+    }
+  }
 }

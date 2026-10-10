@@ -3,7 +3,7 @@ const router = express.Router();
 import { supabase } from '../supabase.js';
 import { verifyAdmin } from '../middleware/auth.js';
 
-// ✅ مزامنة كل البلديات من DHD
+// ✅ مزامنة سريعة - بالتوازي
 router.post('/', verifyAdmin, async (req, res) => {
   try {
     const TOKEN = process.env.ECOTRACK_API_TOKEN;
@@ -18,32 +18,47 @@ router.post('/', verifyAdmin, async (req, res) => {
     let total = 0;
     let errors = [];
     
-    for (const w of wilayas) {
-      try {
-        const r = await fetch(`${URL}/get/communes?wilaya_id=${w}`, {
-          headers: { Authorization: `Bearer ${TOKEN}` }
-        });
-        const data = await r.json();
-        
-        if (Array.isArray(data) && data.length > 0) {
-          const communes = data.map(c => ({
-            wilaya_id: c.wilaya_id,
-            name_ar: c.nom,
-            name_fr: c.nom
-          }));
-          
-          // حذف القديم ثم إضافة الجديد
-          await supabase.from('communes').delete().eq('wilaya_id', w);
-          await supabase.from('communes').insert(communes);
-          
-          total += communes.length;
-        }
-        
-        // انتظار بين كل طلب (تجنب rate limit)
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } catch (err) {
-        errors.push({ wilaya: w, error: err.message });
-      }
+    // ✅ 5 ولايات في نفس الوقت
+    const batches = [];
+    for (let i = 0; i < wilayas.length; i += 5) {
+      batches.push(wilayas.slice(i, i + 5));
+    }
+    
+    for (const batch of batches) {
+      const results = await Promise.all(
+        batch.map(async (w) => {
+          try {
+            const r = await fetch(`${URL}/get/communes?wilaya_id=${w}`, {
+              headers: { Authorization: `Bearer ${TOKEN}` }
+            });
+            const data = await r.json();
+            
+            if (Array.isArray(data) && data.length > 0) {
+              const communes = data.map(c => ({
+                wilaya_id: c.wilaya_id,
+                name_ar: c.nom,
+                name_fr: c.nom
+              }));
+              
+              await supabase.from('communes').delete().eq('wilaya_id', w);
+              await supabase.from('communes').insert(communes);
+              
+              return { count: communes.length, error: null };
+            }
+            return { count: 0, error: null };
+          } catch (err) {
+            return { count: 0, error: { wilaya: w, error: err.message } };
+          }
+        })
+      );
+      
+      results.forEach(r => {
+        total += r.count;
+        if (r.error) errors.push(r.error);
+      });
+      
+      // انتظار بسيط بين batches
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
     
     res.json({ 
