@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Cpu, Zap, Monitor, Package, Wrench, Shield, Truck, Star, Search, X, TrendingUp, ArrowRight, MessageCircle } from 'lucide-react';
+import { Cpu, Zap, Monitor, Package, Wrench, Shield, Truck, Star, Search, X, TrendingUp, ArrowRight } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function HomePage() {
@@ -12,8 +12,6 @@ export default function HomePage() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [brokenBrands, setBrokenBrands] = useState({});
 
-  // ✅ رقم ID الخاص بصفحتك الفعلية
-  // const PAGE_ID = "61593351994312"; 
 
   const slides = [
     { image: '/hero/tcon.jpg' },
@@ -27,11 +25,6 @@ export default function HomePage() {
       if (isMounted && data?.success) setFeaturedProducts((data.products || []).slice(0, 5));
     }).finally(() => { if (isMounted) setLoadingProducts(false); });
     return () => { isMounted = false; };
-  }, []);
-
-  // ✅ إعداد Facebook Chat Plugin للمتصفح
-  useEffect(() => {
-    const chatbox = document.getElementById('fb-customer-chat');
   }, []);
 
   // سلايدر الصور
@@ -63,21 +56,6 @@ export default function HomePage() {
 
     return () => observer.disconnect();
   }, [featuredProducts, loadingProducts]);
-
-  // دالة فتح تطبيق ميسنجر المباشر للهواتف
-  const openMessenger = (e) => {
-    e.preventDefault();
-    const appUrl = `fb-messenger://user-thread/${PAGE_ID}`;
-    const webUrl = `https://m.me/${PAGE_ID}`;
-
-    // محاولة فتح التطبيق المباشر
-    window.location.href = appUrl;
-
-    // توجيه احتياطي للمتصفح إذا لم يُفتح التطبيق خلال نصف ثانية
-    setTimeout(() => {
-      window.location.href = webUrl;
-    }, 500);
-  };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -283,50 +261,13 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {/* ✅ زر ماسنجر عائم مُعدَّل مع دالة فتح التطبيق المباشر */}
-      <a 
-        href={`https://m.me/${PAGE_ID}`} 
-        onClick={openMessenger}
-        className="floating-messenger-btn"
-        aria-label="Contact on Messenger"
-      >
-        <MessageCircle size={28} />
-      </a>
-
       <style>{`
         .hero-banner { height: 240px; }
         @media (min-width: 640px) { .hero-banner { height: 350px; } }
         .reveal-item { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
         .reveal-item.is-visible { opacity: 1 !important; transform: translateY(0) !important; }
         
-        .floating-messenger-btn {
-          position: fixed;
-          bottom: 20px;
-          left: 20px;
-          width: 56px;
-          height: 56px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #0084FF 0%, #00C6FF 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 4px 20px rgba(0,132,255,0.4);
-          z-index: 40;
-          color: #fff;
-          text-decoration: none;
-          animation: pulse-bounce 2.5s infinite;
-          transition: transform 0.2s ease;
-        }
-
-        .floating-messenger-btn:hover {
-          transform: scale(1.1);
-        }
-
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }
-        @keyframes pulse-bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
-        }
       `}</style>
     </div>
   );
